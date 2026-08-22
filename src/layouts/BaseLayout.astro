@@ -29,15 +29,24 @@ const canonical =
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     {canonical && <link rel="canonical" href={canonical} />}
     <script is:inline src="/js/i18n.js"></script>
+    <script is:inline>
+      // 主题/语言初始化：必须在 head 内首屏渲染前执行，避免页面闪跳
+      (function () {
+        var d = document.documentElement;
+        if (localStorage.getItem('tf-theme') === 'dark') d.classList.add('dark');
+        var en = localStorage.getItem('tf-lang') === 'en';
+        d.classList.add(en ? 'lang-en' : 'lang-zh');
+      })();
+    </script>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'TokenFree',
       description,
-      url: Astro.site?.toString() ?? 'https://tokenfree.example.com',
+      url: Astro.site?.toString() ?? 'https://www.tokenfree.wiki',
     })} />
   </head>
   <body class="bg-bg text-text-primary min-h-screen font-sans antialiased">
@@ -48,23 +57,17 @@ const canonical =
     <div class="relative z-10">
       <slot />
     </div>
-    <script>
-      // 主题初始化：默认浅色，localStorage 记忆切换（在渲染前执行避免闪烁）
-      // 兼容旧存储值：旧方案存的 'dark'/'light' 与新方案语义一致
+    <script is:inline>
+      // 文案翻译：DOM 就绪后替换 data-i18n 文本（语言类已在 head 设置，双语块不会闪）
       (function () {
-        if (localStorage.getItem('tf-theme') === 'dark') document.documentElement.classList.add('dark');
-      })();
-      // 轻量 i18n：data-i18n 元素替换文本 + html 语言类控制 [data-lang] 双语内容显隐
-      (function () {
-        const en = localStorage.getItem('tf-lang') === 'en';
-        document.documentElement.classList.add(en ? 'lang-en' : 'lang-zh');
-        if (!en) return;
-        const dict = window.TF_I18N_EN || {};
-        document.querySelectorAll('[data-i18n]').forEach((el) => {
-          const key = el.getAttribute('data-i18n');
-          if (dict[key]) el.textContent = dict[key];
-        });
-        document.documentElement.lang = 'en';
+        if (document.documentElement.classList.contains('lang-en')) {
+          var dict = window.TF_I18N_EN || {};
+          document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            var key = el.getAttribute('data-i18n');
+            if (dict[key]) el.textContent = dict[key];
+          });
+          document.documentElement.lang = 'en';
+        }
       })();
     </script>
   </body>
