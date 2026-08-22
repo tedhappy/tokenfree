@@ -18,6 +18,15 @@ const UPTIME_FILE = path.join(DATA_DIR, 'uptime.json');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
+// ---- 加载 .env（简单实现，已有环境变量优先；便于服务器免敲 export）----
+try {
+  const envText = fs.readFileSync(path.join(ROOT, '.env'), 'utf-8');
+  for (const line of envText.split('\n')) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
+  }
+} catch {}
+
 // ---- 配置 ----
 const PORT = Number(process.env.PORT || 4321);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
