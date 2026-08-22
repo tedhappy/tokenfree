@@ -9,6 +9,7 @@ const {
   title = 'TokenFree - AI Token 中转站导航',
   description = '收集 AI Token 公益中转站，帮助更多人找到可用、稳定、低门槛的 AI 服务入口。',
 } = Astro.props;
+const ogImage = new URL('/og.png', Astro.site ?? 'https://tokenfree.example.com').href;
 ---
 
 <html lang="zh-CN">
@@ -20,11 +21,27 @@ const {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline src="/js/i18n.js"></script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'TokenFree',
+      description,
+      url: Astro.site?.toString() ?? 'https://tokenfree.example.com',
+    })} />
   </head>
   <body class="bg-bg text-text-primary min-h-screen font-sans antialiased">
-    <slot />
+    <!-- 顶部品牌光晕（极淡，氛围用） -->
+    <div class="pointer-events-none fixed inset-x-0 top-0 h-[420px] overflow-hidden z-0" aria-hidden="true">
+      <div class="absolute left-1/2 -translate-x-1/2 -top-[220px] w-[820px] h-[480px] rounded-full opacity-[0.13]" style="background: radial-gradient(ellipse at center, var(--c-accent), transparent 65%);"></div>
+    </div>
+    <div class="relative z-10">
+      <slot />
+    </div>
     <script>
       // 主题初始化：默认暗色，localStorage 记忆切换（在渲染前执行避免闪烁）
       (function () {

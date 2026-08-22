@@ -69,35 +69,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "agent-router",
-    "name": "Agent Router",
-    "url": "https://agentrouter.org/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt",
-      "claude",
-      "gemini"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "口碑炸裂的老牌公益站，注册得50刀，每天签到再得25刀",
-    "description": "非常老的站，为数不多口碑炸裂的公益站。模型很多，免费公益使用，非常良心。注册就可以获得50刀，每天签到还可以获得25刀，可用L站或Github登录。",
-    "status": "offline",
-    "isFeatured": true,
-    "sortOrder": 3,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "uni-token",
     "name": "Uni Token",
     "url": "https://uni-token.com/register",
@@ -607,134 +578,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "君-星辰",
-    "name": "君の星辰",
-    "url": "https://ai.centos.hk/register",
-    "multiplier": 0.02,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "模型很多，GPT 0.02x，大名鼎鼎的君的站",
-    "description": "非公益站。模型很多，GPT现在是0.02x的倍率。该站是大名鼎鼎的君的，可靠性没得说。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 120,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "jiurelay",
-    "name": "JiuRelay",
-    "url": "https://jiurelay.com/r/JR-QGAVTV",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "grok",
-      "claude"
-    ],
-    "tags": [],
-    "summary": "glm-5.2 / grok 4.5 / claude-sonnet-5 分别免费3/2/1小时",
-    "description": "目前可以用glm-5.2和grok 4.5以及claude-sonnet-5，分别免费3小时、2小时、1小时，要用的时候大量用。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 121,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "咯咯哒",
-    "name": "咯咯哒",
-    "url": "https://sbsgqew.dpdns.org/register",
-    "multiplier": 0.005,
-    "bonus": "",
-    "models": [
-      "grok"
-    ],
-    "tags": [],
-    "summary": "grok 一直很稳，倍率只有 0.005x，注册送1刀",
-    "description": "老站了，注册好像是送1刀。grok一直都很稳，并且倍率只有0.005x。送的少但是很耐用。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 122,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：源站故障(CF 530)（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "奇点",
-    "name": "奇点",
-    "url": "https://sub2api.proxy-gls.dde.net/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude"
-    ],
-    "tags": [],
-    "summary": "收费站，注册送0.1刀，Claude Fable 5 限时 0.001x",
-    "description": "奇点的收费站，注册送0.1刀。Claude Fable 5限时0.001x。搞活动的时候还不错，可以注册当作备用。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 123,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：域名已注销（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "豆豆",
-    "name": "豆豆",
-    "url": "https://bizdecipher.com/register",
-    "multiplier": 0.001,
-    "bonus": "",
-    "models": [
-      "grok"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册送2刀，玩法多（共享市场等），grok 0.001x",
-    "description": "注册送2刀，每日可签到得积分。此站玩法比较多，有共享市场等。现在grok是0.001x，基本上可以用很久。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 124,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：连接异常（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "肖恩ai",
     "name": "肖恩AI",
     "url": "https://free.supxh.xin/register",
@@ -835,64 +678,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "发现ai",
-    "name": "发现AI",
-    "url": "https://www.findcg.com/register",
-    "multiplier": 0.001,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini",
-      "grok"
-    ],
-    "tags": [
-      "生图",
-      "稳定"
-    ],
-    "summary": "老站，注册送0.1刀，GPT 0.001 倍率，模型多",
-    "description": "老站了，注册送0.1刀，但是目前GPT倍率0.001，可以蹬很久。模型比较多，有Claude、GPT、Gemini、Grok等等。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 130,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：域名已注销（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "xelvai-api",
-    "name": "XelvAI API",
-    "url": "https://xelvai.com/register",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "稳定"
-    ],
-    "summary": "注册即送5刀，加群找管理再送5刀，GPT 0.01x",
-    "description": "新站，注册即送5刀，加群找管理再送5刀。模型主要是GPT，有5.6，倍率0.01x，很耐蹬。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 131,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：服务关闭（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "mydamoxing",
     "name": "MyDamoxing",
     "url": "https://mydamoxing.cn/register",
@@ -918,37 +703,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "分享奇点",
-    "name": "分享奇点",
-    "url": "https://api-public.proxy-gls.dde.net/sign-up",
-    "multiplier": 0.25,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "grok",
-      "gemini"
-    ],
-    "tags": [
-      "签到",
-      "邀请"
-    ],
-    "summary": "注册即送30刀，签到每天5-8刀，倍率约0.25x",
-    "description": "新站，注册即送30刀，可签到，大概5-8刀每天。模型：claude-fable-5、claude-opus-4.8、gpt-5.6、grok-4.5、gemini等。倍率大概0.25x左右。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 133,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：域名已注销（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "七倍算力",
     "name": "七倍算力",
     "url": "https://7x.hk/sign-up",
@@ -968,37 +722,6 @@
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
     "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "cun-ai",
-    "name": "CUN.AI",
-    "url": "https://www.cun.ai/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini"
-    ],
-    "tags": [
-      "签到",
-      "邀请",
-      "稳定"
-    ],
-    "summary": "注册即送8.8刀，模型丰富含各种国模",
-    "description": "新站，注册即送8.8刀，有签到功能。模型很丰富，有Claude/ChatGPT/Gemini，还有各种国模。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 135,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
   },
   {
     "id": "luna",
@@ -1089,62 +812,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "tokenshub",
-    "name": "TokensHub",
-    "url": "https://api.tokenshub.site/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册领20刀 pro 3日卡，首充额外赠20%",
-    "description": "新用户注册即领20刀 pro 3日体验卡，首充额外赠送20%额度。模型有Claude和ChatGPT，Max、Pro、Plus都有，速度很快。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 140,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：域名已注销（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
-    "id": "年华api",
-    "name": "年华API",
-    "url": "https://newapi.makelove.cloud/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt",
-      "claude",
-      "gemini"
-    ],
-    "tags": [
-      "签到",
-      "邀请"
-    ],
-    "summary": "注册送+签到送，模型丰富，当备选",
-    "description": "注册送，有签到，签到也送。模型有ChatGPT、Claude、Gemini，相当丰富。速度还不错，额度不多，当做备选。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 141,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：连接重置（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "小白code",
     "name": "小白Code",
     "url": "https://token.dialoguedui.com/register",
@@ -1208,31 +875,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "cloudnexus",
-    "name": "CloudNexus",
-    "url": "https://api.aifmusic.top/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "deepseek"
-    ],
-    "tags": [],
-    "summary": "注册送一个月会员，每天可用35刀，国模为主",
-    "description": "新站，注册送一个月订阅会员，每天可用35刀。主要是国模，DeepSeek/Kimi/MiniMax/GLM等。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 145,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "维云",
     "name": "维云",
     "url": "https://vsllm.com/register",
@@ -1279,35 +921,6 @@
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
     "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "bluesminds",
-    "name": "Bluesminds",
-    "url": "https://api.bluesminds.com/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "deepseek"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册就送100刀，模型覆盖广",
-    "description": "新站，注册就送100刀！模型有Claude、GPT、Kimi、DeepSeek、GLM等等。整体速度还不错。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 148,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
   },
   {
     "id": "camel-ai",
@@ -1401,34 +1014,6 @@
     "updatedAt": "2026-08-22"
   },
   {
-    "id": "gjx-ai",
-    "name": "GJX AI",
-    "url": "https://api.gjx88.com/register",
-    "multiplier": 1,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "生图",
-      "邀请"
-    ],
-    "summary": "注册即送50刀，GPT 5.2-5.5 + image-2 生图",
-    "description": "注册即送50刀，模型倍率1倍。主打GPT模型，5.2/5.3/5.4/5.5/image-2都有。渠道状态比较稳定，特意区分了文本渠道和生图渠道。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 153,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：源站宕机(CF 521)（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
-  },
-  {
     "id": "model-gate",
     "name": "Model Gate",
     "url": "https://modelgate.app/register",
@@ -1449,33 +1034,6 @@
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
     "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "ai-router",
-    "name": "Ai-Router",
-    "url": "https://ai-router.dev/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册得5刀（20刀需充值激活），只有 GPT 5.2-5.5",
-    "description": "非公益站，注册即可得20刀（据反馈实际5刀+15刀需充值激活），无签到。模型只有GPT，覆盖5.2-5.5。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 155,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：境内外均不可达（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
   },
   {
     "id": "芙卡卡-小食堂",
@@ -1589,32 +1147,5 @@
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
     "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "ben-api",
-    "name": "Ben API",
-    "url": "https://api.benzhoupo.xyz/sign-up",
-    "multiplier": 0.0001,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "grok"
-    ],
-    "tags": [],
-    "summary": "即将跑路，这几天全部0.0001倍率",
-    "description": "即将跑路，但这几天全部0.0001倍率，注册送0.05，能蹬很久！模型啥都有，Claude、ChatGPT、Grok等等。",
-    "status": "offline",
-    "isFeatured": false,
-    "sortOrder": 161,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22",
-    "events": [
-      {
-        "date": "2026-08-22",
-        "text": "编辑标记失效：已跑路(原描述即预告)（三轮自动监测 + 境内外交叉验证均不可达）"
-      }
-    ]
   }
 ]

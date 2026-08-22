@@ -40,6 +40,14 @@ const statusMap = {
   offline: { label: '已失效', color: '#ef4444' },
 } as const;
 
+// 站点头像：按名称哈希取色，首字母做徽章
+const AVATAR_COLORS = ['#7c5cfc', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ec4899', '#8b5cf6'];
+function avatarColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
 function multiplierColor(m: number | null): string {
   if (m === null) return 'var(--c-t2)';
   if (m <= 0.1) return '#22c55e';
@@ -48,8 +56,23 @@ function multiplierColor(m: number | null): string {
 }
 
 function affEnabled(): boolean {
-  if (typeof window === 'undefined') return true; // SSR 阶段默认开启
+  if (typeof window === 'undefined') return true;
   return localStorage.getItem('tf-aff') !== '0';
+}
+
+function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
+  const c = avatarColor(name);
+  const initial = name.trim().charAt(0).toUpperCase();
+  const dim = size === 'lg' ? 'w-12 h-12 text-lg rounded-xl' : 'w-9 h-9 text-sm rounded-lg';
+  return (
+    <span
+      className={`${dim} shrink-0 flex items-center justify-center font-semibold select-none`}
+      style={{ backgroundColor: `${c}1f`, color: c }}
+      aria-hidden="true"
+    >
+      {initial}
+    </span>
+  );
 }
 
 export default function SiteList({ initialSites, models }: Props) {
@@ -70,7 +93,6 @@ export default function SiteList({ initialSites, models }: Props) {
     try {
       setFavs(new Set(JSON.parse(localStorage.getItem('tf-favs') || '[]')));
     } catch {}
-    // ⌘K / Ctrl+K 聚焦搜索
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -300,48 +322,69 @@ export default function SiteList({ initialSites, models }: Props) {
             const dotTitle = live ? (live.up ? `在线 · ${live.latencyMs ?? '?'}ms` : '监测不可达') : st.label;
             const href = goHref(site);
             return (
-              <div key={site.id} className="group relative p-5 rounded-xl bg-bg-secondary border border-border hover:border-border-hover transition-colors">
+              <div
+                key={site.id}
+                className="group relative p-5 rounded-2xl bg-bg-secondary border border-border hover:border-accent/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20"
+              >
                 <button
                   onClick={() => toggleFav(site.id)}
-                  className={`absolute top-3 right-3 text-sm leading-none transition-colors ${favs.has(site.id) ? 'text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent'}`}
+                  className={`absolute top-3.5 right-3.5 text-sm leading-none transition-all ${
+                    favs.has(site.id)
+                      ? 'text-accent opacity-100'
+                      : 'text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent'
+                  }`}
                   title="收藏"
                 >
                   {favs.has(site.id) ? '★' : '☆'}
                 </button>
-                <div className="flex items-start justify-between gap-3 mb-2 pr-6">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} title={dotTitle} />
-                    <a href={`/site/${site.id}`} className="font-medium text-text-primary truncate hover:text-accent transition-colors">
-                      {site.name}
-                    </a>
-                    {site.network === 'direct' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-stable/30 text-status-stable shrink-0">直连</span>
-                    )}
-                    {site.network === 'proxy' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-unstable/30 text-status-unstable shrink-0">代理</span>
-                    )}
+
+                <div className="flex items-start gap-3 pr-6 mb-3">
+                  <Avatar name={site.name} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a href={`/site/${site.id}`} className="font-medium text-text-primary truncate hover:text-accent transition-colors">
+                        {site.name}
+                      </a>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} title={dotTitle} />
+                      {site.network === 'direct' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-stable/30 text-status-stable shrink-0">直连</span>
+                      )}
+                      {site.network === 'proxy' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-unstable/30 text-status-unstable shrink-0">代理</span>
+                      )}
+                    </div>
+                    {site.bonus ? (
+                      <p className="text-xs text-status-stable/90 truncate mt-0.5">🎁 {site.bonus}</p>
+                    ) : null}
                   </div>
                   {site.multiplier !== null && (
-                    <span className="text-sm font-mono font-medium shrink-0" style={{ color: multiplierColor(site.multiplier) }}>
+                    <span
+                      className="shrink-0 text-xs font-mono font-semibold px-2 py-1 rounded-full"
+                      style={{
+                        color: multiplierColor(site.multiplier),
+                        backgroundColor: `${multiplierColor(site.multiplier)}14`,
+                      }}
+                    >
                       {site.multiplier}x
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mb-3">{site.summary}</p>
-                {site.bonus && <p className="text-xs text-status-stable/90 mb-3 truncate">🎁 {site.bonus}</p>}
+
+                <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mb-3.5 min-h-[2.5rem]">{site.summary}</p>
+
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1.5 min-w-0">
                     {site.models.slice(0, 4).map((mid) => {
                       const model = models.find((mm) => mm.id === mid);
                       if (!model) return null;
                       return (
-                        <span key={mid} className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: `${model.color}30`, color: model.color }}>
+                        <span key={mid} className="text-xs px-2 py-0.5 rounded-md" style={{ color: model.color, backgroundColor: `${model.color}12` }}>
                           {model.name}
                         </span>
                       );
                     })}
                     {site.models.length > 4 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-border text-text-muted">+{site.models.length - 4}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-bg-tertiary text-text-muted">+{site.models.length - 4}</span>
                     )}
                   </div>
                   {href && (

@@ -8,31 +8,30 @@ const { siteCount, stableCount } = Astro.props;
 
 <section class="pt-16 pb-10 sm:pt-20 sm:pb-14">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3" data-i18n="hero.title">
-      AI Token 中转站导航
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight mb-4" data-i18n="hero.title">
+      <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(120deg, var(--c-t1) 30%, var(--c-accent));">
+        AI Token 中转站导航
+      </span>
     </h1>
     <p class="text-text-secondary text-sm sm:text-base max-w-lg mx-auto mb-8" data-i18n="hero.sub">
       收录可用、稳定的 AI API 中转站，帮你快速找到免费额度和低价倍率入口
     </p>
-    <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
-      <div class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-status-stable"></span>
-        <span class="text-text-secondary"><span class="text-text-primary font-medium">{siteCount}</span> <span data-i18n="hero.sites">个站点</span></span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-accent"></span>
-        <span class="text-text-secondary"><span class="text-text-primary font-medium">{stableCount}</span> <span data-i18n="hero.stable">个稳定</span></span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-status-stable/60 animate-none"></span>
-        <span class="text-text-secondary">实时在线 <span id="hero-health" class="text-text-primary font-medium">…</span></span>
-      </div>
+    <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-status-stable/10 text-status-stable border border-status-stable/20">
+        <span class="font-semibold">{siteCount}</span> 个站点
+      </span>
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-accent-muted text-accent border border-accent/20">
+        <span class="font-semibold">{stableCount}</span> 个稳定
+      </span>
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-bg-secondary text-text-secondary border border-border">
+        实时在线 <span id="hero-health" class="font-semibold text-text-primary">…</span>
+      </span>
     </div>
   </div>
 </section>
 
 <script>
-  // 全站健康度：聚合监测 API（借鉴 Help AIO 模型晴雨表）
+  // 全站健康度：聚合监测 API
   fetch('/api/uptime')
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
