@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import SiteList from '../components/SiteList';
 import Footer from '../components/Footer.astro';
+import AnnouncementBar from '../components/AnnouncementBar.astro';
 import { getFilteredSites, goUrl } from '../utils/sites';
 import modelsJson from '../data/models.json';
 
@@ -16,7 +17,8 @@ const stableCount = allSites.filter((s) => s.status === 'stable').length;
 
 <BaseLayout>
   <Header />
-  <main class="pt-16">
+  <main class="pt-14">
+    <AnnouncementBar />
     <Hero siteCount={siteCount} stableCount={stableCount} />
     <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
       {featuredSites.length > 0 && (

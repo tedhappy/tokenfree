@@ -1,0 +1,123 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getFilteredSites } from '../utils/sites';
+import modelsJson from '../data/models.json';
+
+const sites = await getFilteredSites();
+const models = modelsJson as Array<{ id: string; name: string; color: string }>;
+// 传给客户端做筛选（只传必要字段）
+const lite = sites.map((s) => ({
+  id: s.id,
+  name: s.name,
+  multiplier: s.multiplier,
+  bonus: s.bonus,
+  models: s.models,
+  tags: s.tags,
+  summary: s.summary,
+  network: s.network || 'unknown',
+  isFeatured: s.isFeatured,
+  hasUrl: !!s.url,
+}));
+---
+
+<BaseLayout title="帮我选站 - TokenFree" description="回答三个问题，推荐适合你的 AI API 中转站">
+  <Header />
+  <main class="pt-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+      <h1 class="text-2xl font-bold mb-2">🎯 帮我选站</h1>
+      <p class="text-sm text-text-secondary mb-10">回答几个问题，从 {sites.length} 个站点里找出适合你的。</p>
+
+      <div id="quiz" class="space-y-8">
+        <div>
+          <h2 class="text-sm font-medium mb-3">1. 主要用什么模型？</h2>
+          <div class="flex flex-wrap gap-2" data-q="model">
+            {models.filter((m) => m.id !== 'other').map((m) => (
+              <button data-v={m.id} class="text-sm px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-border-hover transition-colors">
+                {m.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 class="text-sm font-medium mb-3">2. 预算偏好？</h2>
+          <div class="flex flex-wrap gap-2" data-q="budget">
+            <button data-v="free" class="text-sm px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-border-hover transition-colors">只要免费/赠送</button>
+            <button data-v="low" class="text-sm px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-border-hover transition-colors">低价充值也行</button>
+          </div>
+        </div>
+        <div>
+          <h2 class="text-sm font-medium mb-3">3. 网络环境？</h2>
+          <div class="flex flex-wrap gap-2" data-q="network">
+            <button data-v="direct" class="text-sm px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-border-hover transition-colors">国内直连</button>
+            <button data-v="any" class="text-sm px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-border-hover transition-colors">都可以</button>
+          </div>
+        </div>
+        <button id="rec-go" class="px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+          查看推荐 →
+        </button>
+      </div>
+
+      <div id="rec-result" class="hidden mt-10">
+        <p id="rec-summary" class="text-sm text-text-secondary mb-4"></p>
+        <div id="rec-list" class="space-y-3"></div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+  <script define:vars={{ lite, models }}>
+    const answers = {};
+    document.querySelectorAll('#quiz [data-q]').forEach((group) => {
+      const q = group.dataset.q;
+      group.querySelectorAll('button').forEach((btn) => {
+        btn.onclick = () => {
+          group.querySelectorAll('button').forEach((b) => {
+            b.className = b.className.replace(/border-accent\/40 text-accent bg-accent-muted/g, '').trim() || b.className;
+            b.classList.remove('border-accent/40', 'text-accent', 'bg-accent-muted');
+          });
+          btn.classList.add('border-accent/40', 'text-accent', 'bg-accent-muted');
+          answers[q] = btn.dataset.v;
+          document.getElementById('rec-go').disabled = !(answers.model && answers.budget && answers.network);
+        };
+      });
+    });
+
+    document.getElementById('rec-go').onclick = () => {
+      let list = [...lite];
+      if (answers.model) list = list.filter((s) => s.models.includes(answers.model));
+      if (answers.network === 'direct') list = list.filter((s) => s.network === 'direct' || s.network === 'unknown');
+      if (answers.budget === 'free') {
+        const free = list.filter((s) => /送|签到|免费|公益/.test(s.bonus + s.summary + s.tags.join()));
+        if (free.length) list = free;
+      }
+      // 评分排序：精选 > 低倍率 > 有赠送
+      list.sort((a, b) => {
+        const score = (s) =>
+          (s.isFeatured ? 2 : 0) + (s.multiplier != null ? (s.multiplier <= 0.1 ? 1.5 : s.multiplier <= 0.5 ? 0.8 : 0.3) : 0) + (/送|签到|免费/.test(s.bonus + s.summary) ? 1 : 0);
+        return score(b) - score(a);
+      });
+      const top = list.slice(0, 6);
+      const summary = document.getElementById('rec-summary');
+      const result = document.getElementById('rec-result');
+      const recList = document.getElementById('rec-list');
+      summary.textContent = top.length
+        ? `为你找到 ${top.length} 个合适的站点（已按推荐度排序）：`
+        : '没有完全匹配的站点，试试放宽条件。';
+      recList.innerHTML = top
+        .map(
+          (s) => `
+        <a href="/site/${s.id}" class="block p-4 rounded-xl bg-bg-secondary border border-border hover:border-border-hover transition-colors">
+          <div class="flex items-center justify-between gap-3">
+            <span class="font-medium">${s.name}${s.isFeatured ? ' ⭐' : ''}</span>
+            <span class="text-sm font-mono ${s.multiplier != null && s.multiplier <= 0.5 ? 'text-status-stable' : 'text-text-muted'}">${s.multiplier != null ? s.multiplier + 'x' : ''}</span>
+          </div>
+          <p class="text-sm text-text-secondary mt-1 line-clamp-1">${s.summary}</p>
+        </a>`
+        )
+        .join('');
+      result.classList.remove('hidden');
+      result.scrollIntoView({ behavior: 'smooth' });
+    };
+  </script>
+</BaseLayout>

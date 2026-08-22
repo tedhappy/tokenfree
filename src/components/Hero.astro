@@ -14,7 +14,7 @@ const { siteCount, stableCount } = Astro.props;
     <p class="text-text-secondary text-sm sm:text-base max-w-lg mx-auto mb-8" data-i18n="hero.sub">
       收录可用、稳定的 AI API 中转站，帮你快速找到免费额度和低价倍率入口
     </p>
-    <div class="flex items-center justify-center gap-6 text-sm">
+    <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
       <div class="flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-status-stable"></span>
         <span class="text-text-secondary"><span class="text-text-primary font-medium">{siteCount}</span> <span data-i18n="hero.sites">个站点</span></span>
@@ -23,6 +23,34 @@ const { siteCount, stableCount } = Astro.props;
         <span class="w-2 h-2 rounded-full bg-accent"></span>
         <span class="text-text-secondary"><span class="text-text-primary font-medium">{stableCount}</span> <span data-i18n="hero.stable">个稳定</span></span>
       </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-status-stable/60 animate-none"></span>
+        <span class="text-text-secondary">实时在线 <span id="hero-health" class="text-text-primary font-medium">…</span></span>
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  // 全站健康度：聚合监测 API（借鉴 Help AIO 模型晴雨表）
+  fetch('/api/uptime')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      const el = document.getElementById('hero-health');
+      if (!el) return;
+      const entries = Object.values(d || {});
+      const checked = entries.filter((e: any) => e.checks > 0);
+      if (!checked.length) {
+        el.textContent = '—';
+        return;
+      }
+      const up = checked.filter((e: any) => e.up).length;
+      const pct = Math.round((up / checked.length) * 100);
+      el.textContent = `${pct}%`;
+      el.style.color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    })
+    .catch(() => {
+      const el = document.getElementById('hero-health');
+      if (el) el.textContent = '—';
+    });
+</script>

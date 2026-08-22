@@ -47,13 +47,17 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         )}
       </div>
 
-      <div class="mt-6 flex flex-wrap gap-2">
+      <div class="mt-6 flex flex-wrap items-center gap-2">
         {site.url && (
-          <a href={goUrl(site)} target="_blank" rel="noopener noreferrer nofollow"
+          <a id="visit-btn" href={goUrl(site)} data-plain-url={`/go?url=${encodeURIComponent(site.url)}&id=${encodeURIComponent(site.id)}`}
+             target="_blank" rel="noopener noreferrer nofollow"
              class="text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors">
             访问站点 ↗
           </a>
         )}
+        <button id="fav-btn" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
+          ☆ 收藏
+        </button>
       </div>
 
       <!-- 实时状态（客户端拉取监测 API） -->
@@ -108,6 +112,20 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
             </div>
           </div>
         )}
+        {(site.events?.length ?? 0) > 0 && (
+          <div>
+            <h2 class="text-sm font-medium text-text-muted mb-3">体验日志</h2>
+            <div class="border-l border-border ml-1 space-y-4">
+              {[...site.events!].reverse().map((ev) => (
+                <div class="relative pl-4">
+                  <span class="absolute -left-[3.5px] top-1.5 w-1.5 h-1.5 rounded-full bg-accent/60"></span>
+                  <p class="text-xs text-text-muted font-mono mb-0.5">{ev.date}</p>
+                  <p class="text-sm text-text-secondary leading-relaxed">{ev.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div class="grid grid-cols-2 gap-3 text-xs text-text-muted border-t border-border pt-4">
           <p>核验日期：{site.verifiedAt}</p>
           <p>更新时间：{site.updatedAt}</p>
@@ -117,13 +135,14 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
   </main>
   <Footer />
   <script>
+    // 实时状态 + 收藏 + AFF 感知
+    const siteId = location.pathname.split('/').pop();
     fetch('/api/uptime')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const el = document.getElementById('live-value');
         if (!d || !el) return;
-        const id = location.pathname.split('/').pop();
-        const u = d[id];
+        const u = d[siteId];
         if (!u || !u.checks) {
           el.textContent = '暂无监测数据';
           return;
@@ -137,5 +156,29 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         const el = document.getElementById('live-value');
         if (el) el.textContent = '暂无监测数据';
       });
+
+    const favBtn = document.getElementById('fav-btn') as HTMLButtonElement | null;
+    if (favBtn) {
+      const renderFav = () => {
+        const favs: string[] = JSON.parse(localStorage.getItem('tf-favs') || '[]');
+        const on = favs.includes(siteId);
+        favBtn.textContent = on ? '★ 已收藏' : '☆ 收藏';
+        favBtn.classList.toggle('text-accent', on);
+      };
+      favBtn.onclick = () => {
+        const favs: string[] = JSON.parse(localStorage.getItem('tf-favs') || '[]');
+        const i = favs.indexOf(siteId);
+        if (i >= 0) favs.splice(i, 1);
+        else favs.push(siteId);
+        localStorage.setItem('tf-favs', JSON.stringify(favs));
+        renderFav();
+      };
+      renderFav();
+    }
+
+    const visit = document.getElementById('visit-btn') as HTMLAnchorElement | null;
+    if (visit && visit.dataset.plainUrl && localStorage.getItem('tf-aff') === '0') {
+      visit.href = visit.dataset.plainUrl;
+    }
   </script>
 </BaseLayout>

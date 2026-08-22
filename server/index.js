@@ -16,6 +16,7 @@ const MODELS_FILE = path.join(DATA_DIR, 'models.json');
 const CLICKS_FILE = path.join(DATA_DIR, 'clicks.json');
 const UPTIME_FILE = path.join(DATA_DIR, 'uptime.json');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 // ---- 配置 ----
 const PORT = Number(process.env.PORT || 4321);
@@ -394,6 +395,31 @@ app.post('/api/rebuild', async (c) => {
   } finally {
     building = false;
   }
+});
+
+// ---- 配置（公告/社群/AFF，公开读 + 鉴权写）----
+app.get('/api/config', (c) => c.json(readJson(CONFIG_FILE, {})));
+
+app.put('/api/config', async (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  const cfg = await c.req.json();
+  if (typeof cfg !== 'object' || !cfg) return c.json({ error: '格式错误' }, 400);
+  writeJson(CONFIG_FILE, cfg);
+  return c.json({ ok: true });
+});
+
+// ---- 数据导出备份（鉴权）----
+app.get('/api/export', (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  return c.json({
+    exportedAt: new Date().toISOString(),
+    sites: readJson(SITES_FILE, []),
+    models: readJson(MODELS_FILE, []),
+    config: readJson(CONFIG_FILE, {}),
+    clicks: readJson(CLICKS_FILE, {}),
+    uptime: readJson(UPTIME_FILE, {}),
+    submissions: readJson(SUBMISSIONS_FILE, []),
+  });
 });
 
 // ---- 静态托管 ----

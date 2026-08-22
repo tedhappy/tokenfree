@@ -20,6 +20,8 @@ export interface Site {
   network?: Network;
   /** 兼容工具：claude-code / cursor / codex-cli / cline */
   tools?: string[];
+  /** 体验日志：[{date:'2026-08-22', text:'调价到0.02x'}]，按日期倒序展示 */
+  events?: Array<{ date: string; text: string }>;
   isFeatured: boolean;
   sortOrder: number;
   verifiedAt: string;
@@ -34,6 +36,7 @@ function normalize(s: any): Site {
     tools: [],
     affUrl: '',
     bonus: '',
+    events: [],
     ...s,
   };
 }

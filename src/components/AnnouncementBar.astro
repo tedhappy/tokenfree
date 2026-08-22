@@ -1,0 +1,35 @@
+---
+// 公告条：客户端拉取 /api/config 实时显示，可按条关闭（localStorage 记忆）
+---
+
+<div id="announce-bar" class="hidden"></div>
+
+<script>
+  fetch('/api/config')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => {
+      const bar = document.getElementById('announce-bar');
+      if (!cfg || !cfg.announcements?.length || !bar) return;
+      const items = cfg.announcements.filter((a: any) => localStorage.getItem('tf-ann-off-' + a.id) !== '1');
+      if (!items.length) return;
+      bar.className = 'bg-accent-muted border-b border-accent/20';
+      bar.innerHTML = `
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-3 text-xs">
+          <span class="text-accent shrink-0">📢 公告</span>
+          <div class="flex-1 min-w-0">
+            ${items
+              .map(
+                (a: any) =>
+                  `<p class="text-text-secondary truncate"><span class="text-text-muted mr-1.5">${a.date}</span>${a.text}</p>`
+              )
+              .join('')}
+          </div>
+          <button id="ann-close" class="text-text-muted hover:text-text-primary shrink-0" aria-label="关闭公告">✕</button>
+        </div>`;
+      document.getElementById('ann-close')?.addEventListener('click', () => {
+        items.forEach((a: any) => localStorage.setItem('tf-ann-off-' + a.id, '1'));
+        bar.remove();
+      });
+    })
+    .catch(() => {});
+</script>

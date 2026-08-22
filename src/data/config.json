@@ -1,0 +1,12 @@
+{
+  "announcements": [
+    {
+      "id": "welcome",
+      "date": "2026-08-22",
+      "text": "TokenFree 上线：已收录 71 个中转站，实时监测运行中。欢迎投稿与反馈。"
+    }
+  ],
+  "qq": "",
+  "telegram": "",
+  "affDefaultOn": true
+}

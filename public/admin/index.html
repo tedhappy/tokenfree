@@ -66,6 +66,7 @@ function topbar(active) {
           <button id="nav-subs" style="${active==='subs'?'color:#e8e8ed':''}">投稿</button>
           <button id="nav-uptime" style="${active==='uptime'?'color:#e8e8ed':''}">监测</button>
           <button id="nav-models" style="${active==='models'?'color:#e8e8ed':''}">模型</button>
+          <button id="nav-settings" style="${active==='settings'?'color:#e8e8ed':''}">设置</button>
           <button id="logout">退出</button>
         </div>
       </div>
@@ -78,6 +79,77 @@ function bindTopbar() {
   const s = document.getElementById('nav-subs'); if (s) s.onclick = showSubmissions;
   const u = document.getElementById('nav-uptime'); if (u) u.onclick = showUptime;
   const m = document.getElementById('nav-models'); if (m) m.onclick = showModels;
+  const g = document.getElementById('nav-settings'); if (g) g.onclick = showSettings;
+}
+
+// ---------- 设置（公告/社群）----------
+async function showSettings() {
+  const cfg = await api('/api/config');
+  window._cfg = cfg;
+  document.getElementById('app').innerHTML = `
+    ${topbar('settings')}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">站点设置</h2>
+        <button id="export-btn" class="btn btn-ghost">导出备份</button>
+      </div>
+      <div class="card">
+        <div class="form-row">
+          <label class="field-label">公告列表（每行一条，格式：日期 | 内容；删除行即删除公告。前台实时生效）</label>
+          <textarea id="cfg-ann" class="inp" rows="5">${(cfg.announcements || []).map(a => `${a.date} | ${a.text}`).join('\n')}</textarea>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="form-row">
+            <label class="field-label">QQ 群链接 key（qm.qq.com 链接里的 k= 参数）</label>
+            <input id="cfg-qq" class="inp" value="${esc(cfg.qq || '')}" placeholder="如 h7ImuW5uve" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">Telegram 链接</label>
+            <input id="cfg-tg" class="inp" value="${esc(cfg.telegram || '')}" placeholder="https://t.me/…" />
+          </div>
+        </div>
+        <p class="hint">公告实时生效；社群链接保存后需「重建前台」。</p>
+        <div class="form-actions">
+          <button id="cfg-save" class="btn btn-primary">保存</button>
+        </div>
+      </div>
+    </main>`;
+
+  bindTopbar();
+  document.getElementById('export-btn').onclick = exportData;
+  document.getElementById('cfg-save').onclick = async () => {
+    const annText = document.getElementById('cfg-ann').value.trim();
+    const announcements = annText
+      ? annText.split('\n').map((line, i) => {
+          const [date, ...rest] = line.split('|');
+          return {
+            id: 'ann-' + i + '-' + Date.now(),
+            date: (date || '').trim() || new Date().toISOString().slice(0, 10),
+            text: rest.join('|').trim(),
+          };
+        }).filter(a => a.text)
+      : [];
+    const cfg = {
+      announcements,
+      qq: document.getElementById('cfg-qq').value.trim(),
+      telegram: document.getElementById('cfg-tg').value.trim(),
+      affDefaultOn: true,
+    };
+    await api('/api/config', { method: 'PUT', body: JSON.stringify(cfg) });
+    alert('已保存');
+    showSettings();
+  };
+}
+
+// ---------- 导出备份 ----------
+async function exportData() {
+  const data = await api('/api/export');
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tokenfree-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // ---------- 仪表盘 ----------
@@ -339,6 +411,10 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
           <label class="field-label">详细描述</label>
           <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
         </div>
+        <div class="form-row">
+          <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x。详情页按时间线展示）</label>
+          <textarea id="f-events" class="inp" rows="3" placeholder="2026-08-22 | 降价活动，Claude 0.01x">${(site.events || []).map(e => `${e.date} | ${e.text}`).join('\n')}</textarea>
+        </div>
         <div class="form-grid">
           <div class="form-row">
             <label class="field-label">核验日期</label>
@@ -377,6 +453,10 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
       tags: document.getElementById('f-tags').value.split(/[,，]/).map(t => t.trim()).filter(Boolean),
       summary: document.getElementById('f-summary').value.trim(),
       description: document.getElementById('f-desc').value.trim(),
+      events: document.getElementById('f-events').value.split('\n').map(l => {
+        const [date, ...rest] = l.split('|');
+        return { date: (date || '').trim(), text: rest.join('|').trim() };
+      }).filter(e => e.date && e.text),
       verifiedAt: document.getElementById('f-verified').value,
       sortOrder: Number(document.getElementById('f-sort').value) || 99,
       isFeatured: document.getElementById('f-featured').checked,
