@@ -43,10 +43,10 @@ const ogImage = new URL('/og.png', Astro.site ?? 'https://tokenfree.example.com'
       <slot />
     </div>
     <script>
-      // 主题初始化：默认暗色，localStorage 记忆切换（在渲染前执行避免闪烁）
+      // 主题初始化：默认浅色，localStorage 记忆切换（在渲染前执行避免闪烁）
+      // 兼容旧存储值：旧方案存的 'dark'/'light' 与新方案语义一致
       (function () {
-        const saved = localStorage.getItem('tf-theme');
-        if (saved === 'light') document.documentElement.classList.add('light');
+        if (localStorage.getItem('tf-theme') === 'dark') document.documentElement.classList.add('dark');
       })();
       // 轻量 i18n：HTML 带 data-i18n 属性的元素按字典替换文本
       (function () {

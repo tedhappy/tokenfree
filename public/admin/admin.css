@@ -1,7 +1,21 @@
-/* TokenFree 管理后台 - 自包含样式，无外部依赖 */
+/* TokenFree 管理后台 - 自包含样式，无外部依赖；默认浅色，html.dark 暗色（跟随前台偏好） */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  --bg: #f6f6f9;
+  --bg2: #ffffff;
+  --bg3: #eeeff3;
+  --accent: #6a4ce6;
+  --accent-h: #5b3fd1;
+  --border: rgba(0, 0, 0, 0.09);
+  --border-h: rgba(0, 0, 0, 0.18);
+  --t1: #1b1b26;
+  --t2: #55556a;
+  --t3: #8a8a9c;
+  --danger: #dc2626;
+}
+
+html.dark {
   --bg: #0a0a0f;
   --bg2: #12121a;
   --bg3: #1a1a25;
@@ -31,7 +45,7 @@ button { font: inherit; }
 /* ---- 布局 ---- */
 .topbar {
   position: sticky; top: 0; z-index: 10;
-  background: rgba(10, 10, 15, 0.85);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
@@ -80,7 +94,7 @@ thead th {
 }
 tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255, 255, 255, 0.015); }
+tbody tr:hover { background: rgba(127, 127, 127, 0.05); }
 .cell-strong { font-weight: 500; }
 .cell-dim { color: var(--t2); }
 .cell-actions { text-align: right; }
