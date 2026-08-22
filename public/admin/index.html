@@ -60,17 +60,19 @@ function showLogin(msg = '') {
 
 // ---------- 顶栏 ----------
 function topbar(active) {
+  const btn = (id, label, key) => `<button id="nav-${id}" class="${active === key ? 'active' : ''}">${label}</button>`;
   return `
     <header class="topbar">
       <div class="topbar-inner">
         <span class="brand">TokenFree 管理</span>
         <div class="topbar-actions">
           <a href="/" target="_blank">前台</a>
-          <button id="nav-dash" class="${active==='dash'?'':''}" style="${active==='dash'?'color:#e8e8ed':''}">站点</button>
-          <button id="nav-subs" style="${active==='subs'?'color:#e8e8ed':''}">投稿</button>
-          <button id="nav-uptime" style="${active==='uptime'?'color:#e8e8ed':''}">监测</button>
-          <button id="nav-models" style="${active==='models'?'color:#e8e8ed':''}">模型</button>
-          <button id="nav-settings" style="${active==='settings'?'color:#e8e8ed':''}">设置</button>
+          ${btn('dash', '站点', 'dash')}
+          ${btn('subs', '投稿', 'subs')}
+          ${btn('uptime', '监测', 'uptime')}
+          ${btn('models', '模型', 'models')}
+          ${btn('ann', '公告', 'ann')}
+          ${btn('settings', '设置', 'settings')}
           <button id="logout">退出</button>
         </div>
       </div>
@@ -79,14 +81,99 @@ function topbar(active) {
 
 function bindTopbar() {
   document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
-  const d = document.getElementById('nav-dash'); if (d) d.onclick = showDashboard;
-  const s = document.getElementById('nav-subs'); if (s) s.onclick = showSubmissions;
-  const u = document.getElementById('nav-uptime'); if (u) u.onclick = showUptime;
-  const m = document.getElementById('nav-models'); if (m) m.onclick = showModels;
-  const g = document.getElementById('nav-settings'); if (g) g.onclick = showSettings;
+  const map = { 'nav-dash': showDashboard, 'nav-subs': showSubmissions, 'nav-uptime': showUptime, 'nav-models': showModels, 'nav-ann': showAnnouncements, 'nav-settings': showSettings };
+  for (const [id, fn] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el) el.onclick = fn;
+  }
 }
 
-// ---------- 设置（公告/社群）----------
+// ---------- 公告管理 ----------
+function annHashId(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return 'ann-' + h.toString(36);
+}
+
+async function showAnnouncements(editingId = null) {
+  const cfg = await api('/api/config');
+  const list = cfg.announcements || [];
+  window._cfg = cfg;
+  const editing = editingId ? list.find((a) => a.id === editingId) : null;
+  document.getElementById('app').innerHTML = `
+    ${topbar('ann')}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">公告管理（${list.length}）</h2>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <p style="font-size:13px;font-weight:500;margin-bottom:12px">${editing ? '✏️ 编辑公告' : '📢 发布新公告'}</p>
+        <form id="ann-form">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field-label">日期</label>
+              <input id="a-date" class="inp" type="date" value="${esc(editing ? editing.date : new Date().toISOString().slice(0, 10))}" required />
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:14px">
+            <label class="field-label">内容（前台弹窗 + 顶部公告条实时展示，无需重建）</label>
+            <textarea id="a-text" class="inp" rows="3" required maxlength="200">${esc(editing ? editing.text : '')}</textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">${editing ? '保存修改' : '发布'}</button>
+            ${editing ? '<button type="button" id="a-cancel" class="btn btn-ghost">取消编辑</button>' : ''}
+          </div>
+        </form>
+      </div>
+      ${list.length === 0 ? '<p class="hint">暂无公告</p>' : `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>内容</th><th>状态</th><th></th></tr></thead>
+          <tbody>
+            ${list.map((a) => `
+              <tr>
+                <td class="cell-dim" style="white-space:nowrap">${esc(a.date)}</td>
+                <td style="white-space:normal;min-width:240px">${esc(a.text)}</td>
+                <td style="color:#22c555">已发布</td>
+                <td class="cell-actions">
+                  <button class="btn btn-ghost" data-edit-ann="${esc(a.id)}">编辑</button>
+                  <button class="btn btn-danger" data-del-ann="${esc(a.id)}">删除</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`}
+      <p class="hint" style="margin-top:12px">提示：修改或新发布的内容会立即推送给用户（弹窗只对未读用户显示一次）。</p>
+    </main>`;
+
+  bindTopbar();
+  const cancelBtn = document.getElementById('a-cancel');
+  if (cancelBtn) cancelBtn.onclick = () => showAnnouncements();
+  document.getElementById('ann-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const date = document.getElementById('a-date').value;
+    const text = document.getElementById('a-text').value.trim();
+    if (!text) return;
+    const anns = [...(window._cfg.announcements || [])];
+    if (editing) {
+      const i = anns.findIndex((a) => a.id === editing.id);
+      anns[i] = { ...anns[i], date, text, id: annHashId(date + '|' + text) };
+    } else {
+      anns.unshift({ id: annHashId(date + '|' + text), date, text });
+    }
+    await api('/api/config', { method: 'PUT', body: JSON.stringify({ ...window._cfg, announcements: anns }) });
+    showAnnouncements();
+  };
+  document.querySelectorAll('[data-edit-ann]').forEach((b) => (b.onclick = () => showAnnouncements(b.dataset.editAnn)));
+  document.querySelectorAll('[data-del-ann]').forEach((b) => (b.onclick = async () => {
+    if (!confirm('确定删除该公告？')) return;
+    const anns = (window._cfg.announcements || []).filter((a) => a.id !== b.dataset.delAnn);
+    await api('/api/config', { method: 'PUT', body: JSON.stringify({ ...window._cfg, announcements: anns }) });
+    showAnnouncements();
+  }));
+}
+
+// ---------- 设置（社群）----------
 async function showSettings() {
   const cfg = await api('/api/config');
   window._cfg = cfg;
@@ -98,11 +185,7 @@ async function showSettings() {
         <button id="export-btn" class="btn btn-ghost">导出备份</button>
       </div>
       <div class="card">
-        <div class="form-row">
-          <label class="field-label">公告列表（每行一条，格式：日期 | 内容；删除行即删除公告。前台实时生效）</label>
-          <textarea id="cfg-ann" class="inp" rows="5">${(cfg.announcements || []).map(a => `${a.date} | ${a.text}`).join('\n')}</textarea>
-        </div>
-        <div class="form-grid" style="margin-top:14px">
+        <div class="form-grid">
           <div class="form-row">
             <label class="field-label">QQ 群链接 key（qm.qq.com 链接里的 k= 参数）</label>
             <input id="cfg-qq" class="inp" value="${esc(cfg.qq || '')}" placeholder="如 h7ImuW5uve" />
@@ -112,7 +195,7 @@ async function showSettings() {
             <input id="cfg-tg" class="inp" value="${esc(cfg.telegram || '')}" placeholder="https://t.me/…" />
           </div>
         </div>
-        <p class="hint">公告实时生效；社群链接保存后需「重建前台」。</p>
+        <p class="hint">社群链接保存后需「重建前台」才会显示；公告请到「公告」页管理（实时生效）。</p>
         <div class="form-actions">
           <button id="cfg-save" class="btn btn-primary">保存</button>
         </div>
@@ -122,19 +205,8 @@ async function showSettings() {
   bindTopbar();
   document.getElementById('export-btn').onclick = exportData;
   document.getElementById('cfg-save').onclick = async () => {
-    const annText = document.getElementById('cfg-ann').value.trim();
-    // 公告 id = 内容哈希：同一内容重复保存不换 id（避免用户端重复弹窗），改内容即视为新公告
-    const hashId = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return 'ann-' + h.toString(36); };
-    const announcements = annText
-      ? annText.split('\n').map((line, i) => {
-          const [date, ...rest] = line.split('|');
-          const d = (date || '').trim() || new Date().toISOString().slice(0, 10);
-          const text = rest.join('|').trim();
-          return text ? { id: hashId(d + '|' + text), date: d, text } : null;
-        }).filter(Boolean)
-      : [];
     const cfg = {
-      announcements,
+      announcements: window._cfg.announcements || [],
       qq: document.getElementById('cfg-qq').value.trim(),
       telegram: document.getElementById('cfg-tg').value.trim(),
     };

@@ -7,6 +7,7 @@
   --bg3: #eeeff3;
   --accent: #6a4ce6;
   --accent-h: #5b3fd1;
+  --accent-muted: rgba(106, 76, 230, 0.1);
   --border: rgba(0, 0, 0, 0.09);
   --border-h: rgba(0, 0, 0, 0.18);
   --t1: #1b1b26;
@@ -21,6 +22,7 @@ html.dark {
   --bg3: #1a1a25;
   --accent: #7c5cfc;
   --accent-h: #6a4ce6;
+  --accent-muted: rgba(124, 92, 252, 0.12);
   --border: rgba(255, 255, 255, 0.06);
   --border-h: rgba(255, 255, 255, 0.14);
   --t1: #e8e8ed;
@@ -54,11 +56,19 @@ button { font: inherit; }
   height: 56px; display: flex; align-items: center; justify-content: space-between;
 }
 .brand { font-weight: 600; font-size: 14px; }
-.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.topbar-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .topbar-actions a, .topbar-actions button {
   background: none; border: none; color: var(--t2); cursor: pointer; font-size: 13px;
+  padding: 5px 10px; border-radius: 6px; transition: all 0.15s;
 }
-.topbar-actions a:hover, .topbar-actions button:hover { color: var(--t1); }
+.topbar-actions a:hover, .topbar-actions button:hover { color: var(--t1); background: var(--bg3); }
+/* 选中态：主题色文字 + 浅色胶囊底，亮暗主题下都清晰 */
+.topbar-actions button.active {
+  color: var(--accent);
+  background: var(--accent-muted);
+  font-weight: 500;
+}
+.topbar-actions button#logout:hover { color: var(--danger); }
 
 .container { max-width: 1024px; margin: 0 auto; padding: 24px 16px 48px; }
 .container-sm { max-width: 640px; }
