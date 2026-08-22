@@ -215,6 +215,9 @@ app.post('/api/logout', (c) => {
 });
 
 // ---- 站点 CRUD ----
+// 避雷榜已下线，旧链接 301 回首页
+app.get('/blacklist', (c) => c.redirect('/', 301));
+
 app.get('/api/sites', (c) => {
   if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json(readJson(SITES_FILE, []));
@@ -284,6 +287,26 @@ app.post('/api/click', async (c) => {
   clicks[siteId] = (clicks[siteId] || 0) + 1;
   writeJson(CLICKS_FILE, clicks);
   return c.json({ ok: true });
+});
+
+// 热度（公开读）：各站点累计点击数
+app.get('/api/hot', (c) => c.json(readJson(CLICKS_FILE, {})));
+
+// ---- 外链跳转：服务端直接 302（无中间页），同步计点击 ----
+app.get('/go', async (c) => {
+  const raw = c.req.query('url') || '';
+  const siteId = c.req.query('id') || '';
+  let target = '';
+  try { target = decodeURIComponent(raw); } catch { target = raw; }
+  if (!/^https?:\/\//i.test(target)) return c.redirect('/', 302);
+  if (siteId && siteId.length <= 64) {
+    try {
+      const clicks = readJson(CLICKS_FILE, {});
+      clicks[siteId] = (clicks[siteId] || 0) + 1;
+      writeJson(CLICKS_FILE, clicks);
+    } catch {}
+  }
+  return c.redirect(target, 302);
 });
 
 // ---- 监测（公开读 + 鉴权触发）----
@@ -434,6 +457,11 @@ app.get('/api/export', (c) => {
 });
 
 // ---- 静态托管 ----
+// favicon 每次更新后浏览器可能长期使用本地缓存，禁止缓存以确保换图标后立即生效
+app.use('/favicon.svg', async (c, next) => {
+  await next();
+  c.res.headers.set('Cache-Control', 'no-cache, must-revalidate');
+});
 app.use('/admin/*', serveStatic({ root: './public' }));
 app.use('/*', serveStatic({ root: './dist' }));
 

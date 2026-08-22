@@ -10,6 +10,7 @@ import Footer from '../components/Footer.astro';
     <div class="max-w-xl mx-auto px-4 sm:px-6 py-12">
       <h1 class="text-2xl font-bold mb-2" data-i18n="submit.title">投稿站点</h1>
       <p class="text-sm text-text-secondary mb-8" data-i18n="submit.sub">分享你发现的中转站，投稿后由编辑审核收录。</p>
+      <p id="feedback-hint" class="hidden text-xs text-status-unstable bg-status-unstable/10 border border-status-unstable/20 rounded-lg px-3 py-2 mb-6" data-i18n="submit.feedbackHint">反馈模式：提交后编辑会尽快核实该站的价格/可用性变化。</p>
 
       <form id="submit-form" class="card p-6 space-y-4" style="background: var(--c-bg2); border: 1px solid var(--c-border); border-radius: 12px;">
         <!-- 蜜罐：人类不可见，机器人会填 -->
@@ -38,6 +39,17 @@ import Footer from '../components/Footer.astro';
   </main>
   <Footer />
   <script>
+    // 反馈预填：/submit?site=id&name=名称（来自详情页"报告问题"）
+    const prefill = new URLSearchParams(location.search);
+    if (prefill.get('site')) {
+      const hint = document.getElementById('feedback-hint');
+      hint?.classList.remove('hidden');
+      const nameEl = document.getElementById('s-name') as HTMLInputElement | null;
+      const summaryEl = document.getElementById('s-summary') as HTMLTextAreaElement | null;
+      if (nameEl && !nameEl.value) nameEl.value = prefill.get('name') || prefill.get('site') || '';
+      if (summaryEl && !summaryEl.value) summaryEl.value = '【反馈】';
+    }
+
     const form = document.getElementById('submit-form') as HTMLFormElement;
     const msg = document.getElementById('s-msg')!;
     const btn = document.getElementById('s-btn') as HTMLButtonElement;

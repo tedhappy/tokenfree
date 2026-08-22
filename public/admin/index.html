@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TokenFree 管理</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
   <link rel="stylesheet" href="/admin/admin.css" />
   <script>
     // 跟随前台主题偏好：默认浅色
@@ -458,6 +458,30 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
             <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
           </div>
         </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="form-row">
+            <label class="field-label">邀请码 / 兑换口令（前台一键复制，可留空）</label>
+            <input id="f-invite" class="inp" value="${esc(site.inviteCode || '')}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">充值汇率（每 1 刀额度所需人民币，如 7.5；用于折算实际倍率）</label>
+            <input id="f-toprate" class="inp" type="number" step="0.01" min="0" value="${site.topupRate ?? ''}" />
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="form-row">
+            <label class="field-label">获奖理由（榜单缎带，如：最佳白嫖 / 最低价 / 最稳老站）</label>
+            <input id="f-award" class="inp" value="${esc(site.award || '')}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">API Base URL（如 https://api.example.com/v1，详情页展示一键复制）</label>
+            <input id="f-apibase" class="inp" value="${esc(site.apiBase || '')}" placeholder="https://…/v1" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          <label class="field-label">英文简介（可选，EN 模式下替换中文摘要）</label>
+          <input id="f-summary-en" class="inp" value="${esc(site.summaryEn || '')}" />
+        </div>
         <div class="form-row" style="margin-top:14px">
           <label class="field-label">支持模型</label>
           <div class="checkbox-row">
@@ -485,6 +509,10 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
         <div class="form-row">
           <label class="field-label">详细描述</label>
           <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          <label class="field-label">英文详细描述（可选，EN 模式下替换中文描述）</label>
+          <textarea id="f-desc-en" class="inp" rows="3">${esc(site.descriptionEn || '')}</textarea>
         </div>
         <div class="form-row">
           <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x。详情页按时间线展示）</label>
@@ -523,11 +551,17 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
       status: document.getElementById('f-status').value,
       network: document.getElementById('f-network').value,
       bonus: document.getElementById('f-bonus').value.trim(),
+      inviteCode: document.getElementById('f-invite').value.trim(),
+      topupRate: document.getElementById('f-toprate').value === '' ? null : Number(document.getElementById('f-toprate').value),
+      award: document.getElementById('f-award').value.trim(),
+      apiBase: document.getElementById('f-apibase').value.trim(),
+      summaryEn: document.getElementById('f-summary-en').value.trim(),
       models: [...document.querySelectorAll('input[name=models]:checked')].map(i => i.value),
       tools: [...document.querySelectorAll('input[name=tools]:checked')].map(i => i.value),
       tags: document.getElementById('f-tags').value.split(/[,，]/).map(t => t.trim()).filter(Boolean),
       summary: document.getElementById('f-summary').value.trim(),
       description: document.getElementById('f-desc').value.trim(),
+      descriptionEn: document.getElementById('f-desc-en').value.trim(),
       events: document.getElementById('f-events').value.split('\n').map(l => {
         const [date, ...rest] = l.split('|');
         return { date: (date || '').trim(), text: rest.join('|').trim() };

@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllSites, goUrl, TOOLS } from '../../utils/sites';
+import { getAllSites, goUrl, monthsSince, TOOLS } from '../../utils/sites';
 import modelsJson from '../../data/models.json';
 
 export async function getStaticPaths() {
@@ -16,6 +16,48 @@ const models = modelsJson as Array<{ id: string; name: string; color: string }>;
 const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], offline: ['已失效', '#ef4444'] }[site.status];
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
 const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
+const months = monthsSince(site.createdAt);
+const curlExample = site.apiBase ? `curl ${site.apiBase}/chat/completions \\
+  -H "Authorization: Bearer sk-你的key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'` : '';
+// 按站点工具兼容性生成客户端配置示例（key 统一占位）
+const TOOL_SNIPPETS: Record<string, { title: string; titleEn: string; code: string }> = {
+  'claude-code': {
+    title: 'Claude Code',
+    titleEn: 'Claude Code',
+    code: `export ANTHROPIC_BASE_URL=${site.apiBase?.replace(/\/v1\/?$/, '') ?? ''}
+export ANTHROPIC_AUTH_TOKEN=sk-你的key`,
+  },
+  cursor: {
+    title: 'Cursor',
+    titleEn: 'Cursor',
+    code: `# Settings → Models → OpenAI API Key
+# OpenAI Base URL 填：
+${site.apiBase ?? ''}
+# API Key 填站点注册后生成的 sk- key`,
+  },
+  'codex-cli': {
+    title: 'Codex CLI',
+    titleEn: 'Codex CLI',
+    code: `# ~/.codex/config.toml
+model_provider = "custom"
+[model_provider.custom]
+base_url = "${site.apiBase ?? ''}"
+wire_api = "chat"`,
+  },
+  cline: {
+    title: 'Cline',
+    titleEn: 'Cline',
+    code: `# VSCode Cline 设置 → API Provider (OpenAI Compatible)
+# Base URL：
+${site.apiBase ?? ''}
+# API Key：站点注册后生成的 sk- key`,
+  },
+};
+const toolSnippets = (site.tools ?? [])
+  .map((t) => TOOL_SNIPPETS[t])
+  .filter((s) => s && site.apiBase);
 ---
 
 <BaseLayout title={`${site.name} - 倍率/模型/评价 | TokenFree`} description={site.summary}>
@@ -30,7 +72,7 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
             <h1 class="text-2xl font-bold">{site.name}</h1>
             <span class="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border" style={`border-color: ${st![1]}40; color: ${st![1]}`}>
               <span class="w-1.5 h-1.5 rounded-full" style={`background: ${st![1]}`}></span>
-              st![0]
+              {st![0]}
             </span>
             {netLabel && (
               <span class={`text-xs px-2 py-0.5 rounded-full border ${site.network === 'direct' ? 'border-status-stable/30 text-status-stable' : 'border-status-unstable/30 text-status-unstable'}`}>
@@ -39,6 +81,12 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
             )}
           </div>
           <p class="text-sm text-text-muted mt-2 font-mono">{host}</p>
+          {site.award && (
+            <span class="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white">🏆 {site.award}</span>
+          )}
+          {months > 0 && (
+            <span class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-bg-secondary border border-border text-text-secondary">📅 <span data-i18n="detail.age">已收录</span> {months} <span data-i18n="detail.ageUnit">个月</span></span>
+          )}
         </div>
         {site.multiplier !== null && (
           <div class="text-center px-4 py-2 rounded-xl bg-bg-secondary border border-border">
@@ -59,6 +107,9 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
         <button id="fav-btn" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
           <span data-i18n="detail.fav">☆ 收藏</span>
         </button>
+        <a href={`/submit?site=${encodeURIComponent(site.id)}&name=${encodeURIComponent(site.name)}`} class="text-sm px-4 py-2 rounded-lg border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors" title="反馈价格变动、失效等问题">
+          <span data-i18n="detail.report">⚠ 报告问题</span>
+        </a>
       </div>
 
       <!-- 实时状态（客户端拉取监测 API） -->
@@ -69,18 +120,47 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
       <div class="mt-8 space-y-6">
         <div>
           <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.intro">简介</h2>
-          <p class="text-sm text-text-secondary leading-relaxed">{site.summary}</p>
+          {site.summaryEn ? (
+            <p class="text-sm text-text-secondary leading-relaxed">
+              <span data-lang="zh">{site.summary}</span><span data-lang="en">{site.summaryEn}</span>
+            </p>
+          ) : (
+            <p class="text-sm text-text-secondary leading-relaxed">{site.summary}</p>
+          )}
         </div>
         {site.description && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.more">详细信息</h2>
-            <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
+            {site.descriptionEn ? (
+              <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+                <span data-lang="zh">{site.description}</span><span data-lang="en">{site.descriptionEn}</span>
+              </p>
+            ) : (
+              <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
+            )}
           </div>
         )}
         {site.bonus && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.bonus">注册赠送</h2>
             <p class="text-sm text-status-stable">🎁 {site.bonus}</p>
+          </div>
+        )}
+        {site.inviteCode && (
+          <div>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.invite">邀请码 / 口令</h2>
+            <button id="invite-btn" class="inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors">
+              🎫 {site.inviteCode} · <span data-i18n="detail.copy">复制</span>
+            </button>
+          </div>
+        )}
+        {site.topupRate && site.multiplier !== null && (
+          <div>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.real">实际倍率</h2>
+            <p class="text-sm text-text-secondary">
+              <span class="font-mono font-semibold">{(site.multiplier * site.topupRate / 7.2).toFixed(2)}x</span>
+              <span class="text-xs text-text-muted">（{site.multiplier}x × {site.topupRate} ÷ 7.2）</span>
+            </p>
           </div>
         )}
         {site.models.length > 0 && (
@@ -103,6 +183,26 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
                 <span class="text-xs px-2.5 py-1 rounded-full border border-border text-text-secondary">{TOOLS.find((x) => x.id === t)?.name || t}</span>
               ))}
             </div>
+          </div>
+        )}
+        {site.apiBase && curlExample && (
+          <div>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.quickstart">快速开始</h2>
+            <div class="mb-2">
+              <button id="apibase-btn" class="inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors">
+                {site.apiBase} · <span data-i18n="detail.copy">复制</span>
+              </button>
+            </div>
+            <details class="group border border-border rounded-xl bg-bg-secondary">
+              <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors" data-i18n="detail.curlExample">curl 调用示例</summary>
+              <pre class="px-4 pb-3 text-[11px] leading-relaxed text-text-secondary overflow-x-auto"><code>{curlExample}</code></pre>
+            </details>
+            {toolSnippets.map((s) => (
+              <details class="mt-2 border border-border rounded-xl bg-bg-secondary">
+                <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors">{s.title} <span class="text-text-muted">配置示例</span></summary>
+                <pre class="px-4 pb-3 text-[11px] leading-relaxed text-text-secondary overflow-x-auto"><code>{s.code}</code></pre>
+              </details>
+            ))}
           </div>
         )}
         {site.tags.length > 0 && (
@@ -128,8 +228,8 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
           </div>
         )}
         <div class="grid grid-cols-2 gap-3 text-xs text-text-muted border-t border-border pt-4">
-          <p> data-i18n="detail.verified">核验日期：{site.verifiedAt}</p>
-          <p> data-i18n="detail.updated">更新时间：{site.updatedAt}</p>
+          <p><span data-i18n="detail.verified">核验日期</span>：{site.verifiedAt}</p>
+          <p><span data-i18n="detail.updated">更新时间</span>：{site.updatedAt}</p>
         </div>
       </div>
     </div>
@@ -157,6 +257,34 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
         const el = document.getElementById('live-value');
         if (el) el.textContent = '暂无监测数据';
       });
+
+    const inviteBtn = document.getElementById('invite-btn');
+    if (inviteBtn) {
+      inviteBtn.onclick = () => {
+        navigator.clipboard?.writeText(inviteBtn.textContent?.replace(/^🎫\s*/, '').split('·')[0].trim() || '').then(() => {
+          const label = inviteBtn.querySelector('[data-i18n]');
+          if (label) {
+            const orig = label.textContent;
+            label.textContent = localStorage.getItem('tf-lang') === 'en' ? 'Copied ✓' : '已复制 ✓';
+            setTimeout(() => (label.textContent = orig), 1500);
+          }
+        }).catch(() => {});
+      };
+    }
+
+    const apibaseBtn = document.getElementById('apibase-btn');
+    if (apibaseBtn) {
+      apibaseBtn.onclick = () => {
+        navigator.clipboard?.writeText(apibaseBtn.textContent?.split('·')[0].trim() || '').then(() => {
+          const label = apibaseBtn.querySelector('[data-i18n]');
+          if (label) {
+            const orig = label.textContent;
+            label.textContent = localStorage.getItem('tf-lang') === 'en' ? 'Copied ✓' : '已复制 ✓';
+            setTimeout(() => (label.textContent = orig), 1500);
+          }
+        }).catch(() => {});
+      };
+    }
 
     const favBtn = document.getElementById('fav-btn') as HTMLButtonElement | null;
     if (favBtn) {

@@ -6,32 +6,14 @@ import SiteList from '../components/SiteList';
 import Footer from '../components/Footer.astro';
 import AnnouncementBar from '../components/AnnouncementBar.astro';
 import AnnounceModal from '../components/AnnounceModal.astro';
-import { getFilteredSites, goUrl } from '../utils/sites';
+import { getFilteredSites } from '../utils/sites';
 import modelsJson from '../data/models.json';
 
 const allSites = await getFilteredSites();
 const featuredSites = allSites.filter((s) => s.isFeatured && s.url);
-const latestSites = [...allSites]
-  .filter((s) => s.url)
-  .sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
-  .slice(0, 6);
 const models = modelsJson as any;
 const siteCount = allSites.length;
 const stableCount = allSites.filter((s) => s.status === 'stable').length;
-
-// 头像配色（与 SiteList 一致）
-const AVATAR_COLORS = ['#7c5cfc', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ec4899', '#8b5cf6'];
-function avatarColor(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-function multColor(m: number | null): string {
-  if (m === null) return 'var(--c-t2)';
-  if (m <= 0.1) return '#22c55e';
-  if (m <= 0.5) return '#eab308';
-  return '#f97316';
-}
 ---
 
 <BaseLayout>
@@ -40,88 +22,13 @@ function multColor(m: number | null): string {
     <AnnouncementBar />
     <Hero siteCount={siteCount} stableCount={stableCount} />
     <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
-      {featuredSites.length > 0 && (
-        <section class="mb-12">
-          <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
-            <span class="w-1 h-4 bg-accent rounded-full"></span>
-            <span data-lang="zh">编辑精选</span><span data-lang="en">Featured</span>
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredSites.map((site) => {
-              const ac = avatarColor(site.name);
-              return (
-                <div class="group p-5 rounded-2xl bg-bg-secondary border border-border hover:border-accent/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20">
-                  <div class="flex items-start gap-3 mb-3">
-                    <span class="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-sm font-semibold" style={`background: ${ac}1f; color: ${ac}`} aria-hidden="true">
-                      {site.name.trim().charAt(0).toUpperCase()}
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <a href={`/site/${site.id}`} class="font-medium text-text-primary group-hover:text-accent transition-colors block truncate">
-                        {site.name} <span class="text-accent text-xs">⭐</span>
-                      </a>
-                      {site.bonus && <p class="text-xs text-status-stable/90 truncate mt-0.5">🎁 {site.bonus}</p>}
-                    </div>
-                    {site.multiplier !== null && (
-                      <span class="shrink-0 text-xs font-mono font-semibold px-2 py-1 rounded-full" style={`color: ${multColor(site.multiplier)}; background: ${multColor(site.multiplier)}14`}>
-                        {site.multiplier}x
-                      </span>
-                    )}
-                  </div>
-                  <p class="text-sm text-text-secondary line-clamp-2 leading-relaxed mb-3.5 min-h-[2.5rem]">{site.summary}</p>
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="flex flex-wrap gap-1.5 min-w-0">
-                      {site.models.slice(0, 3).map((mid) => {
-                        const model = models.find((mm: any) => mm.id === mid);
-                        if (!model) return null;
-                        return (
-                          <span class="text-xs px-2 py-0.5 rounded-md" style={`color: ${model.color}; background: ${model.color}12`}>
-                            {model.name}
-                          </span>
-                        );
-                      })}
-                    </div>
-                    <a
-                      href={goUrl(site)}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      class="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors ml-2"
-                    >访问 →</a>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-      {latestSites.length > 0 && (
-        <section class="mb-12">
-          <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
-            <span class="w-1 h-4 bg-status-stable rounded-full"></span>
-            <span data-lang="zh">最新收录</span><span data-lang="en">Latest</span>
-          </h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {latestSites.map((site) => {
-              const ac = avatarColor(site.name);
-              return (
-                <a href={`/site/${site.id}`} class="group p-4 rounded-xl bg-bg-secondary border border-border hover:border-border-hover transition-all duration-200 hover:-translate-y-0.5 text-center">
-                  <span class="w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center text-base font-semibold" style={`background: ${ac}1f; color: ${ac}`} aria-hidden="true">
-                    {site.name.trim().charAt(0).toUpperCase()}
-                  </span>
-                  <p class="text-xs font-medium text-text-primary group-hover:text-accent transition-colors truncate">{site.name}</p>
-                  {site.multiplier !== null && (
-                    <p class="text-xs font-mono mt-1" style={`color: ${multColor(site.multiplier)}`}>{site.multiplier}x</p>
-                  )}
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      )}
       <section>
-        <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
-          <span class="w-1 h-4 bg-text-muted rounded-full"></span>
+        <h2 class="text-lg font-medium text-text-primary mb-1 flex items-center gap-2">
+          <span class="w-1 h-4 bg-accent rounded-full"></span>
           <span data-lang="zh">全部站点</span><span data-lang="en">All Sites</span>
         </h2>
+        <p class="text-xs text-text-muted mb-4" data-lang="zh">🏆 获奖理由由编辑实测评定，默认榜单序即编辑推荐排名；可用筛选和排序快速定位</p>
+        <p class="text-xs text-text-muted mb-4" data-lang="en">🏆 Awards are editor-tested; the default ranking is our recommendation — filter &amp; sort to narrow down</p>
         <SiteList client:load initialSites={allSites} models={models} />
       </section>
     </div>

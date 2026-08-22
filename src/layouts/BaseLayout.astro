@@ -6,15 +6,12 @@ interface Props {
   description?: string;
 }
 const {
-  title = 'TokenFree - AI Token 中转站导航',
-  description = '收集 AI Token 公益中转站，帮助更多人找到可用、稳定、低门槛的 AI 服务入口。',
+  title = 'TokenFree - AI Token 中转站精选榜',
+  description = '编辑实测筛选的 AI Token 中转站精选榜：免费额度、低价倍率、实时监测，帮你快速找到可用、稳定的 AI 服务入口。',
 } = Astro.props;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://www.tokenfree.wiki').href;
-// canonical：统一域名避免重复内容（/go 带 query 参数不设）
-const canonical =
-  Astro.url.pathname === '/go/'
-    ? null
-    : new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfree.wiki').href;
+// canonical：统一域名避免重复内容
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfree.wiki').href;
 ---
 
 <html lang="zh-CN">
@@ -29,7 +26,7 @@ const canonical =
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
     {canonical && <link rel="canonical" href={canonical} />}
     <script is:inline src="/js/i18n.js"></script>
     <script is:inline>

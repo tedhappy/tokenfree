@@ -19,7 +19,9 @@
     "sortOrder": 1,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "活动价天花板",
+    "summaryEn": "New relay with frequent 0.001x events; join their group for alerts"
   },
   {
     "id": "hubway",
@@ -43,30 +45,16 @@
     "sortOrder": 2,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "云舟api",
-    "name": "云舟API",
-    "url": "https://cli.999554.xyz/register",
-    "multiplier": 0.05,
-    "bonus": "",
-    "models": [
-      "grok",
-      "deepseek"
-    ],
-    "tags": [
-      "邀请",
-      "稳定"
-    ],
-    "summary": "Grok-4.5 免费用，DeepSeek V4 flash 长期免费（公益分组）",
-    "description": "【Grok-4.5免费用！！！】DeepSeek V4 flash长期免费，使用公益分组。其他付费使用，但codex经常是0.05倍率。站长人很好，调用也比较稳定。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 100,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "topupRate": 10,
+    "award": "新人礼最厚",
+    "summaryEn": "New-user friendly: $5 on signup + $10 via group; limited 0.01 tier",
+    "apiBase": "https://hubway.cc/v1",
+    "descriptionEn": "New relay: $5 on signup, $10 more via group. Limited 0.01 tier. Claude & GPT available; GPT at 0.4x nominal — effective ~0.04x with the 1:10 top-up rate.",
+    "tools": [
+      "claude-code",
+      "cline"
+    ]
   },
   {
     "id": "uni-token",
@@ -90,7 +78,9 @@
     "sortOrder": 4,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "免费尝鲜",
+    "summaryEn": "Free ChatGPT day card on signup; 0.01x multiplier"
   },
   {
     "id": "ctai",
@@ -109,7 +99,9 @@
     "sortOrder": 5,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "GPT 低价",
+    "summaryEn": "Claim $5 in group; GPT at 0.01x, opens daily at random hours"
   },
   {
     "id": "guyscode",
@@ -130,7 +122,9 @@
     "sortOrder": 6,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "最稳老站",
+    "summaryEn": "Long-running stable relay; $3 from owner in group, daily check-in"
   },
   {
     "id": "发财api",
@@ -153,7 +147,9 @@
     "sortOrder": 7,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "签到福利",
+    "summaryEn": "$2 on signup, random check-in rewards, 0.07x plus tier, image gen"
   },
   {
     "id": "登仙api",
@@ -178,7 +174,9 @@
     "sortOrder": 8,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "纯公益",
+    "summaryEn": "Pure free relay with frequent events; daily check-in bonuses"
   },
   {
     "id": "super-nb",
@@ -201,481 +199,9 @@
     "sortOrder": 9,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "truesota",
-    "name": "TrueSota",
-    "url": "https://true-sota.com/register",
-    "multiplier": 0.35,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册就送20刀，倍率0.35x，模型基本只有 ChatGPT",
-    "description": "新站，注册就送20刀，倍率0.35x。模型基本只有ChatGPT，说是Pro官号。拉1人送20刀，每周可拉10人。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 101,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "allinai",
-    "name": "AllinAI",
-    "url": "https://allinai.shop/register",
-    "multiplier": 0.12,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册送50刀月卡，每天限额3刀，PLUS分组 0.12x",
-    "description": "新站，注册就送50刀月卡，但是每天限额3刀，每周15刀。PLUS分组0.12x，价格偏高，限制也比较严。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 102,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "justdowork",
-    "name": "JustDoWork",
-    "url": "https://api.justwoker.icu/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册就送70刀，签到送30刀，模型只有 claude opus 4.8 和 opus 5",
-    "description": "新站，注册就送70刀，签到送30刀。模型只有claude opus 4.8和opus 5。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 103,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "启悟流",
-    "name": "启悟流",
-    "url": "https://756777.xyz/register",
-    "multiplier": 0.0499,
-    "bonus": "",
-    "models": [],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册后加群领取体验额度20刀/周，充值1:10 相当于0.0499x",
-    "description": "新站，注册后加群领取体验额度20刀/周。此站活动比较多，一般是拉新活动。充值比例是1:10，相当于倍率0.0499x。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 104,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "tabiai",
-    "name": "TaBiAI",
-    "url": "https://tabitoken.com/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "GitHub邀请码注册送120刀，每日送随机额度，可用 opus 5",
-    "description": "GitHub邀请码注册送120刀，每日送随机额度，可用opus5。限时注册，错过了又要等很久。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 105,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "ourchat-api",
-    "name": "OurChat API",
-    "url": "https://ourchat.shop/register",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册送2刀，倍率0.01x，实测首字速度1s内",
-    "description": "新站，注册送2刀，倍率0.01x。注册使用用户名验证邮箱即可，实测首字速度1s内。活动不清楚什么时间结束，还有签到。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 106,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "straitapi",
-    "name": "StraitAPI",
-    "url": "https://straitapi.com/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [],
-    "tags": [],
-    "summary": "QQ邮箱注册得2刀，首充得3刀，每日不定时开 0.01 倍率",
-    "description": "通过链接用QQ邮箱注册得2刀，首充任意金额得3刀，群内每天做活动可兑换token。每日不定时开0.01倍率。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 107,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "llm-host",
-    "name": "LLM HOST",
-    "url": "https://llmhost.net/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "deepseek",
-      "grok"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "deepseek v4 flash / grok 4.6 / mimo-v2.5 免费用",
-    "description": "注册送0.2，有签到。deepseek v4 flash免费用、grok 4.6免费用、mimo-v2.5免费用。想用GPT可能要签到很久。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 108,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "zai-abyss",
-    "name": "ZAI-Abyss",
-    "url": "https://api.060913.xyz/register",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [],
-    "tags": [],
-    "summary": "注册送0.5刀，加群再领1刀，每晚10-12点开放0.01分组",
-    "description": "新站，注册送0.5刀，今日倍率0.01，加群找管理再领1刀。充值1元起，速度很不错。每晚10:00-12:00开放0.01分组，白天恢复0.06。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 109,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "redstoneapi",
-    "name": "RedStoneAPI",
-    "url": "https://api.mcmy.love/register",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [],
-    "tags": [],
-    "summary": "注册加群送0.5刀，0.01x 倍率，可用约6000万token",
-    "description": "新站，注册加群送0.5刀，0.01x的倍率，大概可用6000万token。分组比较多，请选择K12速蹬的那个分组。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 110,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "sotaai",
-    "name": "SotaAI",
-    "url": "https://www.sotamodel.net/sign-up",
-    "multiplier": 1,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册就送100刀，首页签到再送300刀，倍率1x",
-    "description": "注册就送100刀，首页agents页面底部签到再送300刀，一共400刀！倍率是1x。注册邀请码：80HUXEQM。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 111,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "卡皮巴拉api",
-    "name": "卡皮巴拉API",
-    "url": "https://kapibala.asia/sign-up",
-    "multiplier": 1,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "邀请码注册送22刀，每日签到0.2刀，邀请他人送20刀",
-    "description": "使用邀请码注册赠送22刀，每日签到0.2刀，邀请他人送20刀。codex分组倍率1x，实际上20刀可能也就是6刀。适合当个备用。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 112,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "ooioo",
-    "name": "ooioo",
-    "url": "https://ooioo.work/sign-up",
-    "multiplier": 0.08,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "L站注册送5刀，帖子评论送30刀，codex-plus 0.08x",
-    "description": "L站注册送5刀，帖子下面评论id或用户名送30刀。codex-plus x0.08，gpt-5.6-sol codex-plus 0.08。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 113,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "soulecho-ai-发电站",
-    "name": "SoulEcho AI 发电站",
-    "url": "https://ai.soulecho.cc/sign-up",
-    "multiplier": 0.245,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册有5刀（兑换卡），gpt plus 0.245，每日签到1.5-5刀",
-    "description": "注册有5刀，注册登录会有个兑换卡，然后去兑换。gpt plus倍率0.245，实际充值1:10。每日签到1.5-5刀。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 114,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "粥pro",
-    "name": "粥Pro",
-    "url": "https://congee.pro/register",
-    "multiplier": 0.2,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "稳定"
-    ],
-    "summary": "L站登录送5刀+评论送5刀+加群送5刀，0.2x 倍率",
-    "description": "使用L站登录送5刀，L站评论送5刀，加群再送5刀，一共15刀。0.2x的倍率，全部是正价Pro20x账号。速度还不错。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 115,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "grox",
-    "name": "Grox",
-    "url": "https://www.mcgrox.top/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "进群绑定账号领100刀日卡，模型全GPT，速度非常快",
-    "description": "注册不送，注册后进群绑定账号后可领100刀日卡。模型全部都是GPT，有5.6-sol，速度非常快。属于日抛型。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 116,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "twinkle-model",
-    "name": "Twinkle Model",
-    "url": "https://big-model.smart-agi.com/register",
-    "multiplier": 0.18,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "回帖送10刀，加v进群再送50刀，GPT PRO 20X 号池",
-    "description": "注册后回帖送10刀，加v进群再送50刀。号池都全走GPT PRO 20X，首字98%低于5秒内，1比10充值。平时1.8x倍率按1:10算相当于0.18x。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 117,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "hhhtoken",
-    "name": "HHHToken",
-    "url": "https://sub2.hhhtoken.cc/register",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册送10刀，主要都是GPT模型，速度不错",
-    "description": "新站，注册送10刀，今天倍率只有0.01。主要都是GPT模型，模型速度都不错。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 118,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "jucodex",
-    "name": "JuCodex",
-    "url": "https://jucodex.com/register",
-    "multiplier": 0.05,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册送1刀，QQ邮箱注册再送2刀，GPT 0.05x",
-    "description": "注册送1刀，不要用Github，用QQ邮箱注册再送2刀。模型比较多，GPT现在是0.05x的倍率。实测速度还不错，有时候还会搞抽奖。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 119,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "肖恩ai",
-    "name": "肖恩AI",
-    "url": "https://free.supxh.xin/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [],
-    "tags": [
-      "签到"
-    ],
-    "summary": "免费大模型 API，注册即送7000额度，邀请双方各得2000",
-    "description": "免费大模型API，注册即送7000额度！每邀请1人，双方各得2000额度。累计邀请20人，送无限量周卡。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 125,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "aizzz",
-    "name": "Aizzz",
-    "url": "https://api.aizzz.xyz/sign-up",
-    "multiplier": 0.01,
-    "bonus": "",
-    "models": [
-      "grok",
-      "gpt"
-    ],
-    "tags": [
-      "稳定"
-    ],
-    "summary": "非公益，Grok 0.01x，GPT 平时0.05x，较稳定",
-    "description": "非公益站，Grok分组倍率是0.01x，充1块钱能用很久。另外也有GPT，平时0.05x，低价时候也有0.01x。注册不送，需要充值。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 126,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "99code",
-    "name": "99code",
-    "url": "https://gpt.api456.me/",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "gpt 超低价源头公益站，邀请注册送50算力点，签到无上限",
-    "description": "gpt超低价源头公益站，通过邀请注册送50算力点。邀请一位好友赠送150算力点，每日还可签到领算力，无上限。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 127,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "tokora",
-    "name": "tokora",
-    "url": "https://tokora.vip/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "免费蹬分组（0x），GPT 首字3s内",
-    "description": "新站，今天免费蹬，分组里有一个免费蹬分组，0x。模型有GPT，速度还不错，首字在3s内。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 128,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "1412-s-api",
-    "name": "1412's API",
-    "url": "https://napi.kid1412.qzz.io/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册即送95刀，每天签到，可买订阅套餐约1700刀",
-    "description": "新站，注册即送95刀，每天还有签到，签到还能得不少。直接去买两个订阅套餐，大概可以用1700刀左右。速度一般，但额度不少。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 129,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "最佳白嫖",
+    "summaryEn": "Best free credits: $50 on signup + $10 more in group"
   },
   {
     "id": "mydamoxing",
@@ -696,456 +222,33 @@
     "summary": "注册送1刀，限时0.001倍，模型丰富含很多国模",
     "description": "新站，注册就送1刀，限时0.001倍，也相当于100刀了。模型丰富，有Claude、GPT、Gemini、Grok等，还有很多国模。",
     "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 132,
+    "isFeatured": true,
+    "sortOrder": 11,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "当前最低价",
+    "summaryEn": "$1 on signup; limited 0.001x tier with many CN models"
   },
   {
-    "id": "七倍算力",
-    "name": "七倍算力",
-    "url": "https://7x.hk/sign-up",
-    "multiplier": 2,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册即送105刀，签到再得20刀/天，倍率2x",
-    "description": "新公益站，注册即送105刀，每天签到再得20刀。模型主要是GPT，有gpt-5.6-sol。倍率是2x，虽然比较高，但公益的可以用一用。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 134,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "luna",
-    "name": "LUNA",
-    "url": "https://luna-ai.shop/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "GPT 免费蹬，注册后兑换处输入兑换码领88",
-    "description": "【7.7更新】GPT免费蹬！注册0余额，但是不要钱！GPT5.5，实测速度3s之内，注册完到兑换处输入：感谢管理小哥，兑换88。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 136,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "star-api",
-    "name": "Star API",
-    "url": "https://token.stellaisle.com/register",
-    "multiplier": 0.16,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "加群找群主领5刀，Claude 0.28x / GPT 0.16x",
-    "description": "新站，加qq群找群主领取额度5刀。Claude最低0.28倍率，GPT最低0.16倍率，pro是0.2的倍率。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 137,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "词元站",
-    "name": "词元站",
-    "url": "https://ai.962831.xyz/register",
-    "multiplier": 0.05,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "签到",
-      "生图"
-    ],
-    "summary": "注册送1元，0.05倍率，gpt 5.5 可生图",
-    "description": "注册送1元，倍率是0.05，有签到。模型主要是gpt，有5.5，可以生图。额度较少，但倍率比较低，大概可以用1-2千万token。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 138,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "乾行ai",
-    "name": "乾行AI",
-    "url": "https://fast.qianxing.pro/sign-up",
-    "multiplier": 0.1,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册送2刀，加群再送5刀，倍率约0.1",
-    "description": "注册送2刀，加QQ群私聊群主再送5刀。模型有Claude、ChatGPT、Gemini，倍率不高。速度还不错。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 139,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "小白code",
-    "name": "小白Code",
-    "url": "https://token.dialoguedui.com/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt",
-      "claude"
-    ],
-    "tags": [
-      "签到",
-      "稳定"
-    ],
-    "summary": "注册送1刀，签到0.25刀/天，ChatGPT/Claude 应用尽有",
-    "description": "注册送1刀，有签到，每日签到可得0.25刀。ChatGPT、Claude应用尽有，plus pro max等等。额度少但签到能送，而且非常稳定。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 142,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "rawchat",
-    "name": "RawChat",
-    "url": "https://new.sharedchat.cc/list/#/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "稳定"
-    ],
-    "summary": "新用户体验200次卡，gpt-5.5 速度非常快",
-    "description": "新站，非公益，注册就可以享受新用户体验200次卡。可使用gpt-5.5模型，实测速度非常快。200次大概能用50刀左右。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 143,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "j3gb",
-    "name": "J3GB",
-    "url": "https://vip.j3gb.com/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册送10刀，gpt5.5 首字2s内，当备用站",
-    "description": "新站，注册送10刀。gpt5.5模型的速度非常快，首字在2s内。送的不多，但作为备用站还算是不错。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 144,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "维云",
-    "name": "维云",
-    "url": "https://vsllm.com/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini"
-    ],
-    "tags": [
-      "签到",
-      "生图",
-      "邀请"
-    ],
-    "summary": "大站，签到+红包玩法多，实测速度4s内",
-    "description": "这是个大站，注册好像不送，但是可以签到，还有各种红包玩法。模型丰富，Claude、GPT、Gemini，很多国模也都免费。实测4s内。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 146,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "二狗子",
-    "name": "二狗子",
-    "url": "https://ergouzi.life/register",
+    "id": "ourchat-api",
+    "name": "OurChat API",
+    "url": "https://ourchat.shop/register",
     "multiplier": 0.01,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "deepseek"
-    ],
-    "tags": [
-      "稳定"
-    ],
-    "summary": "非公益，注册送0.15，0.01-0.03 低倍率分组多",
-    "description": "非公益站，注册送0.15。倍率很低，0.01、0.02、0.03的分组特别多。模型也多，涵盖Claude、GPT、DeepSeek、GLM、Kimi、MiniMax、Mimo等。临时应急没问题。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 147,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "camel-ai",
-    "name": "CaMeL AI",
-    "url": "https://camel.kr777.top/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt",
-      "claude",
-      "gemini"
-    ],
-    "tags": [
-      "签到"
-    ],
-    "summary": "注册送3刀，绑教育邮箱每日还有2刀",
-    "description": "非公益站，注册送3刀，如果绑定教育邮箱，每日还有2刀的福利。模型有GPT、Claude、Gemini、国模等。临时应个急。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 149,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "vc-api",
-    "name": "VC API",
-    "url": "https://sub.vcnovb.cn/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt",
-      "claude",
-      "gemini"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册送5刀，邀请1人再送5刀",
-    "description": "新站，非公益，注册送5刀，邀请1人再送5刀。模型覆盖gpt、claude、Gemini、国模等。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 150,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "future-hub",
-    "name": "Future Hub",
-    "url": "https://api.futureppo.top/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude"
-    ],
-    "tags": [
-      "签到",
-      "生图",
-      "邀请"
-    ],
-    "summary": "纯公益，注册送10刀，签到10-20刀，仅限 GitHub/edu/LinuxDo",
-    "description": "纯公益站，注册送10刀，签到得10-20刀。无gpt，有Claude opus 4.8，很多国模免费。仅支持GitHub、edu.cn邮箱、LinuxDo账号注册。严禁批量测活和二次分发。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 151,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "斑马api",
-    "name": "斑马API",
-    "url": "https://bmapi.020212.xyz/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [
-      "生图",
-      "邀请"
-    ],
-    "summary": "注册送Pro号池月卡4000积分（约60刀），据反馈可能已停送",
-    "description": "新站，注册就免费送一个Pro号池的月卡套餐，送4000积分约60刀左右，应急够用。每拉一位新用户可额外获得一张Pro月卡兑换码。模型以GPT为主，有5.4、5.5，速度很快。",
-    "status": "unstable",
-    "isFeatured": false,
-    "sortOrder": 152,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "model-gate",
-    "name": "Model Gate",
-    "url": "https://modelgate.app/register",
-    "multiplier": 0.8,
-    "bonus": "",
-    "models": [
-      "claude"
-    ],
-    "tags": [
-      "签到",
-      "邀请"
-    ],
-    "summary": "注册送5刀，签到1-5刀/天，纯Claude号池",
-    "description": "注册送5刀，每天签到可得1-5刀不等。纯Claude号池，其中Claude MAX倍率0.8。不适合大量使用，偶尔应急不错。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 154,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "芙卡卡-小食堂",
-    "name": "芙卡卡の小食堂",
-    "url": "https://api.fuka.win/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini",
-      "deepseek"
-    ],
-    "tags": [
-      "邀请"
-    ],
-    "summary": "注册得150点，大部分模型按次付费1-3点",
-    "description": "现在注册得150点，邀请好友各得50点，无签到功能。大部分模型是按次付费的，一次1-3点。模型比较丰富。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 156,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "可萌中转站",
-    "name": "可萌中转站",
-    "url": "https://api456.me/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gpt",
-      "gemini",
-      "deepseek"
-    ],
-    "tags": [
-      "签到",
-      "邀请"
-    ],
-    "summary": "注册送20硬币，按次扣费，可签到",
-    "description": "注册送20硬币，该站按次扣费。覆盖Claude、GPT、Gemini、DeepSeek、Kimi、智谱等多个大模型。可签到获得随机额度。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 157,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "moyuu-ai",
-    "name": "Moyuu AI",
-    "url": "http://moyuu.cc/register",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "claude",
-      "gemini",
-      "gpt"
-    ],
-    "tags": [
-      "签到",
-      "生图",
-      "邀请"
-    ],
-    "summary": "公益站，注册送6刀，模型丰富含 gpt-image-2",
-    "description": "公益站，注册送6刀，签到也送。模型有Claude4.6-4.8、Gemini3-3.1、GPT5.4-5.5，而且有gpt-image-2。",
-    "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 158,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "freemodel",
-    "name": "FreeModel",
-    "url": "https://freemodel.dev/invite/FRE-20d20d49",
-    "multiplier": null,
     "bonus": "",
     "models": [],
     "tags": [
-      "邀请",
-      "稳定"
+      "签到"
     ],
-    "summary": "注册赠一个月Pro，每5小时10刀，需绑手机",
-    "description": "新用户注册赠送一个月Pro，可作为应急使用。每5小时可用10刀，每周66.67刀，每周二额度自动重置。需要绑定手机。",
+    "summary": "注册送2刀，倍率0.01x，实测首字速度1s内",
+    "description": "新站，注册送2刀，倍率0.01x。注册使用用户名验证邮箱即可，实测首字速度1s内。活动不清楚什么时间结束，还有签到。",
     "status": "stable",
-    "isFeatured": false,
-    "sortOrder": 159,
+    "isFeatured": true,
+    "sortOrder": 10,
     "verifiedAt": "2026-08-22",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
-  },
-  {
-    "id": "api中转站",
-    "name": "api中转站",
-    "url": "https://zhongzhuanzhan.yshshs.cc.cd/sign-up",
-    "multiplier": null,
-    "bonus": "",
-    "models": [
-      "gpt"
-    ],
-    "tags": [],
-    "summary": "注册送60（须邀请码），5.6sol 超低倍率，近期不稳",
-    "description": "注册送60必须邀请码，有5.6sol，超级低的倍率能用40亿。近期大拉闸，可能不稳，具体能否可用请自行查看。",
-    "status": "unstable",
-    "isFeatured": false,
-    "sortOrder": 160,
-    "verifiedAt": "2026-08-22",
-    "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-22"
+    "updatedAt": "2026-08-22",
+    "award": "响应最快",
+    "summaryEn": "$2 on signup at 0.01x; first token in under 1s in our tests"
   }
 ]

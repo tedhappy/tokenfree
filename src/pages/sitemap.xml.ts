@@ -7,6 +7,7 @@ export const GET: APIRoute = async ({ site }) => {
   const sites = await getFilteredSites();
   const pages: Array<{ loc: string; priority: string; changefreq: string }> = [
     { loc: '/', priority: '1.0', changefreq: 'daily' },
+    { loc: '/recommend', priority: '0.6', changefreq: 'monthly' },
     { loc: '/faq', priority: '0.6', changefreq: 'monthly' },
     { loc: '/submit', priority: '0.4', changefreq: 'yearly' },
     { loc: '/about', priority: '0.5', changefreq: 'monthly' },

@@ -9,15 +9,14 @@ export const GET: APIRoute = async ({ site }) => {
   const byMult = [...sites].filter((s) => s.multiplier !== null).sort((a, b) => a.multiplier! - b.multiplier!).slice(0, 10);
   const today = new Date().toISOString().slice(0, 10);
 
-  const body = `# TokenFree — AI Token 中转站导航（AI Token Relay Directory）
+  const body = `# TokenFree — AI Token 中转站精选榜（AI Token Relay Directory）
 
-> TokenFree 收录、监测并排名可用的 AI API 中转站（relay/proxy），覆盖 GPT、Claude、Gemini、Grok、DeepSeek 等模型的低价倍率与免费额度入口。数据每日核验，站点可用性每 30 分钟自动监测。当前收录 ${sites.length} 个站点（更新于 ${today}）。
+> TokenFree 由编辑实测筛选并持续监测优质的 AI API 中转站（relay/proxy），覆盖 GPT、Claude、Gemini、Grok、DeepSeek 等模型的低价倍率与免费额度入口。数据每日核验，站点可用性每 30 分钟自动监测。当前精选 ${sites.length} 个站点（更新于 ${today}）。
 
 ## 站点结构
 
 - ${base}/ ：全部站点列表（搜索/筛选/倍率排序/实时在线状态）
 - ${base}/site/{站点ID} ：单个站点详情（倍率、模型、工具兼容、24h 可用率、体验日志）
-- ${base}/blacklist ：避雷榜（已失效/跑路/不稳定站点名单）
 - ${base}/recommend ：帮我选站（按需求推荐）
 - ${base}/faq ：新手指南（什么是中转站、倍率解读、防坑指南）
 - ${base}/submit ：用户投稿入口

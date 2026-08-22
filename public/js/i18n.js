@@ -6,14 +6,13 @@ window.TF_I18N_EN = {
   'nav.faq': 'FAQ',
   'nav.about': 'About',
   'nav.recommend': 'Pick',
-  'nav.blacklist': 'Warning',
   'footer.disclaimer': 'For reference only. We are not responsible for any relay site.',
   'footer.about': 'About',
   'footer.admin': 'Admin',
 
   // 首页
-  'hero.title': 'AI Token Relay Directory',
-  'hero.sub': 'A curated directory of usable, stable AI API relays — find free credits and low multipliers fast.',
+  'hero.title': 'The Best AI Token Relays',
+  'hero.sub': '10 editor-tested AI API relays: free credits, low multipliers, live monitoring — all at a glance.',
   'hero.sites': 'sites',
   'hero.stable': 'stable',
   'hero.live': 'live',
@@ -27,12 +26,6 @@ window.TF_I18N_EN = {
 
   // 404
   '404.back': 'Back to home',
-  'go.title': 'Redirecting',
-  'go.text': 'Opening external site…',
-  'go.note': 'We are not responsible for external sites. Stay safe.',
-  'go.continue': 'Continue',
-  'go.back': 'Back to home',
-  'go.invalid': 'Invalid redirect link',
 
   // 详情页
   'detail.back': '← Back to list',
@@ -48,6 +41,16 @@ window.TF_I18N_EN = {
   'detail.multiplier': 'Multiplier',
   'detail.visit': 'Visit site ↗',
   'detail.fav': '☆ Favorite',
+  'detail.invite': 'Invite Code',
+  'detail.copy': 'Copy',
+  'detail.copyDone': 'Copied ✓',
+  'detail.real': 'Effective multiplier',
+  'detail.age': 'Listed',
+  'detail.ageUnit': 'mo',
+  'detail.quickstart': 'Quick Start',
+  'detail.curlExample': 'curl example',
+  'detail.report': '⚠ Report issue',
+  'submit.feedbackHint': 'Feedback mode: editors will verify price / availability changes soon.',
   'detail.favDone': '★ Favorited',
   'detail.verified': 'Verified',
   'detail.updated': 'Updated',
@@ -70,12 +73,4 @@ window.TF_I18N_EN = {
   'rec.go': 'Show recommendations →',
   'rec.empty': 'No exact match — try relaxing your answers.',
 
-  // 避雷榜
-  'bl.title': '⚠ Warning List',
-  'bl.sub': 'Dead, suspected-ran, or unstable relays. From editor checks and automated monitoring.',
-  'bl.tip': 'Tip: use up any balance ASAP; do not top up if not registered.',
-  'bl.dead': 'Dead / Ran away',
-  'bl.unstable': 'Unstable',
-  'bl.down': 'Currently unreachable',
-  'bl.downTip': 'Sites failing automated checks right now (may be temporary):',
 };
