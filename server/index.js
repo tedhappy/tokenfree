@@ -29,6 +29,8 @@ try {
 
 // ---- 配置 ----
 const PORT = Number(process.env.PORT || 4321);
+// HOST=127.0.0.1 时仅本机可访问（Nginx 反代场景推荐，避免绕过 CDN 直连源站）
+const HOST = process.env.HOST || '0.0.0.0';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_TTL_HOURS = 24;
@@ -443,4 +445,4 @@ if (MONITOR_INTERVAL_MIN > 0) {
 }
 
 console.log(`[admin] listening on http://0.0.0.0:${PORT} (monitor every ${MONITOR_INTERVAL_MIN}min)`);
-serve({ fetch: app.fetch, port: PORT });
+serve({ fetch: app.fetch, port: PORT, hostname: HOST });

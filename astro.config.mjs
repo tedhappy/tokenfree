@@ -3,7 +3,7 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  site: process.env.SITE_URL || 'https://tokenfree.example.com',
+  site: process.env.SITE_URL || 'https://www.tokenfree.wiki',
   integrations: [react(), tailwind()],
   output: 'static',
   vite: {
