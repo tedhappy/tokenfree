@@ -1,0 +1,42 @@
+public/admin/index.html
+  h_19d9dc6fff8e84 7,461-484,513-516,554-558,564
+public/js/i18n.js
+  h_19d9dc6fff8e84 14-15,44-53
+server/index.js
+  h_19d9dc6fff8e84 218-220,292-311,460-464
+src/components/Hero.astro
+  h_19d9dc6fff8e84 13,16-17,19-27
+src/components/SiteList.tsx
+  h_19d9dc6fff8e84 15-16,18-19,23-26,30-31,53-55,60,65,74-97,100-102,118-129,132,137-138,153,155,157-159,168-171,175-177,200-227,237-245,257,264-267,279-288,301-302,305,322-331,358-399,410-415,424,434,445,451-454,484,486-490,494-498,512-529,533,536-544,546-556,561-576,580-592,609-617,619-631,633,639-690
+src/data/config.json
+  h_19d9dc6fff8e84 6,11
+src/data/sites.json
+  h_19d9dc6fff8e84 22-24,48-57,81-83,102-104,125-127,150-152,177-179,202-204,207-210,213-216,219-220,222-223,225-226,229-231,246-247,250-252
+src/layouts/BaseLayout.astro
+  h_19d9dc6fff8e84 9-10,13-14,29
+src/pages/about.astro
+  h_19d9dc6fff8e84 14
+src/pages/index.astro
+  h_19d9dc6fff8e84 9,26-27,30-31
+src/pages/llms.txt.ts
+  h_19d9dc6fff8e84 12,14
+src/pages/site/[slug].astro
+  h_19d9dc6fff8e84 5,19-60,75,84-89,110-112,123-129,134-140,149-165,188-207,231-232,261-288
+src/pages/sitemap.xml.ts
+  h_19d9dc6fff8e84 10
+src/pages/submit.astro
+  h_19d9dc6fff8e84 13,42-52
+src/utils/sites.ts
+  h_19d9dc6fff8e84 12-13,15-16,22-29,52-57,87-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "7d309e5383d2d3e03e22659fde890f218e1d0e8a",
+  "prompts": {},
+  "humans": {
+    "h_19d9dc6fff8e84": {
+      "author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
