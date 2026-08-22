@@ -128,4 +128,17 @@ function multColor(m: number | null): string {
   </main>
   <AnnounceModal />
   <Footer />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'TokenFree AI Token 中转站导航',
+    description: '收录可用、稳定的 AI API 中转站，实时监测，倍率对比',
+    numberOfItems: siteCount,
+    itemListElement: featuredSites.slice(0, 10).map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: s.name,
+      url: new URL(`/site/${s.id}`, Astro.site ?? 'https://www.tokenfree.wiki').href,
+    })),
+  })} />
 </BaseLayout>

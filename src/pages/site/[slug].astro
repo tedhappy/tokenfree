@@ -180,4 +180,20 @@ const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy'
 
 
   </script>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: site.name + ' - TokenFree',
+    description: site.summary,
+    url: new URL('/site/' + site.id, Astro.site ?? 'https://www.tokenfree.wiki').href,
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '首页', item: (Astro.site ?? 'https://www.tokenfree.wiki').toString() },
+        { '@type': 'ListItem', position: 2, name: '全部站点', item: new URL('/', Astro.site).href },
+        { '@type': 'ListItem', position: 3, name: site.name },
+      ],
+    },
+  })} />
 </BaseLayout>

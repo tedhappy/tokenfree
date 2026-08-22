@@ -1,6 +1,36 @@
+# TokenFree — 欢迎所有搜索引擎与 AI 工具抓取
+
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: /sitemap.xml
+# 显式欢迎 AI 爬虫（ChatGPT/Claude/Perplexity/Gemini 等）
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://www.tokenfree.wiki/sitemap.xml

@@ -85,4 +85,14 @@ const faqsEn = [
     </div>
   </main>
   <Footer />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    name: 'AI 中转站 FAQ 与新手指南',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  })} />
 </BaseLayout>

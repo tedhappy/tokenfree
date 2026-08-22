@@ -9,7 +9,12 @@ const {
   title = 'TokenFree - AI Token 中转站导航',
   description = '收集 AI Token 公益中转站，帮助更多人找到可用、稳定、低门槛的 AI 服务入口。',
 } = Astro.props;
-const ogImage = new URL('/og.png', Astro.site ?? 'https://tokenfree.example.com').href;
+const ogImage = new URL('/og.png', Astro.site ?? 'https://www.tokenfree.wiki').href;
+// canonical：统一域名避免重复内容（/go 带 query 参数不设）
+const canonical =
+  Astro.url.pathname === '/go/'
+    ? null
+    : new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfree.wiki').href;
 ---
 
 <html lang="zh-CN">
@@ -25,6 +30,7 @@ const ogImage = new URL('/og.png', Astro.site ?? 'https://tokenfree.example.com'
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {canonical && <link rel="canonical" href={canonical} />}
     <script is:inline src="/js/i18n.js"></script>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
