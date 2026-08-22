@@ -1,4 +1,6 @@
 ---
+import '../styles/theme.css';
+
 interface Props {
   title?: string;
   description?: string;
@@ -9,7 +11,7 @@ const {
 } = Astro.props;
 ---
 
-<html lang="zh-CN" class="dark">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,8 +21,26 @@ const {
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline src="/js/i18n.js"></script>
   </head>
   <body class="bg-bg text-text-primary min-h-screen font-sans antialiased">
     <slot />
+    <script>
+      // 主题初始化：默认暗色，localStorage 记忆切换（在渲染前执行避免闪烁）
+      (function () {
+        const saved = localStorage.getItem('tf-theme');
+        if (saved === 'light') document.documentElement.classList.add('light');
+      })();
+      // 轻量 i18n：HTML 带 data-i18n 属性的元素按字典替换文本
+      (function () {
+        if (localStorage.getItem('tf-lang') !== 'en') return;
+        const dict = window.TF_I18N_EN || {};
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key]) el.textContent = dict[key];
+        });
+        document.documentElement.lang = 'en';
+      })();
+    </script>
   </body>
 </html>

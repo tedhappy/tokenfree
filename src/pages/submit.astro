@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="投稿站点 - TokenFree" description="提交你发现的 AI API 中转站">
+  <Header />
+  <main class="pt-16">
+    <div class="max-w-xl mx-auto px-4 sm:px-6 py-12">
+      <h1 class="text-2xl font-bold mb-2" data-i18n="submit.title">投稿站点</h1>
+      <p class="text-sm text-text-secondary mb-8" data-i18n="submit.sub">分享你发现的中转站，投稿后由编辑审核收录。</p>
+
+      <form id="submit-form" class="card p-6 space-y-4" style="background: var(--c-bg2); border: 1px solid var(--c-border); border-radius: 12px;">
+        <!-- 蜜罐：人类不可见，机器人会填 -->
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
+        <div>
+          <label class="block text-xs text-text-muted mb-1.5" data-i18n="submit.name">站点名称 *</label>
+          <input id="s-name" class="w-full bg-bg-tertiary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/50" required maxlength="50" />
+        </div>
+        <div>
+          <label class="block text-xs text-text-muted mb-1.5" data-i18n="submit.url">站点 URL *</label>
+          <input id="s-url" type="url" class="w-full bg-bg-tertiary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/50" required placeholder="https://…" />
+        </div>
+        <div>
+          <label class="block text-xs text-text-muted mb-1.5" data-i18n="submit.summary">一句话简介 *（倍率、赠送、支持模型等）</label>
+          <textarea id="s-summary" rows="3" class="w-full bg-bg-tertiary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/50" required maxlength="200"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs text-text-muted mb-1.5" data-i18n="submit.contact">你的联系方式（可选，仅编辑可见）</label>
+          <input id="s-contact" class="w-full bg-bg-tertiary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/50" maxlength="100" />
+        </div>
+        <p id="s-msg" class="text-xs hidden"></p>
+        <button type="submit" id="s-btn" class="px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm transition-colors" data-i18n="submit.send">提交</button>
+      </form>
+      <p class="text-xs text-text-muted mt-4" data-i18n="submit.rules">仅接受 AI API 中转站投稿，垃圾信息会被丢弃。每人每小时最多提交 5 次。</p>
+    </div>
+  </main>
+  <Footer />
+  <script>
+    const form = document.getElementById('submit-form') as HTMLFormElement;
+    const msg = document.getElementById('s-msg')!;
+    const btn = document.getElementById('s-btn') as HTMLButtonElement;
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      msg.classList.add('hidden');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: (document.getElementById('s-name') as HTMLInputElement).value,
+            url: (document.getElementById('s-url') as HTMLInputElement).value,
+            summary: (document.getElementById('s-summary') as HTMLTextAreaElement).value,
+            contact: (document.getElementById('s-contact') as HTMLInputElement).value,
+            website: (form.querySelector('[name=website]') as HTMLInputElement).value,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.textContent = '✓ ' + (data.ok ? '提交成功，审核后即会收录' : '');
+          msg.className = 'text-xs text-status-stable';
+          form.reset();
+        } else {
+          msg.textContent = data.error || '提交失败';
+          msg.className = 'text-xs text-status-offline';
+        }
+      } catch {
+        msg.textContent = '网络错误，请稍后再试';
+        msg.className = 'text-xs text-status-offline';
+      }
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+    };
+  </script>
+</BaseLayout>

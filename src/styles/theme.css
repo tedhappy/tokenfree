@@ -1,0 +1,28 @@
+/* 主题变量：默认暗色，html.light 切换亮色 */
+:root {
+  --c-bg: #0a0a0f;
+  --c-bg2: #12121a;
+  --c-bg3: #1a1a25;
+  --c-border: rgba(255, 255, 255, 0.06);
+  --c-border-h: rgba(255, 255, 255, 0.14);
+  --c-t1: #e8e8ed;
+  --c-t2: #8888a0;
+  --c-t3: #55556a;
+  --c-accent: #7c5cfc;
+  --c-accent-h: #6a4ce6;
+  --c-accent-muted: rgba(124, 92, 252, 0.12);
+}
+
+html.light {
+  --c-bg: #f6f6f9;
+  --c-bg2: #ffffff;
+  --c-bg3: #eeeff3;
+  --c-border: rgba(0, 0, 0, 0.09);
+  --c-border-h: rgba(0, 0, 0, 0.18);
+  --c-t1: #1b1b26;
+  --c-t2: #55556a;
+  --c-t3: #8a8a9c;
+  --c-accent: #6a4ce6;
+  --c-accent-h: #5b3fd1;
+  --c-accent-muted: rgba(106, 76, 230, 0.1);
+}

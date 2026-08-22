@@ -55,18 +55,29 @@ function showLogin(msg = '') {
 }
 
 // ---------- 顶栏 ----------
-function topbar() {
+function topbar(active) {
   return `
     <header class="topbar">
       <div class="topbar-inner">
         <span class="brand">TokenFree 管理</span>
         <div class="topbar-actions">
-          <a href="/" target="_blank">查看前台</a>
-          <button id="nav-models">模型标签</button>
+          <a href="/" target="_blank">前台</a>
+          <button id="nav-dash" class="${active==='dash'?'':''}" style="${active==='dash'?'color:#e8e8ed':''}">站点</button>
+          <button id="nav-subs" style="${active==='subs'?'color:#e8e8ed':''}">投稿</button>
+          <button id="nav-uptime" style="${active==='uptime'?'color:#e8e8ed':''}">监测</button>
+          <button id="nav-models" style="${active==='models'?'color:#e8e8ed':''}">模型</button>
           <button id="logout">退出</button>
         </div>
       </div>
     </header>`;
+}
+
+function bindTopbar() {
+  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
+  const d = document.getElementById('nav-dash'); if (d) d.onclick = showDashboard;
+  const s = document.getElementById('nav-subs'); if (s) s.onclick = showSubmissions;
+  const u = document.getElementById('nav-uptime'); if (u) u.onclick = showUptime;
+  const m = document.getElementById('nav-models'); if (m) m.onclick = showModels;
 }
 
 // ---------- 仪表盘 ----------
@@ -74,12 +85,19 @@ async function showDashboard() {
   const [stats, sites] = await Promise.all([api('/api/stats'), api('/api/sites')]);
   window._sites = sites;
   document.getElementById('app').innerHTML = `
-    ${topbar()}
+    ${topbar('dash')}
     <main class="container">
       <div class="stats-grid">
         ${[['总站点', stats.total], ['稳定', stats.stable], ['不稳定', stats.unstable], ['已失效', stats.offline]]
           .map(([l, v]) => `<div class="card"><p class="stat-label">${l}</p><p class="stat-value">${v}</p></div>`).join('')}
       </div>
+      ${stats.suspect && stats.suspect.length ? `
+        <div class="card" style="border-color:rgba(239,68,68,.3);margin-bottom:20px">
+          <p style="font-size:13px;font-weight:500;color:#f87171;margin-bottom:8px">⚠ 监测发现 ${stats.suspect.length} 个疑似失效站点（连续不可达）</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${stats.suspect.map(s => `<span class="model-chip"><span class="model-dot" style="background:#ef4444"></span>${esc(s.name)}<button data-mark-off="${esc(s.id)}" title="标记为已失效" style="color:#8888a0">标记失效</button></span>`).join('')}
+          </div>
+        </div>` : ''}
       <div class="section-head">
         <h2 class="section-title">站点列表</h2>
         <div class="section-actions">
@@ -91,14 +109,19 @@ async function showDashboard() {
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>名称</th><th>倍率</th><th>状态</th><th>精选</th><th>点击</th><th>核验</th><th></th>
+            <th>名称</th><th>倍率</th><th>状态</th><th>网络</th><th>精选</th><th>点击</th><th>核验</th><th></th>
           </tr></thead>
           <tbody>
-            ${sites.map(s => `
+            ${sites.map(s => {
+              const u = stats.uptime && stats.uptime[s.id];
+              const live = u && u.checks ? (u.up ? '●' : '✕') : '';
+              const liveColor = u && u.checks ? (u.up ? '#22c55e' : '#ef4444') : '#55556a';
+              return `
               <tr>
-                <td class="cell-strong">${esc(s.name)}</td>
+                <td class="cell-strong">${esc(s.name)} <span style="color:${liveColor}" title="${u && u.up ? '在线 ' + (u.latencyMs ?? '?') + 'ms' : '不可达/无数据'}">${live}</span></td>
                 <td class="cell-dim">${s.multiplier ?? '—'}</td>
                 <td>${STATUS[s.status] || s.status}</td>
+                <td class="cell-dim">${s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '—'}</td>
                 <td>${s.isFeatured ? '⭐' : ''}</td>
                 <td>${(stats.clicks && stats.clicks[s.id]) || 0}</td>
                 <td class="cell-dim">${esc(s.verifiedAt || '')}</td>
@@ -106,14 +129,14 @@ async function showDashboard() {
                   <button class="btn btn-ghost" data-edit="${esc(s.id)}">编辑</button>
                   <button class="btn btn-danger" data-del="${esc(s.id)}">删除</button>
                 </td>
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>
     </main>`;
 
-  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
-  document.getElementById('nav-models').onclick = showModels;
+  bindTopbar();
   document.getElementById('add-site').onclick = () => showSiteForm(null);
   document.getElementById('rebuild').onclick = rebuildFrontend;
   document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => showSiteForm(window._sites.find(s => s.id === b.dataset.edit)));
@@ -122,6 +145,102 @@ async function showDashboard() {
     await api('/api/sites/' + b.dataset.del, { method: 'DELETE' });
     showDashboard();
   });
+  document.querySelectorAll('[data-mark-off]').forEach(b => b.onclick = async () => {
+    await api('/api/sites/' + b.dataset.markOff, { method: 'PUT', body: JSON.stringify({ status: 'offline' }) });
+    showDashboard();
+  });
+}
+
+// ---------- 投稿审核 ----------
+async function showSubmissions() {
+  const subs = await api('/api/submissions');
+  document.getElementById('app').innerHTML = `
+    ${topbar('subs')}
+    <main class="container">
+      <div class="section-head">
+        <h2 class="section-title">投稿审核（${subs.length}）</h2>
+      </div>
+      ${subs.length === 0 ? '<p class="hint" style="margin:20px 0">暂无投稿</p>' : `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>联系方式</th><th>时间</th><th></th></tr></thead>
+          <tbody>
+            ${subs.map(s => `
+              <tr>
+                <td class="cell-strong">${esc(s.name)}</td>
+                <td class="cell-dim" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(s.url)}</td>
+                <td style="max-width:260px;white-space:normal">${esc(s.summary)}</td>
+                <td class="cell-dim">${esc(s.contact || '—')}</td>
+                <td class="cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
+                <td class="cell-actions">
+                  <button class="btn btn-ghost" data-approve="${esc(s.id)}">收录</button>
+                  <button class="btn btn-danger" data-reject="${esc(s.id)}">丢弃</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </main>`;
+
+  bindTopbar();
+  document.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => {
+    const sub = subs.find(x => x.id === b.dataset.approve);
+    showSiteForm(null, { name: sub.name, url: sub.url, summary: sub.summary }, sub.id);
+  });
+  document.querySelectorAll('[data-reject]').forEach(b => b.onclick = async () => {
+    await api('/api/submissions/' + b.dataset.reject, { method: 'DELETE' });
+    showSubmissions();
+  });
+}
+
+// ---------- 监测面板 ----------
+async function showUptime() {
+  const stats = await api('/api/stats');
+  const sites = await api('/api/sites');
+  const entries = sites
+    .filter(s => s.status !== 'offline' && stats.uptime[s.id] && stats.uptime[s.id].checks > 0)
+    .map(s => ({ name: s.name, ...stats.uptime[s.id] }))
+    .sort((a, b) => (a.uptime24h ?? 2) - (b.uptime24h ?? 2));
+  document.getElementById('app').innerHTML = `
+    ${topbar('uptime')}
+    <main class="container">
+      <div class="section-head">
+        <h2 class="section-title">可用性监测</h2>
+        <div class="section-actions">
+          <button id="run-now" class="btn btn-primary">立即检测</button>
+        </div>
+      </div>
+      <p class="hint" style="margin:-6px 0 14px">每 ${stats.monitor.intervalMin} 分钟自动探测一次（GET，8s 超时）。下表按 24h 可用率升序，最差在前。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>站点</th><th>当前</th><th>延迟</th><th>24h 可用率</th><th>检测次数</th></tr></thead>
+          <tbody>
+            ${entries.map(e => `
+              <tr>
+                <td class="cell-strong">${esc(e.name)}</td>
+                <td style="color:${e.up ? '#22c55e' : '#ef4444'}">${e.up ? '● 在线' : '✕ 不可达'}</td>
+                <td class="cell-dim">${e.latencyMs != null ? e.latencyMs + 'ms' : '—'}</td>
+                <td>${e.uptime24h != null ? Math.round(e.uptime24h * 100) + '%' : '—'}</td>
+                <td class="cell-dim">${e.checks}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${entries.length === 0 ? '<p class="hint" style="margin-top:14px">暂无监测数据，点击「立即检测」开始第一轮。</p>' : ''}
+    </main>`;
+
+  bindTopbar();
+  const btn = document.getElementById('run-now');
+  btn.onclick = async () => {
+    btn.disabled = true; btn.textContent = '检测中…（约30s）';
+    try {
+      await api('/api/monitor/run', { method: 'POST' });
+      showUptime();
+    } catch (e) {
+      btn.textContent = '失败：' + e.message;
+      setTimeout(() => { btn.disabled = false; btn.textContent = '立即检测'; }, 3000);
+    }
+  };
 }
 
 // ---------- 重建前台 ----------
@@ -139,12 +258,21 @@ async function rebuildFrontend() {
 }
 
 // ---------- 站点表单 ----------
-async function showSiteForm(site) {
+const TOOL_OPTS = [
+  { id: 'claude-code', name: 'Claude Code' },
+  { id: 'cursor', name: 'Cursor' },
+  { id: 'codex-cli', name: 'Codex CLI' },
+  { id: 'cline', name: 'Cline' },
+];
+const NET_OPTS = { unknown: '未验证', direct: '国内直连', proxy: '需代理' };
+
+async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
   const isNew = !site;
   const models = await api('/api/models');
-  site = site || { name:'', url:'', multiplier:'', bonus:'', models:[], tags:[], summary:'', description:'', status:'stable', isFeatured:false, sortOrder:99 };
+  site = site || { name:'', url:'', affUrl:'', multiplier:'', bonus:'', models:[], tags:[], summary:'', description:'', status:'stable', network:'unknown', tools:[], isFeatured:false, sortOrder:99 };
+  if (prefill) Object.assign(site, prefill);
   document.getElementById('app').innerHTML = `
-    ${topbar()}
+    ${topbar('dash')}
     <main class="container container-sm">
       <div class="section-head">
         <h2 class="section-title">${isNew ? '新增站点' : '编辑：' + esc(site.name)}</h2>
@@ -159,6 +287,10 @@ async function showSiteForm(site) {
           <label class="field-label">URL（留空则前台显示"链接待补充"）</label>
           <input id="f-url" class="inp" placeholder="https://…" value="${esc(site.url)}" />
         </div>
+        <div class="form-row">
+          <label class="field-label">推广链接 affUrl（可选：设置后跳转用它，用于返佣）</label>
+          <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
+        </div>
         <div class="form-grid">
           <div class="form-row">
             <label class="field-label">倍率（如 0.4，留空为未知）</label>
@@ -169,16 +301,30 @@ async function showSiteForm(site) {
             <select id="f-status" class="inp">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}" ${site.status===v?'selected':''}>${l}</option>`).join('')}</select>
           </div>
         </div>
-        <div class="form-row" style="margin-top:14px">
-          <label class="field-label">注册赠送</label>
-          <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
+        <div class="form-grid" style="margin-top:14px">
+          <div class="form-row">
+            <label class="field-label">网络可达性</label>
+            <select id="f-network" class="inp">${Object.entries(NET_OPTS).map(([v,l]) => `<option value="${v}" ${(site.network||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+          <div class="form-row">
+            <label class="field-label">注册赠送</label>
+            <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
+          </div>
         </div>
-        <div class="form-row">
+        <div class="form-row" style="margin-top:14px">
           <label class="field-label">支持模型</label>
           <div class="checkbox-row">
             ${models.map(m => `<label class="checkbox-item">
               <input type="checkbox" name="models" value="${esc(m.id)}" ${site.models.includes(m.id)?'checked':''} />
               <span style="color:${esc(m.color)}">${esc(m.name)}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">工具兼容</label>
+          <div class="checkbox-row">
+            ${TOOL_OPTS.map(t => `<label class="checkbox-item">
+              <input type="checkbox" name="tools" value="${t.id}" ${(site.tools||[]).includes(t.id)?'checked':''} />
+              ${t.name}</label>`).join('')}
           </div>
         </div>
         <div class="form-row">
@@ -213,18 +359,21 @@ async function showSiteForm(site) {
       </form>
     </main>`;
 
+  bindTopbar();
   document.getElementById('back').onclick = showDashboard;
   document.getElementById('cancel').onclick = showDashboard;
-  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
   document.getElementById('site-form').onsubmit = async (e) => {
     e.preventDefault();
     const body = {
       name: document.getElementById('f-name').value.trim(),
       url: document.getElementById('f-url').value.trim(),
+      affUrl: document.getElementById('f-affurl').value.trim(),
       multiplier: document.getElementById('f-mult').value === '' ? null : Number(document.getElementById('f-mult').value),
       status: document.getElementById('f-status').value,
+      network: document.getElementById('f-network').value,
       bonus: document.getElementById('f-bonus').value.trim(),
       models: [...document.querySelectorAll('input[name=models]:checked')].map(i => i.value),
+      tools: [...document.querySelectorAll('input[name=tools]:checked')].map(i => i.value),
       tags: document.getElementById('f-tags').value.split(/[,，]/).map(t => t.trim()).filter(Boolean),
       summary: document.getElementById('f-summary').value.trim(),
       description: document.getElementById('f-desc').value.trim(),
@@ -234,6 +383,8 @@ async function showSiteForm(site) {
     };
     if (isNew) await api('/api/sites', { method: 'POST', body: JSON.stringify(body) });
     else await api('/api/sites/' + site.id, { method: 'PUT', body: JSON.stringify(body) });
+    // 从投稿收录时，保存后自动删除该投稿
+    if (afterSaveDeleteSub) await api('/api/submissions/' + afterSaveDeleteSub, { method: 'DELETE' }).catch(() => {});
     showDashboard();
   };
 }
@@ -243,7 +394,7 @@ async function showModels() {
   const models = await api('/api/models');
   window._models = models;
   document.getElementById('app').innerHTML = `
-    ${topbar()}
+    ${topbar('models')}
     <main class="container container-sm">
       <div class="section-head">
         <h2 class="section-title">模型标签</h2>
@@ -268,8 +419,9 @@ async function showModels() {
       </div>
     </main>`;
 
-  document.getElementById('back').onclick = showDashboard;
-  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
+  bindTopbar();
+  const backBtn = document.getElementById('back');
+  if (backBtn) backBtn.onclick = showDashboard;
   document.querySelectorAll('[data-del-model]').forEach(b => b.onclick = async () => {
     if (!confirm('确定删除该模型标签？')) return;
     const next = window._models.filter((_, i) => i !== Number(b.dataset.delModel));

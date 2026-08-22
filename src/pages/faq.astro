@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const faqs = [
+  {
+    q: '什么是 AI API 中转站？',
+    a: '中转站（relay）是在你和官方 API（OpenAI、Anthropic 等）之间的转发服务：你把 base_url 指向中转站，用它的 key 调用，它再转发到官方。好处是免去外币支付和网络问题，通常价格更低（倍率 < 1）。正常官转倍率在 0.7-1.5 之间。',
+  },
+  {
+    q: '倍率（multiplier）是什么意思？',
+    a: '倍率是相对官方定价的折扣系数。0.4x 表示按官方价的 40% 计费；0.01x 即 1%。注意部分站点充值比例不是 1:1（如 1 元 = 0.1 刀），实际成本要乘上充值比例。',
+  },
+  {
+    q: '怎么使用中转站？',
+    a: '注册账号 → 在后台生成 API Key → 把客户端的 base_url 换成中转站地址。支持 OpenAI 格式的客户端（ChatBox、NextChat、各类 CLI 编程工具）都可以直接用。部分站点区分分组，注册后先看清自己所在的分组倍率。',
+  },
+  {
+    q: '怎么避免被坑？',
+    a: '① 谨慎充值，先小额试用；② 同时注册 2-3 家互为备份，避免单点故障；③ 关注站点运营时长和社区口碑（LinuxDo 等）；④ 免费额度大的新站风险也大，重要数据别走不可信渠道；⑤ 本站标注的实时状态和核验日期仅供参考。',
+  },
+  {
+    q: '免费额度/签到送的刀是真的吗？',
+    a: '多数是真的，但注意：① 部分站点送的"刀"按高倍率计费，实际能用的量很小；② 有些站需要进群/做任务才发放；③ 送的额度通常限速或限模型。看到"注册送 100 刀"先看清倍率和限制再冲。',
+  },
+  {
+    q: '中转站会跑路吗？',
+    a: '会。中转站本质是灰色生意，跑路、被封、停服都常见。本站用"实时监测"标记站点可达性，连续不可达的站点会被标注。但监测只能说明"站点能打开"，不能保证"不跑路"。原则：不充值超过你能承受损失的金额。',
+  },
+  {
+    q: '本站如何收录站点？',
+    a: '信息来自公开渠道整理和用户投稿，编辑审核后收录。收录不代表背书，排序和精选仅代表编辑偏好。如果你是站长想收录/删除，欢迎通过投稿页联系。',
+  },
+];
+---
+
+<BaseLayout title="FAQ 与新手指南 - TokenFree" description="什么是 AI API 中转站、倍率怎么看、怎么防跑路 —— 新手指南">
+  <Header />
+  <main class="pt-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+      <h1 class="text-2xl font-bold mb-2">FAQ 与新手指南</h1>
+      <p class="text-sm text-text-secondary mb-8">中转站是什么、怎么用、怎么不被坑。</p>
+      <div class="space-y-3">
+        {faqs.map((f, i) => (
+          <details class="group rounded-xl bg-bg-secondary border border-border" open={i === 0}>
+            <summary class="px-5 py-4 cursor-pointer text-sm font-medium list-none flex items-center justify-between gap-2">
+              {f.q}
+              <svg class="w-4 h-4 text-text-muted shrink-0 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-4 text-sm text-text-secondary leading-relaxed">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

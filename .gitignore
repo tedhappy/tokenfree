@@ -24,5 +24,7 @@ pnpm-debug.log*
 
 # 运行时数据（由后台服务写入，不属于源码）
 src/data/clicks.json
+src/data/uptime.json
+src/data/submissions.json
 
 .zcode/

@@ -1,12 +1,15 @@
 ---
+
 ---
 
 <footer class="border-t border-border py-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-muted">
-    <p>&copy; {new Date().getFullYear()} TokenFree. 仅供参考，不对任何中转站的安全性负责。</p>
+    <p data-i18n="footer.disclaimer">&copy; {new Date().getFullYear()} TokenFree. 仅供参考，不对任何中转站的安全性负责。</p>
     <div class="flex items-center gap-4">
-      <a href="/about" class="hover:text-text-secondary transition-colors">关于</a>
-      <a href="/admin" class="hover:text-text-secondary transition-colors">管理</a>
+      <a href="/submit" class="hover:text-text-secondary transition-colors" data-i18n="nav.submit">投稿</a>
+      <a href="/faq" class="hover:text-text-secondary transition-colors" data-i18n="nav.faq">FAQ</a>
+      <a href="/about" class="hover:text-text-secondary transition-colors" data-i18n="footer.about">关于</a>
+      <a href="/admin" class="hover:text-text-secondary transition-colors" data-i18n="footer.admin">管理</a>
     </div>
   </div>
 </footer>
