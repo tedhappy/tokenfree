@@ -15,14 +15,14 @@ const { site } = Astro.props;
 const models = modelsJson as Array<{ id: string; name: string; color: string }>;
 const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], offline: ['已失效', '#ef4444'] }[site.status];
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
-const netLabel = site.network === 'direct' ? '国内直连' : site.network === 'proxy' ? '需代理' : null;
+const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
 ---
 
 <BaseLayout title={`${site.name} - 倍率/模型/评价 | TokenFree`} description={site.summary}>
   <Header />
   <main class="pt-16">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <a href="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors">← 返回列表</a>
+      <a href="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors" data-i18n="detail.back">← 返回列表</a>
 
       <div class="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -30,7 +30,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
             <h1 class="text-2xl font-bold">{site.name}</h1>
             <span class="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border" style={`border-color: ${st![1]}40; color: ${st![1]}`}>
               <span class="w-1.5 h-1.5 rounded-full" style={`background: ${st![1]}`}></span>
-              {st![0]}
+              st![0]
             </span>
             {netLabel && (
               <span class={`text-xs px-2 py-0.5 rounded-full border ${site.network === 'direct' ? 'border-status-stable/30 text-status-stable' : 'border-status-unstable/30 text-status-unstable'}`}>
@@ -42,7 +42,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         </div>
         {site.multiplier !== null && (
           <div class="text-center px-4 py-2 rounded-xl bg-bg-secondary border border-border">
-            <p class="text-[10px] text-text-muted">倍率</p>
+            <p class="text-[10px] text-text-muted" data-i18n="detail.multiplier">倍率</p>
             <p class="text-xl font-bold font-mono">{site.multiplier}x</p>
           </div>
         )}
@@ -53,39 +53,39 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
           <a id="visit-btn" href={goUrl(site)} data-plain-url={`/go?url=${encodeURIComponent(site.url)}&id=${encodeURIComponent(site.id)}`}
              target="_blank" rel="noopener noreferrer nofollow"
              class="text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors">
-            访问站点 ↗
+            <span data-i18n="detail.visit">访问站点 ↗</span>
           </a>
         )}
         <button id="fav-btn" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
-          ☆ 收藏
+          <span data-i18n="detail.fav">☆ 收藏</span>
         </button>
       </div>
 
       <!-- 实时状态（客户端拉取监测 API） -->
       <div id="live-status" class="mt-6 p-4 rounded-xl bg-bg-secondary border border-border text-sm text-text-secondary">
-        <span class="text-text-muted">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
+        <span class="text-text-muted" data-i18n="detail.live">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
       </div>
 
       <div class="mt-8 space-y-6">
         <div>
-          <h2 class="text-sm font-medium text-text-muted mb-2">简介</h2>
+          <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.intro">简介</h2>
           <p class="text-sm text-text-secondary leading-relaxed">{site.summary}</p>
         </div>
         {site.description && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">详细信息</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.more">详细信息</h2>
             <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
           </div>
         )}
         {site.bonus && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">注册赠送</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.bonus">注册赠送</h2>
             <p class="text-sm text-status-stable">🎁 {site.bonus}</p>
           </div>
         )}
         {site.models.length > 0 && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">支持模型</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.models">支持模型</h2>
             <div class="flex flex-wrap gap-2">
               {site.models.map((mid) => {
                 const m = models.find((x) => x.id === mid);
@@ -97,7 +97,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         )}
         {(site.tools?.length ?? 0) > 0 && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">工具兼容</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tools">工具兼容</h2>
             <div class="flex flex-wrap gap-2">
               {site.tools!.map((t) => (
                 <span class="text-xs px-2.5 py-1 rounded-full border border-border text-text-secondary">{TOOLS.find((x) => x.id === t)?.name || t}</span>
@@ -107,7 +107,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         )}
         {site.tags.length > 0 && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">标签</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tags">标签</h2>
             <div class="flex flex-wrap gap-2">
               {site.tags.map((t) => <span class="text-xs px-2.5 py-1 rounded-full border border-dashed border-border text-text-muted">#{t}</span>)}
             </div>
@@ -115,7 +115,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         )}
         {(site.events?.length ?? 0) > 0 && (
           <div>
-            <h2 class="text-sm font-medium text-text-muted mb-3">体验日志</h2>
+            <h2 class="text-sm font-medium text-text-muted mb-3" data-i18n="detail.events">体验日志</h2>
             <div class="border-l border-border ml-1 space-y-4">
               {[...site.events!].reverse().map((ev) => (
                 <div class="relative pl-4">
@@ -128,8 +128,8 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
           </div>
         )}
         <div class="grid grid-cols-2 gap-3 text-xs text-text-muted border-t border-border pt-4">
-          <p>核验日期：{site.verifiedAt}</p>
-          <p>更新时间：{site.updatedAt}</p>
+          <p> data-i18n="detail.verified">核验日期：{site.verifiedAt}</p>
+          <p> data-i18n="detail.updated">更新时间：{site.updatedAt}</p>
         </div>
       </div>
     </div>
@@ -145,7 +145,7 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
         if (!d || !el) return;
         const u = d[siteId];
         if (!u || !u.checks) {
-          el.textContent = '暂无监测数据';
+          el.textContent = localStorage.getItem('tf-lang') === 'en' ? 'No monitor data yet' : '暂无监测数据';
           return;
         }
         const pct = u.uptime24h != null ? `${Math.round(u.uptime24h * 100)}%` : '—';
@@ -163,7 +163,8 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
       const renderFav = () => {
         const favs: string[] = JSON.parse(localStorage.getItem('tf-favs') || '[]');
         const on = favs.includes(siteId);
-        favBtn.textContent = on ? '★ 已收藏' : '☆ 收藏';
+        const en = localStorage.getItem('tf-lang') === 'en';
+        favBtn.textContent = on ? (en ? '★ Favorited' : '★ 已收藏') : en ? '☆ Favorite' : '☆ 收藏';
         favBtn.classList.toggle('text-accent', on);
       };
       favBtn.onclick = () => {
@@ -177,9 +178,6 @@ const netLabel = site.network === 'direct' ? '国内直连' : site.network === '
       renderFav();
     }
 
-    const visit = document.getElementById('visit-btn') as HTMLAnchorElement | null;
-    if (visit && visit.dataset.plainUrl && localStorage.getItem('tf-aff') === '0') {
-      visit.href = visit.dataset.plainUrl;
-    }
+
   </script>
 </BaseLayout>

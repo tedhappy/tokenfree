@@ -123,21 +123,20 @@ async function showSettings() {
   document.getElementById('export-btn').onclick = exportData;
   document.getElementById('cfg-save').onclick = async () => {
     const annText = document.getElementById('cfg-ann').value.trim();
+    // 公告 id = 内容哈希：同一内容重复保存不换 id（避免用户端重复弹窗），改内容即视为新公告
+    const hashId = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return 'ann-' + h.toString(36); };
     const announcements = annText
       ? annText.split('\n').map((line, i) => {
           const [date, ...rest] = line.split('|');
-          return {
-            id: 'ann-' + i + '-' + Date.now(),
-            date: (date || '').trim() || new Date().toISOString().slice(0, 10),
-            text: rest.join('|').trim(),
-          };
-        }).filter(a => a.text)
+          const d = (date || '').trim() || new Date().toISOString().slice(0, 10);
+          const text = rest.join('|').trim();
+          return text ? { id: hashId(d + '|' + text), date: d, text } : null;
+        }).filter(Boolean)
       : [];
     const cfg = {
       announcements,
       qq: document.getElementById('cfg-qq').value.trim(),
       telegram: document.getElementById('cfg-tg').value.trim(),
-      affDefaultOn: true,
     };
     await api('/api/config', { method: 'PUT', body: JSON.stringify(cfg) });
     alert('已保存');

@@ -5,16 +5,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="跳转中 - TokenFree">
   <div class="min-h-screen flex items-center justify-center px-4">
     <div class="text-center max-w-md w-full p-8 rounded-xl bg-bg-secondary border border-border">
-      <p class="text-text-secondary text-sm mb-4">正在跳转到外部站点…</p>
+      <p class="text-text-secondary text-sm mb-4"><span data-lang="zh">正在跳转到外部站点…</span><span data-lang="en">Opening external site…</span></p>
       <p id="go-target" class="font-mono text-xs text-text-muted break-all mb-6"></p>
-      <p class="text-xs text-text-muted mb-6">本站不对外部站点内容负责，请注意安全。</p>
+      <p class="text-xs text-text-muted mb-6"><span data-lang="zh">本站不对外部站点内容负责，请注意安全。</span><span data-lang="en">We are not responsible for external sites.</span></p>
       <div class="flex items-center justify-center gap-3">
         <a
           id="go-continue"
           href="#"
           class="text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors"
-        >继续前往</a>
-        <a href="/" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text-primary transition-colors">返回首页</a>
+        ><span data-lang="zh">继续前往</span><span data-lang="en">Continue</span></a>
+        <a href="/" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text-primary transition-colors"><span data-lang="zh">返回首页</span><span data-lang="en">Back to home</span></a>
       </div>
     </div>
   </div>

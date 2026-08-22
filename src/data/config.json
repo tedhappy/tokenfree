@@ -1,12 +1,11 @@
 {
   "announcements": [
     {
-      "id": "cleanup-20260822",
+      "id": "ann-1t2fksg",
       "date": "2026-08-22",
-      "text": "已完成首轮失效清理：自动监测三轮 + 境内外交叉验证，17 个不可达站点已移入避雷榜，当前收录 54 个可用站点。"
+      "text": "TokenFree 上线：已收录 54 个可用中转站（清理 17 个失效站），实时监测运行中。欢迎投稿与反馈。"
     }
   ],
   "qq": "",
-  "telegram": "",
-  "affDefaultOn": true
+  "telegram": ""
 }

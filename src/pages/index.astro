@@ -5,6 +5,7 @@ import Hero from '../components/Hero.astro';
 import SiteList from '../components/SiteList';
 import Footer from '../components/Footer.astro';
 import AnnouncementBar from '../components/AnnouncementBar.astro';
+import AnnounceModal from '../components/AnnounceModal.astro';
 import { getFilteredSites, goUrl } from '../utils/sites';
 import modelsJson from '../data/models.json';
 
@@ -43,7 +44,7 @@ function multColor(m: number | null): string {
         <section class="mb-12">
           <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
             <span class="w-1 h-4 bg-accent rounded-full"></span>
-            编辑精选
+            <span data-lang="zh">编辑精选</span><span data-lang="en">Featured</span>
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {featuredSites.map((site) => {
@@ -96,7 +97,7 @@ function multColor(m: number | null): string {
         <section class="mb-12">
           <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
             <span class="w-1 h-4 bg-status-stable rounded-full"></span>
-            最新收录
+            <span data-lang="zh">最新收录</span><span data-lang="en">Latest</span>
           </h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {latestSites.map((site) => {
@@ -119,11 +120,12 @@ function multColor(m: number | null): string {
       <section>
         <h2 class="text-lg font-medium text-text-primary mb-5 flex items-center gap-2">
           <span class="w-1 h-4 bg-text-muted rounded-full"></span>
-          全部站点
+          <span data-lang="zh">全部站点</span><span data-lang="en">All Sites</span>
         </h2>
         <SiteList client:load initialSites={allSites} models={models} />
       </section>
     </div>
   </main>
+  <AnnounceModal />
   <Footer />
 </BaseLayout>

@@ -35,9 +35,28 @@ interface Props {
 }
 
 const statusMap = {
-  stable: { label: '稳定', color: '#22c55e' },
-  unstable: { label: '不稳定', color: '#f59e0b' },
-  offline: { label: '已失效', color: '#ef4444' },
+  stable: { label: ['稳定', 'Stable'], color: '#22c55e' },
+  unstable: { label: ['不稳定', 'Unstable'], color: '#f59e0b' },
+  offline: { label: ['已失效', 'Offline'], color: '#ef4444' },
+} as const;
+
+// 界面文案：[中文, English]，语言在挂载后读取（避免 SSR 水合不一致）
+const UI = {
+  searchPh: ['搜索站点名称、标签或优惠…（⌘K）', 'Search name, tag or bonus… (⌘K)'],
+  all: ['全部', 'All'],
+  sortDefault: ['默认排序', 'Default'],
+  sortMult: ['倍率从低到高', 'Multiplier low→high'],
+  fav: ['我的收藏', 'Favorites'],
+  results: ['个结果', 'results'],
+  empty: ['没有找到匹配的站点', 'No matching sites'],
+  pending: ['链接待补充', 'URL pending'],
+  visit: ['访问 →', 'Visit →'],
+  direct: ['直连', 'Direct'],
+  proxy: ['代理', 'Proxy'],
+  online: ['在线', 'up'],
+  unreachable: ['监测不可达', 'Unreachable'],
+  cardView: ['卡片视图', 'Card view'],
+  tableView: ['表格视图', 'Table view'],
 } as const;
 
 // 站点头像：按名称哈希取色，首字母做徽章
@@ -84,8 +103,10 @@ export default function SiteList({ initialSites, models }: Props) {
   const [view, setView] = useState<'card' | 'table'>('card');
   const [uptime, setUptime] = useState<Record<string, UptimeEntry>>({});
   const [favs, setFavs] = useState<Set<string>>(new Set());
+  const [lang, setLang] = useState<0 | 1>(0); // 0=zh 1=en
 
   useEffect(() => {
+    setLang(localStorage.getItem('tf-lang') === 'en' ? 1 : 0);
     fetch('/api/uptime')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setUptime(d))
@@ -102,6 +123,8 @@ export default function SiteList({ initialSites, models }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  const t = (key: keyof typeof UI) => UI[key][lang];
 
   const toggleFav = (id: string) => {
     setFavs((prev) => {
@@ -160,7 +183,7 @@ export default function SiteList({ initialSites, models }: Props) {
 
   const goHref = (site: SiteItem) =>
     site.url
-      ? `/go?url=${encodeURIComponent((affEnabled() && site.affUrl) || site.url)}&id=${encodeURIComponent(site.id)}`
+      ? `/go?url=${encodeURIComponent(site.affUrl || site.url)}&id=${encodeURIComponent(site.id)}`
       : null;
 
   return (
@@ -177,7 +200,7 @@ export default function SiteList({ initialSites, models }: Props) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索站点名称、标签或优惠…（⌘K）"
+              placeholder={t('searchPh')}
               className="w-full bg-bg-secondary border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 transition-colors"
             />
           </div>
@@ -187,21 +210,21 @@ export default function SiteList({ initialSites, models }: Props) {
               onChange={(e) => setSortBy(e.target.value as 'default' | 'multiplier')}
               className="bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent/50"
             >
-              <option value="default">默认排序</option>
-              <option value="multiplier">倍率从低到高</option>
+              <option value="default">{t('sortDefault')}</option>
+              <option value="multiplier">{t('sortMult')}</option>
             </select>
             <div className="flex rounded-lg border border-border overflow-hidden">
               <button
                 onClick={() => setView('card')}
                 className={`px-2.5 py-2 text-xs ${view === 'card' ? 'bg-accent-muted text-accent' : 'text-text-muted hover:text-text-secondary'}`}
-                title="卡片视图"
+                title={t('cardView')}
               >
                 ▦
               </button>
               <button
                 onClick={() => setView('table')}
                 className={`px-2.5 py-2 text-xs ${view === 'table' ? 'bg-accent-muted text-accent' : 'text-text-muted hover:text-text-secondary'}`}
-                title="表格视图"
+                title={t('tableView')}
               >
                 ☰
               </button>
@@ -209,7 +232,7 @@ export default function SiteList({ initialSites, models }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2 mt-3 overflow-x-auto">
-          <button onClick={() => setActiveModel(null)} className={chipCls(activeModel === null)}>全部</button>
+          <button onClick={() => setActiveModel(null)} className={chipCls(activeModel === null)}>{t('all')}</button>
           {usedModels.map((m) => (
             <button
               key={m.id}
@@ -229,7 +252,7 @@ export default function SiteList({ initialSites, models }: Props) {
             }`}
             style={favOnly ? undefined : { borderStyle: 'dashed' }}
           >
-            ★ 我的收藏{favs.size > 0 ? `(${favs.size})` : ''}
+            ★ {t('fav')}{favs.size > 0 ? `(${favs.size})` : ''}
           </button>
           {usedTags.map((t) => (
             <button
@@ -249,14 +272,14 @@ export default function SiteList({ initialSites, models }: Props) {
       </div>
 
       <p className="text-xs text-text-muted mb-4">
-        共 {filtered.length} 个结果
+        {filtered.length} {t('results')}
         {activeModel && `（${usedModels.find((m) => m.id === activeModel)?.name}）`}
         {activeTag && ` #${activeTag}`}
         {favOnly && ' ★'}
       </p>
 
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-text-muted text-sm">没有找到匹配的站点</div>
+        <div className="py-16 text-center text-text-muted text-sm">t('empty')</div>
       ) : view === 'table' ? (
         <div className="rounded-xl border border-border overflow-x-auto bg-bg-secondary">
           <table className="w-full text-sm">
@@ -319,7 +342,7 @@ export default function SiteList({ initialSites, models }: Props) {
             const st = statusMap[site.status];
             const live = uptime[site.id];
             const dotColor = live ? (live.up ? '#22c55e' : '#ef4444') : st.color;
-            const dotTitle = live ? (live.up ? `在线 · ${live.latencyMs ?? '?'}ms` : '监测不可达') : st.label;
+            const dotTitle = live ? (live.up ? lang ? `up · ${live.latencyMs ?? '?'}ms` : `在线 · ${live.latencyMs ?? '?'}ms` : t('unreachable')) : st.label[lang];
             const href = goHref(site);
             return (
               <div
@@ -347,10 +370,10 @@ export default function SiteList({ initialSites, models }: Props) {
                       </a>
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} title={dotTitle} />
                       {site.network === 'direct' && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-stable/30 text-status-stable shrink-0">直连</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-stable/30 text-status-stable shrink-0">{t('direct')}</span>
                       )}
                       {site.network === 'proxy' && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-unstable/30 text-status-unstable shrink-0">代理</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-status-unstable/30 text-status-unstable shrink-0">{t('proxy')}</span>
                       )}
                     </div>
                     {site.bonus ? (
@@ -394,11 +417,11 @@ export default function SiteList({ initialSites, models }: Props) {
                       rel="noopener noreferrer nofollow"
                       className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors"
                     >
-                      访问 →
+                      t('visit')
                     </a>
                   )}
                 </div>
-                {!href && <p className="text-xs text-text-muted mt-2">链接待补充</p>}
+                {!href && <p className="text-xs text-text-muted mt-2">t('pending')</p>}
               </div>
             );
           })}

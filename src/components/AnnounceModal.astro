@@ -1,0 +1,54 @@
+---
+// 公告弹窗：首次访问或有未读公告时展示，关闭后按公告 id 记忆已读
+---
+
+<div id="ann-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="公告">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="ann-modal-overlay"></div>
+  <div class="relative w-full max-w-md rounded-2xl bg-bg-secondary border border-border shadow-2xl p-6">
+    <div class="flex items-center gap-2.5 mb-4">
+      <span class="w-8 h-8 rounded-lg bg-accent-muted flex items-center justify-center text-accent text-lg">📢</span>
+      <h2 class="text-base font-semibold" data-i18n="modal.title">公告</h2>
+    </div>
+    <div id="ann-modal-list" class="space-y-4 max-h-[50vh] overflow-y-auto mb-5"></div>
+    <button id="ann-modal-close" class="w-full py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors" data-i18n="modal.ok">
+      我知道了
+    </button>
+  </div>
+</div>
+
+<script>
+  fetch('/api/config')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => {
+      const modal = document.getElementById('ann-modal');
+      const list = document.getElementById('ann-modal-list');
+      if (!cfg?.announcements?.length || !modal || !list) return;
+      let seen: string[] = [];
+      try { seen = JSON.parse(localStorage.getItem('tf-ann-seen') || '[]'); } catch {}
+      const unseen = cfg.announcements.filter((a: any) => a.text && !seen.includes(a.id));
+      if (!unseen.length) return;
+      const en = localStorage.getItem('tf-lang') === 'en';
+      list.innerHTML = unseen
+        .map(
+          (a: any) => `
+          <div class="p-3.5 rounded-xl bg-bg-tertiary/60 border border-border">
+            <p class="text-[11px] text-text-muted font-mono mb-1.5">${a.date}</p>
+            <p class="text-sm text-text-primary leading-relaxed">${a.text}</p>
+          </div>`
+        )
+        .join('');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      const close = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        try {
+          seen.push(...unseen.map((a: any) => a.id));
+          localStorage.setItem('tf-ann-seen', JSON.stringify(seen));
+        } catch {}
+      };
+      document.getElementById('ann-modal-close')?.addEventListener('click', close);
+      document.getElementById('ann-modal-overlay')?.addEventListener('click', close);
+    })
+    .catch(() => {});
+</script>

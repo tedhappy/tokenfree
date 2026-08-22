@@ -26,3 +26,7 @@ html.dark {
   --c-accent-h: #6a4ce6;
   --c-accent-muted: rgba(124, 92, 252, 0.12);
 }
+
+/* 双语内容显隐：html.lang-en 显示 [data-lang=en]，html.lang-zh 显示 [data-lang=zh] */
+html.lang-en [data-lang='zh'] { display: none !important; }
+html.lang-zh [data-lang='en'] { display: none !important; }

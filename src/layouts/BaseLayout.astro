@@ -48,9 +48,11 @@ const ogImage = new URL('/og.png', Astro.site ?? 'https://tokenfree.example.com'
       (function () {
         if (localStorage.getItem('tf-theme') === 'dark') document.documentElement.classList.add('dark');
       })();
-      // 轻量 i18n：HTML 带 data-i18n 属性的元素按字典替换文本
+      // 轻量 i18n：data-i18n 元素替换文本 + html 语言类控制 [data-lang] 双语内容显隐
       (function () {
-        if (localStorage.getItem('tf-lang') !== 'en') return;
+        const en = localStorage.getItem('tf-lang') === 'en';
+        document.documentElement.classList.add(en ? 'lang-en' : 'lang-zh');
+        if (!en) return;
         const dict = window.TF_I18N_EN || {};
         document.querySelectorAll('[data-i18n]').forEach((el) => {
           const key = el.getAttribute('data-i18n');

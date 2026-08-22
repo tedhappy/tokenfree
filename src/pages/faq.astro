@@ -32,6 +32,36 @@ const faqs = [
     q: '本站如何收录站点？',
     a: '信息来自公开渠道整理和用户投稿，编辑审核后收录。收录不代表背书，排序和精选仅代表编辑偏好。如果你是站长想收录/删除，欢迎通过投稿页联系。',
   },
+]; // EN versions for data-lang spans
+const faqsEn = [
+  {
+    "q": "What is an AI API relay site?",
+    "a": "A relay (proxy) sits between you and official APIs (OpenAI, Anthropic, etc.): you point base_url at the relay and use its key. Benefits: no foreign card needed, no network issues, and usually cheaper (multiplier < 1). Fair-priced official-forwarding relays usually sit at 0.7–1.5x."
+  },
+  {
+    "q": "What does multiplier mean?",
+    "a": "The multiplier is the discount vs official pricing: 0.4x = 40% of official price; 0.01x = 1%. Note some sites use non-1:1 top-up rates (e.g. 1 CNY = 0.1 USD) — multiply that in for real cost."
+  },
+  {
+    "q": "How do I use a relay?",
+    "a": "Register → generate an API key in the dashboard → set base_url in your client. OpenAI-compatible clients (ChatBox, NextChat, CLI coding tools) work directly. Check which group/plan your account is on — multipliers differ per group."
+  },
+  {
+    "q": "How to avoid getting burned?",
+    "a": "① Top up small, test first; ② keep 2-3 relays as backups; ③ check site age and community reputation (LinuxDo etc.); ④ big free credits on new sites = big risk; ⑤ treat live status and verified dates here as reference only."
+  },
+  {
+    "q": "Are the free credits / check-in rewards real?",
+    "a": "Mostly yes, but: ① some \"credits\" are billed at high multipliers so real value is tiny; ② some require joining groups or tasks; ③ free tiers are often rate-limited or model-limited. Read the multiplier and limits before rushing in."
+  },
+  {
+    "q": "Do relay sites run away?",
+    "a": "Yes. Relays are a gray-market business — exit scams, bans and shutdowns are common. Our live monitoring marks reachability, and consistently failing sites get flagged. But \"reachable\" never guarantees \"won't run\". Rule: never top up more than you can afford to lose."
+  },
+  {
+    "q": "How does this directory list sites?",
+    "a": "From public sources and user submissions, reviewed by the editor. Listing is not endorsement; ordering and featuring reflect editor preference. Site owners can reach us via the submit page."
+  }
 ];
 ---
 
@@ -39,16 +69,16 @@ const faqs = [
   <Header />
   <main class="pt-16">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-      <h1 class="text-2xl font-bold mb-2">FAQ 与新手指南</h1>
-      <p class="text-sm text-text-secondary mb-8">中转站是什么、怎么用、怎么不被坑。</p>
+      <h1 class="text-2xl font-bold mb-2"><span data-lang="zh">FAQ 与新手指南</span><span data-lang="en">FAQ &amp; Guide</span></h1>
+      <p class="text-sm text-text-secondary mb-8"><span data-lang="zh">中转站是什么、怎么用、怎么不被坑。</span><span data-lang="en">What relays are, how to use them, and how not to get burned.</span></p>
       <div class="space-y-3">
         {faqs.map((f, i) => (
           <details class="group rounded-xl bg-bg-secondary border border-border" open={i === 0}>
             <summary class="px-5 py-4 cursor-pointer text-sm font-medium list-none flex items-center justify-between gap-2">
-              {f.q}
+              <span><span data-lang="zh">{f.q}</span><span data-lang="en">{faqsEn[i].q}</span></span>
               <svg class="w-4 h-4 text-text-muted shrink-0 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
             </summary>
-            <p class="px-5 pb-4 text-sm text-text-secondary leading-relaxed">{f.a}</p>
+            <p class="px-5 pb-4 text-sm text-text-secondary leading-relaxed"><span data-lang="zh">{f.a}</span><span data-lang="en">{faqsEn[i].a}</span></p>
           </details>
         ))}
       </div>

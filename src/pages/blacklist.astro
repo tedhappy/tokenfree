@@ -13,13 +13,13 @@ const unstable = all.filter((s) => s.status === 'unstable');
   <Header />
   <main class="pt-16">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      <h1 class="text-2xl font-bold mb-2">⚠ 避雷榜</h1>
-      <p class="text-sm text-text-secondary mb-4">以下站点已失效、疑似跑路或状态不稳定。数据来自编辑核验与自动监测，仅供参考。</p>
-      <p class="text-xs text-text-muted mb-10">提示：在这些站有余额的用户建议尽快用完；未注册的不建议充值。</p>
+      <h1 class="text-2xl font-bold mb-2"><span data-lang="zh">⚠ 避雷榜</span><span data-lang="en">⚠ Warning List</span></h1>
+      <p class="text-sm text-text-secondary mb-4"><span data-lang="zh">以下站点已失效、疑似跑路或状态不稳定。数据来自编辑核验与自动监测，仅供参考。</span><span data-lang="en">Dead, suspected-ran, or unstable relays. From editor checks and automated monitoring.</span></p>
+      <p class="text-xs text-text-muted mb-10"><span data-lang="zh">提示：在这些站有余额的用户建议尽快用完；未注册的不建议充值。</span><span data-lang="en">Tip: use up any balance ASAP; do not top up if not registered.</span></p>
 
       {offline.length > 0 && (
         <section class="mb-10">
-          <h2 class="text-sm font-medium text-status-offline mb-4">已失效 / 跑路（{offline.length}）</h2>
+          <h2 class="text-sm font-medium text-status-offline mb-4"><span data-lang="zh">已失效 / 跑路</span><span data-lang="en">Dead / Ran</span>（{offline.length}）</h2>
           <div class="space-y-3">
             {offline.map((s) => (
               <div class="p-4 rounded-xl bg-bg-secondary border border-status-offline/20">
@@ -37,7 +37,7 @@ const unstable = all.filter((s) => s.status === 'unstable');
 
       {unstable.length > 0 && (
         <section class="mb-10">
-          <h2 class="text-sm font-medium text-status-unstable mb-4">状态不稳定（{unstable.length}）</h2>
+          <h2 class="text-sm font-medium text-status-unstable mb-4"><span data-lang="zh">状态不稳定</span><span data-lang="en">Unstable</span>（{unstable.length}）</h2>
           <div class="space-y-3">
             {unstable.map((s) => (
               <div class="p-4 rounded-xl bg-bg-secondary border border-status-unstable/20">
