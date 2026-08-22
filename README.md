@@ -14,17 +14,22 @@ token中转站合集，让我们实现token自由 —— 收录可用、稳定�
 # 安装依赖
 npm install
 
-# 开发前台（http://localhost:4321）
+# 配置：复制示例并修改管理员密码（推荐，启动命令就不用带密码了）
+cp .env.example .env
+#   编辑 .env：ADMIN_PASSWORD=你的密码
+#   可选：SITE_URL=你的域名（影响 sitemap/og 链接）
+
+# 开发前台（http://localhost:4321，热更新，无后台 API）
 npm run dev
 
 # 构建前台静态文件到 dist/
 npm run build
 
-# 启动生产服务（前台 + 后台 API + 管理页，默认 4321 端口）
-ADMIN_PASSWORD=你的密码 npm run admin:start
+# 启动生产服务（前台 + 后台 API + 管理页，自动读取 .env）
+node server/index.js
 ```
 
-生产环境**必须**设置 `ADMIN_PASSWORD` 环境变量，否则服务拒绝启动。可用环境变量见 `.env.example`。
+密码等配置的优先级：**命令行环境变量 > .env 文件**。生产环境必须设置 `ADMIN_PASSWORD`（.env 或环境变量均可），否则服务拒绝启动。全部可用配置见 `.env.example`。
 
 ## 前台功能
 
