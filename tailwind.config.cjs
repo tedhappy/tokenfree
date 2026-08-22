@@ -42,8 +42,12 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+        // 系统字体栈：零外部请求，国内无被墙风险
+        sans: [
+          '-apple-system', 'BlinkMacSystemFont', 'Segoe UI',
+          'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'sans-serif',
+        ],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
     },
   },
