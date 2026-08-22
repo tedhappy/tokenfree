@@ -2,11 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getFilteredSites, goUrl, TOOLS } from '../../utils/sites';
+import { getAllSites, goUrl, TOOLS } from '../../utils/sites';
 import modelsJson from '../../data/models.json';
 
 export async function getStaticPaths() {
-  const sites = await getFilteredSites();
+  // 失效站也生成详情页（展示失效记录），sitemap 只收录活跃站
+  const sites = await getAllSites();
   return sites.map((site) => ({ params: { slug: site.id }, props: { site } }));
 }
 
