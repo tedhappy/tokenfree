@@ -1,0 +1,149 @@
+[
+  {
+    "id": "truesota",
+    "name": "TrueSota",
+    "url": "",
+    "multiplier": 0.01,
+    "bonus": "注册即送5刀，进群可再领10刀",
+    "models": [
+      "gpt",
+      "claude"
+    ],
+    "category": "公益",
+    "tags": [
+      "签到",
+      "邀请"
+    ],
+    "summary": "新站，基本上每天都有 0.001x 的倍率活动，可进群等消息。",
+    "description": "新站，注册即送5刀，进群可再领取10刀。限时 0.01 分组，基本上每天都有 0.001x 的倍率活动，建议进群等消息。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 1,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-22"
+  },
+  {
+    "id": "laowang-gongyi",
+    "name": "老牌公益站",
+    "url": "",
+    "multiplier": 0.4,
+    "bonus": "注册拉人有奖励",
+    "models": [
+      "gpt",
+      "claude"
+    ],
+    "tags": [
+      "稳定",
+      "邀请"
+    ],
+    "summary": "供应很稳，不拥挤名额，定价便宜，Github 和 L 站账号注册。",
+    "description": "老牌公益站，供应很稳，不拥挤名额。模型只有 5.6sol、opsu5、opus4.8，定价便宜。支持 Github 和 L 站账号注册，注册拉人有奖励。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 2,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-20"
+  },
+  {
+    "id": "modelquan",
+    "name": "模型全中转",
+    "url": "",
+    "multiplier": 0.4,
+    "bonus": "",
+    "models": [
+      "gpt",
+      "claude",
+      "gemini",
+      "grok",
+      "deepseek",
+      "qwen"
+    ],
+    "tags": [
+      "模型全"
+    ],
+    "summary": "模型齐全，并且支持 Cursor。",
+    "description": "模型齐全，覆盖 GPT、Claude、Gemini、Grok、DeepSeek、Qwen 等主流模型，并且支持 Cursor。",
+    "status": "stable",
+    "isFeatured": false,
+    "sortOrder": 3,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-20"
+  },
+  {
+    "id": "qiandao-quanmo",
+    "name": "签到领额度站",
+    "url": "",
+    "multiplier": null,
+    "bonus": "签到领额度",
+    "models": [
+      "claude",
+      "grok",
+      "gpt",
+      "gemini",
+      "llama",
+      "deepseek",
+      "qwen"
+    ],
+    "tags": [
+      "签到"
+    ],
+    "summary": "签到领额度，无免费额度。模型很全，倍率低。",
+    "description": "签到领额度，无免费额度。模型很全，Claude、Grok、Grok-3、Grok-3 mini、GPT、Gemini、Llama、DeepSeek、Qwen 等。倍率低。",
+    "status": "stable",
+    "isFeatured": false,
+    "sortOrder": 4,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-20"
+  },
+  {
+    "id": "song2dao",
+    "name": "注册送2刀站",
+    "url": "",
+    "multiplier": null,
+    "bonus": "注册送2刀，可签到",
+    "models": [
+      "gpt",
+      "claude",
+      "gemini",
+      "grok",
+      "deepseek",
+      "qwen"
+    ],
+    "tags": [
+      "签到"
+    ],
+    "summary": "注册送 2 刀，可签到，模型全，倍率相对较低。",
+    "description": "一个中转站，提供 AI API 中转服务，注册送 2 刀，可签到。模型全（GPT、Claude、Gemini、Grok、DeepSeek、Qwen 等）。倍率相对较低。",
+    "status": "stable",
+    "isFeatured": false,
+    "sortOrder": 5,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-20"
+  },
+  {
+    "id": "gpt-huodong",
+    "name": "GPT 活动站",
+    "url": "",
+    "multiplier": null,
+    "bonus": "",
+    "models": [
+      "gpt"
+    ],
+    "tags": [
+      "活动多"
+    ],
+    "summary": "速度很快，经常搞活动，模型全部是 GPT。",
+    "description": "速度很快，经常搞活动，模型全部是 GPT。充值 10 元起，适合轻度使用。",
+    "status": "unstable",
+    "isFeatured": false,
+    "sortOrder": 6,
+    "verifiedAt": "2026-08-20",
+    "createdAt": "2026-08-01",
+    "updatedAt": "2026-08-20"
+  }
+]

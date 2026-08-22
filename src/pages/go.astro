@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="跳转中 - TokenFree">
+  <div class="min-h-screen flex items-center justify-center px-4">
+    <div class="text-center max-w-md w-full p-8 rounded-xl bg-bg-secondary border border-border">
+      <p class="text-text-secondary text-sm mb-4">正在跳转到外部站点…</p>
+      <p id="go-target" class="font-mono text-xs text-text-muted break-all mb-6"></p>
+      <p class="text-xs text-text-muted mb-6">本站不对外部站点内容负责，请注意安全。</p>
+      <div class="flex items-center justify-center gap-3">
+        <a
+          id="go-continue"
+          href="#"
+          class="text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors"
+        >继续前往</a>
+        <a href="/" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text-primary transition-colors">返回首页</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 静态页面：在浏览器端解析 ?url= 参数并校验协议
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('url') || '';
+    const siteId = params.get('id') || '';
+    let target = '';
+    try { target = decodeURIComponent(raw); } catch { target = raw; }
+    const box = document.getElementById('go-target');
+    const btn = document.getElementById('go-continue') as HTMLAnchorElement | null;
+
+    if (/^https?:\/\//i.test(target)) {
+      if (box) box.textContent = target;
+      if (btn) {
+        btn.href = target;
+        btn.setAttribute('rel', 'noopener noreferrer nofollow');
+      }
+      // 点击统计（fire-and-forget，失败不影响跳转）
+      if (siteId) {
+        fetch('/api/click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ siteId }),
+        }).catch(() => {});
+      }
+      setTimeout(() => { location.href = target; }, 1500);
+    } else {
+      if (box) box.textContent = '无效的跳转链接';
+      if (btn) btn.style.display = 'none';
+    }
+  </script>
+</BaseLayout>

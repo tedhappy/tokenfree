@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import SiteList from '../components/SiteList';
+import Footer from '../components/Footer.astro';
+import { getFilteredSites } from '../utils/sites';
+
+const allSites = await getFilteredSites();
+const featuredSites = allSites.filter((s) => s.isFeatured && s.url);
+const models = (await import('../data/models.json')).default;
+const siteCount = allSites.length;
+const stableCount = allSites.filter(s => s.status === 'stable').length;
+---
+
+<BaseLayout>
+  <Header />
+  <main class="pt-16">
+    <Hero siteCount={siteCount} stableCount={stableCount} />
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+      {featuredSites.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-lg font-medium text-text-secondary mb-5 flex items-center gap-2">
+            <span class="w-1 h-4 bg-accent rounded-full"></span>
+            编辑精选
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {featuredSites.map(site => (
+              <a
+                href={`/go?url=${encodeURIComponent(site.url)}&id=${encodeURIComponent(site.id)}`}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                class="group block p-5 rounded-xl bg-bg-secondary border border-border hover:border-border-hover transition-colors"
+              >
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-medium text-text-primary group-hover:text-accent transition-colors">
+                    {site.name}
+                  </h3>
+                  <span class="text-xs font-mono text-text-muted shrink-0 ml-3">
+                    {site.multiplier}x
+                  </span>
+                </div>
+                <p class="text-sm text-text-secondary line-clamp-2 leading-relaxed">
+                  {site.summary}
+                </p>
+                <div class="flex flex-wrap gap-1.5 mt-3">
+                  {site.models.slice(0, 4).map(m => {
+                    const model = models.find((mm: any) => mm.id === m);
+                    const color = model?.color || 'model-other';
+                    return (
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full border"
+                        style={`border-color: ${color}30; color: ${color}`}
+                      >
+                        {model?.name || m}
+                      </span>
+                    );
+                  })}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+      <section>
+        <h2 class="text-lg font-medium text-text-secondary mb-5 flex items-center gap-2">
+          <span class="w-1 h-4 bg-text-muted rounded-full"></span>
+          全部站点
+        </h2>
+        <SiteList client:load initialSites={allSites} models={models} />
+      </section>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TokenFree 管理</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('tf_admin_token') || '';
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(opts.headers || {}) },
+  });
+  if (res.status === 401) { showLogin(); throw new Error('未授权'); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('请求失败 ' + res.status));
+  return data;
+}
+
+const STATUS = { stable:'稳定', unstable:'不稳定', offline:'已失效' };
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------- 登录 ----------
+function showLogin(msg = '') {
+  document.getElementById('app').innerHTML = `
+    <div class="login-wrap">
+      <form id="login-form" class="card login-card">
+        <h1 class="login-title">TokenFree 管理</h1>
+        <p class="login-sub">请输入管理员密码</p>
+        ${msg ? `<p class="login-error">${esc(msg)}</p>` : ''}
+        <input type="password" id="pwd" class="inp form-row" placeholder="密码" autofocus />
+        <button type="submit" class="btn btn-primary" style="width:100%">登录</button>
+      </form>
+    </div>`;
+  document.getElementById('login-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('pwd').value;
+    const res = await fetch(API + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.token) {
+      token = data.token; localStorage.setItem('tf_admin_token', token); showDashboard();
+    } else {
+      showLogin(data.error || '登录失败');
+    }
+  };
+}
+
+// ---------- 顶栏 ----------
+function topbar() {
+  return `
+    <header class="topbar">
+      <div class="topbar-inner">
+        <span class="brand">TokenFree 管理</span>
+        <div class="topbar-actions">
+          <a href="/" target="_blank">查看前台</a>
+          <button id="nav-models">模型标签</button>
+          <button id="logout">退出</button>
+        </div>
+      </div>
+    </header>`;
+}
+
+// ---------- 仪表盘 ----------
+async function showDashboard() {
+  const [stats, sites] = await Promise.all([api('/api/stats'), api('/api/sites')]);
+  window._sites = sites;
+  document.getElementById('app').innerHTML = `
+    ${topbar()}
+    <main class="container">
+      <div class="stats-grid">
+        ${[['总站点', stats.total], ['稳定', stats.stable], ['不稳定', stats.unstable], ['已失效', stats.offline]]
+          .map(([l, v]) => `<div class="card"><p class="stat-label">${l}</p><p class="stat-value">${v}</p></div>`).join('')}
+      </div>
+      <div class="section-head">
+        <h2 class="section-title">站点列表</h2>
+        <div class="section-actions">
+          <button id="rebuild" class="btn btn-ghost">重建前台</button>
+          <button id="add-site" class="btn btn-primary">+ 新增站点</button>
+        </div>
+      </div>
+      <p class="hint" style="margin:-6px 0 14px">改动站点数据后需点击「重建前台」，前台页面才会更新。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>名称</th><th>倍率</th><th>状态</th><th>精选</th><th>点击</th><th>核验</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${sites.map(s => `
+              <tr>
+                <td class="cell-strong">${esc(s.name)}</td>
+                <td class="cell-dim">${s.multiplier ?? '—'}</td>
+                <td>${STATUS[s.status] || s.status}</td>
+                <td>${s.isFeatured ? '⭐' : ''}</td>
+                <td>${(stats.clicks && stats.clicks[s.id]) || 0}</td>
+                <td class="cell-dim">${esc(s.verifiedAt || '')}</td>
+                <td class="cell-actions">
+                  <button class="btn btn-ghost" data-edit="${esc(s.id)}">编辑</button>
+                  <button class="btn btn-danger" data-del="${esc(s.id)}">删除</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </main>`;
+
+  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
+  document.getElementById('nav-models').onclick = showModels;
+  document.getElementById('add-site').onclick = () => showSiteForm(null);
+  document.getElementById('rebuild').onclick = rebuildFrontend;
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => showSiteForm(window._sites.find(s => s.id === b.dataset.edit)));
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!confirm('确定删除该站点？')) return;
+    await api('/api/sites/' + b.dataset.del, { method: 'DELETE' });
+    showDashboard();
+  });
+}
+
+// ---------- 重建前台 ----------
+async function rebuildFrontend() {
+  const btn = document.getElementById('rebuild');
+  btn.disabled = true; btn.textContent = '构建中…';
+  try {
+    const r = await api('/api/rebuild', { method: 'POST' });
+    btn.textContent = '✓ 已重建'; btn.classList.add('success-msg');
+    setTimeout(() => { btn.textContent = '重建前台'; btn.classList.remove('success-msg'); btn.disabled = false; }, 2500);
+  } catch (e) {
+    btn.textContent = '构建失败：' + e.message;
+    setTimeout(() => { btn.textContent = '重建前台'; btn.disabled = false; }, 4000);
+  }
+}
+
+// ---------- 站点表单 ----------
+async function showSiteForm(site) {
+  const isNew = !site;
+  const models = await api('/api/models');
+  site = site || { name:'', url:'', multiplier:'', bonus:'', models:[], tags:[], summary:'', description:'', status:'stable', isFeatured:false, sortOrder:99 };
+  document.getElementById('app').innerHTML = `
+    ${topbar()}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">${isNew ? '新增站点' : '编辑：' + esc(site.name)}</h2>
+        <button id="back" class="btn btn-ghost">← 返回</button>
+      </div>
+      <form id="site-form" class="card">
+        <div class="form-row">
+          <label class="field-label">名称 *</label>
+          <input id="f-name" class="inp" required value="${esc(site.name)}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">URL（留空则前台显示"链接待补充"）</label>
+          <input id="f-url" class="inp" placeholder="https://…" value="${esc(site.url)}" />
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="field-label">倍率（如 0.4，留空为未知）</label>
+            <input id="f-mult" class="inp" type="number" step="0.01" min="0" value="${site.multiplier ?? ''}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">状态</label>
+            <select id="f-status" class="inp">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}" ${site.status===v?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          <label class="field-label">注册赠送</label>
+          <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">支持模型</label>
+          <div class="checkbox-row">
+            ${models.map(m => `<label class="checkbox-item">
+              <input type="checkbox" name="models" value="${esc(m.id)}" ${site.models.includes(m.id)?'checked':''} />
+              <span style="color:${esc(m.color)}">${esc(m.name)}</span></label>`).join('')}
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">标签（逗号分隔，如：签到,生图,稳定）</label>
+          <input id="f-tags" class="inp" value="${esc((site.tags||[]).join(','))}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">一句话简介 *</label>
+          <input id="f-summary" class="inp" required value="${esc(site.summary)}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">详细描述</label>
+          <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="field-label">核验日期</label>
+            <input id="f-verified" class="inp" type="date" value="${esc(site.verifiedAt || new Date().toISOString().slice(0,10))}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">排序（小在前）</label>
+            <input id="f-sort" class="inp" type="number" value="${site.sortOrder ?? 99}" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          <label class="checkbox-item"><input id="f-featured" type="checkbox" ${site.isFeatured?'checked':''} /> 编辑精选 ⭐</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" id="cancel" class="btn btn-ghost">取消</button>
+        </div>
+      </form>
+    </main>`;
+
+  document.getElementById('back').onclick = showDashboard;
+  document.getElementById('cancel').onclick = showDashboard;
+  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
+  document.getElementById('site-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const body = {
+      name: document.getElementById('f-name').value.trim(),
+      url: document.getElementById('f-url').value.trim(),
+      multiplier: document.getElementById('f-mult').value === '' ? null : Number(document.getElementById('f-mult').value),
+      status: document.getElementById('f-status').value,
+      bonus: document.getElementById('f-bonus').value.trim(),
+      models: [...document.querySelectorAll('input[name=models]:checked')].map(i => i.value),
+      tags: document.getElementById('f-tags').value.split(/[,，]/).map(t => t.trim()).filter(Boolean),
+      summary: document.getElementById('f-summary').value.trim(),
+      description: document.getElementById('f-desc').value.trim(),
+      verifiedAt: document.getElementById('f-verified').value,
+      sortOrder: Number(document.getElementById('f-sort').value) || 99,
+      isFeatured: document.getElementById('f-featured').checked,
+    };
+    if (isNew) await api('/api/sites', { method: 'POST', body: JSON.stringify(body) });
+    else await api('/api/sites/' + site.id, { method: 'PUT', body: JSON.stringify(body) });
+    showDashboard();
+  };
+}
+
+// ---------- 模型标签管理 ----------
+async function showModels() {
+  const models = await api('/api/models');
+  window._models = models;
+  document.getElementById('app').innerHTML = `
+    ${topbar()}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">模型标签</h2>
+        <button id="back" class="btn btn-ghost">← 返回</button>
+      </div>
+      <div class="card">
+        <div class="chips-wrap" id="chips">
+          ${models.map((m, i) => `
+            <span class="model-chip" data-i="${i}">
+              <span class="model-dot" style="background:${esc(m.color)}"></span>
+              ${esc(m.name)} <span class="cell-dim" style="font-size:11px">${esc(m.id)}</span>
+              <button data-del-model="${i}" title="删除">×</button>
+            </span>`).join('')}
+        </div>
+        <form id="model-form" class="inline-form">
+          <div><label class="field-label">ID（英文，如 gpt）</label><input id="m-id" class="inp" required pattern="[a-z0-9-]+" /></div>
+          <div><label class="field-label">显示名</label><input id="m-name" class="inp" required /></div>
+          <div><label class="field-label">颜色</label><input id="m-color" class="inp" type="color" value="#6b7280" style="padding:4px;height:35px" /></div>
+          <button type="submit" class="btn btn-primary">添加</button>
+        </form>
+        <p class="hint">新增或删除模型后，记得「重建前台」。已有关联站点的模型删除后，前台会自动忽略未知模型。</p>
+      </div>
+    </main>`;
+
+  document.getElementById('back').onclick = showDashboard;
+  document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
+  document.querySelectorAll('[data-del-model]').forEach(b => b.onclick = async () => {
+    if (!confirm('确定删除该模型标签？')) return;
+    const next = window._models.filter((_, i) => i !== Number(b.dataset.delModel));
+    await api('/api/models', { method: 'PUT', body: JSON.stringify(next) });
+    showModels();
+  });
+  document.getElementById('model-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const m = {
+      id: document.getElementById('m-id').value.trim(),
+      name: document.getElementById('m-name').value.trim(),
+      color: document.getElementById('m-color').value,
+    };
+    if (window._models.some(x => x.id === m.id)) return alert('该 ID 已存在');
+    await api('/api/models', { method: 'PUT', body: JSON.stringify([...window._models, m]) });
+    showModels();
+  };
+}
+
+// ---------- 入口 ----------
+(async () => {
+  if (!token) return showLogin();
+  try { await api('/api/stats'); showDashboard(); }
+  catch { /* 401 时 api() 已自动跳转登录 */ }
+})();
+</script>
+</body>
+</html>

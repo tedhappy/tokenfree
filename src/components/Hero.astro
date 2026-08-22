@@ -1,0 +1,28 @@
+---
+interface Props {
+  siteCount: number;
+  stableCount: number;
+}
+const { siteCount, stableCount } = Astro.props;
+---
+
+<section class="pt-16 pb-10 sm:pt-20 sm:pb-14">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
+    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+      AI Token 中转站导航
+    </h1>
+    <p class="text-text-secondary text-sm sm:text-base max-w-lg mx-auto mb-8">
+      收录可用、稳定的 AI API 中转站，帮你快速找到免费额度和低价倍率入口
+    </p>
+    <div class="flex items-center justify-center gap-6 text-sm">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-status-stable"></span>
+        <span class="text-text-secondary"><span class="text-text-primary font-medium">{siteCount}</span> 个站点</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-accent"></span>
+        <span class="text-text-secondary"><span class="text-text-primary font-medium">{stableCount}</span> 个稳定</span>
+      </div>
+    </div>
+  </div>
+</section>
