@@ -1,0 +1,45 @@
+public/admin/admin.css
+  s_fbb68de319cc81::t_835da19d756c5c 138-140
+ecosystem.config.cjs
+  s_fbb68de319cc81::t_8306589e501361 2-3
+server/index.js
+  s_fbb68de319cc81::t_1027209f1ca5ca 24-31,35-38
+  s_fbb68de319cc81::t_09ce58f7fb257c 462-496
+  s_fbb68de319cc81::t_8fdcd705fe0310 500,507
+tsconfig.json
+  s_8463016df10eb1::t_a29a1eedf15854 7
+.env.example
+  s_fbb68de319cc81::t_5e891dbe135b01 1,4
+README.md
+  s_fbb68de319cc81::t_dfd362a43c585d 32,78-80,83,86-87,90
+deploy.sh
+  s_fbb68de319cc81::t_ff19a2dafc8b48 4,8-33,54-55,57,60-61,81
+public/admin/index.html
+  s_fbb68de319cc81::t_0ff096397ba97c 771-776,778,785-813,823,825-827,830-835,837-838,841-842,846,852-885,888,891-900,1006,1162-1163,1196,1198-1199
+src/components/SiteList.tsx
+  s_fbb68de319cc81::t_2ae39723f61f62 335-339
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "e8da08018e42b2d043b35ae171d4aa165beee28d",
+  "prompts": {},
+  "sessions": {
+    "s_8463016df10eb1": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "f11f45f2-9a2f-49f1-b575-cd51b2e938b6",
+        "model": "composer-2.5"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    },
+    "s_fbb68de319cc81": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d5d7ae73-3c53-43d1-9c25-13d990218b3c",
+        "model": "composer-2.5"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
