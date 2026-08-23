@@ -80,7 +80,7 @@ const qqHref = !qq
 {qq && (
   <div id="qq-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="QQ 群">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="qq-modal-overlay"></div>
-    <div class="relative w-full max-w-xs rounded-2xl bg-bg-secondary border border-border shadow-2xl p-6 text-center">
+    <div class="relative w-full max-w-xs rounded-2xl bg-bg-secondary border border-border shadow-2xl p-5 text-center overflow-y-auto max-h-[90vh]">
       <button id="qq-modal-close" class="absolute top-3 right-3 text-text-muted hover:text-text-primary text-lg leading-none" aria-label="关闭">✕</button>
       <h2 class="text-base font-semibold mb-1">
         <span data-lang="zh">加入 QQ 群「token自由」</span><span data-lang="en">Join QQ Group</span>
@@ -88,7 +88,7 @@ const qqHref = !qq
       <p class="text-xs text-text-muted mb-4">
         <span data-lang="zh">扫码进群，交流中转站资讯与白嫖情报</span><span data-lang="en">Scan to join &amp; share relay tips</span>
       </p>
-      <img src="/qq.png?v=2" alt="QQ 群二维码" class="w-56 h-56 mx-auto rounded-xl border border-border object-contain bg-white" />
+      <img src="/qq.png?v=2" alt="QQ 群二维码" class="w-full max-w-[220px] aspect-square mx-auto rounded-xl border border-border object-contain bg-white" />
       {qqNumber && (
         <button id="qq-number-copy" class="mt-4 inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors" data-number={qqNumber}>
           <span data-lang="zh">群号 {qqNumber} · 点击复制</span><span data-lang="en">Group {qqNumber} · copy</span>

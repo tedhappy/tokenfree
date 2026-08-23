@@ -512,9 +512,9 @@ async function showContent(tab = 'faq') {
       });
     };
     document.getElementById('faq-list').addEventListener('click', (e) => {
-      const del = (e.target as HTMLElement).closest('.faq-del');
+      const del = e.target.closest('.faq-del');
       if (del) {
-        (e.target as HTMLElement).closest('.faq-item')?.remove();
+        e.target.closest('.faq-item')?.remove();
         reindexFaq();
       }
     });
