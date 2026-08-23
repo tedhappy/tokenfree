@@ -67,6 +67,8 @@ const lite = sites.map((s) => ({
   </main>
   <Footer />
   <script define:vars={{ lite, models }}>
+  let uptimeData = {};
+  fetch('/api/uptime').then((r) => (r.ok ? r.json() : null)).then((d) => { uptimeData = d || {}; }).catch(() => {});
     const answers = {};
     document.querySelectorAll('#quiz [data-q]').forEach((group) => {
       const q = group.dataset.q;
@@ -86,7 +88,11 @@ const lite = sites.map((s) => ({
     document.getElementById('rec-go').onclick = () => {
       let list = [...lite];
       if (answers.model) list = list.filter((s) => s.models.includes(answers.model));
-      if (answers.network === 'direct') list = list.filter((s) => s.network === 'direct' || s.network === 'unknown');
+      // 国内直连：用本站实测延迟代理（>2.5s 或不可达视为直连体验差）
+      if (answers.network === 'direct' && Object.keys(uptimeData).length) {
+        const ok = list.filter((s) => { const u = uptimeData[s.id]; return u && u.up && (u.latencyMs ?? 9999) <= 2500; });
+        if (ok.length) list = ok;
+      }
       if (answers.budget === 'free') {
         const free = list.filter((s) => /送|签到|免费|公益/.test(s.bonus + s.summary + s.tags.join()));
         if (free.length) list = free;

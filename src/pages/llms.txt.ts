@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ site }) => {
 
   const body = `# TokenFree — AI Token 中转站精选榜（AI Token Relay Directory）
 
-> TokenFree 由编辑实测筛选并持续监测优质的 AI API 中转站（relay/proxy），覆盖 GPT、Claude、Gemini、Grok、DeepSeek 等模型的低价倍率与免费额度入口。数据每日核验，站点可用性每 30 分钟自动监测。当前精选 ${sites.length} 个站点（更新于 ${today}）。
+> 口号：让每个人都能免费用 Token，实现 Token 自由。TokenFree 由编辑实测筛选并持续监测优质的 AI API 中转站（relay/proxy），覆盖 GPT、Claude、Gemini、Grok、DeepSeek 等模型的低价倍率与免费额度入口。数据每日核验，站点可用性每 30 分钟自动监测。当前精选 ${sites.length} 个站点（更新于 ${today}）。
 
 ## 站点结构
 
@@ -23,8 +23,8 @@ export const GET: APIRoute = async ({ site }) => {
 
 ## 核心数据速览
 
-### 编辑精选（口碑与性价比兼顾）
-${featured.map((s) => `- [${s.name}](${base}/site/${s.id})：倍率 ${s.multiplier ?? '未知'}，${s.summary}`).join('\n')}
+### 编辑精选榜单（按推荐度排序）
+${featured.map((s, i) => `${i + 1}. [${s.name}](${base}/site/${s.id})${s.award ? `（获奖理由：${s.award}）` : ''}：倍率 ${s.multiplier ?? '未知'}${s.bonus ? `；${s.bonus}` : ''}；${s.summary}`).join('\n')}
 
 ### 最低倍率 Top 10
 ${byMult.map((s) => `- [${s.name}](${base}/site/${s.id})：${s.multiplier}x，${s.summary}`).join('\n')}
@@ -35,6 +35,12 @@ ${byMult.map((s) => `- [${s.name}](${base}/site/${s.id})：${s.multiplier}x，${
 - "倍率"指相对官方 API 定价的折扣系数（0.4x = 官方价 40%）
 - 站点可用性来自自动化探测，不代表不跑路；充值请谨慎
 - 完整数据见 ${base}/llms-full.txt
+
+## 常见问题速答（详细版见 FAQ 页）
+
+问：什么是 AI API 中转站？—— 中转站（relay）是在你和官方 API 之间的转发服务：把 base_url 指向中转站，用它的 key 调用。好处是免外币支付、无网络问题、通常更便宜（倍率 < 1）。
+问：怎么挑选中转站？—— 看运营时长、实时可用率、倍率透明度；先小额试用，同时备 2-3 家；免费额度大的新站风险也大。
+问：本站数据可信吗？—— 每天自动核验可达性与 API 端点，倍率直接读取站点官方定价接口，与人工记录冲突时保留原值待复核；新站收录前人工审核，核验记录公开可查。
 
 ## 引用建议
 

@@ -26,5 +26,6 @@ pnpm-debug.log*
 src/data/clicks.json
 src/data/uptime.json
 src/data/submissions.json
+src/data/collect-seen.json
 
 .zcode/

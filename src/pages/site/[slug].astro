@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllSites, goUrl, monthsSince, TOOLS } from '../../utils/sites';
+import { getAllSites, goUrl, ageParts, AGE_UNIT_ZH, AGE_UNIT_EN, TOOLS } from '../../utils/sites';
 import modelsJson from '../../data/models.json';
 
 export async function getStaticPaths() {
@@ -16,7 +16,7 @@ const models = modelsJson as Array<{ id: string; name: string; color: string }>;
 const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], offline: ['已失效', '#ef4444'] }[site.status];
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
 const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
-const months = monthsSince(site.createdAt);
+const months = ageParts(site.createdAt);
 const curlExample = site.apiBase ? `curl ${site.apiBase}/chat/completions \\
   -H "Authorization: Bearer sk-你的key" \\
   -H "Content-Type: application/json" \\
@@ -60,7 +60,7 @@ const toolSnippets = (site.tools ?? [])
   .filter((s) => s && site.apiBase);
 ---
 
-<BaseLayout title={`${site.name} - 倍率/模型/评价 | TokenFree`} description={site.summary}>
+<BaseLayout title={`${site.name} - 倍率/模型/实测 | TokenFree`} description={site.summary}>
   <Header />
   <main class="pt-16">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
@@ -82,15 +82,18 @@ const toolSnippets = (site.tools ?? [])
           </div>
           <p class="text-sm text-text-muted mt-2 font-mono">{host}</p>
           {site.award && (
-            <span class="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white">🏆 {site.award}</span>
+            <span class="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white"><span data-lang="zh">🏆 {site.award}</span>{site.awardEn && <span data-lang="en">🏆 {site.awardEn}</span>}</span>
           )}
-          {months > 0 && (
-            <span class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-bg-secondary border border-border text-text-secondary">📅 <span data-i18n="detail.age">已收录</span> {months} <span data-i18n="detail.ageUnit">个月</span></span>
+          {months && (
+            <span class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-bg-secondary border border-border text-text-secondary">📅
+              <span data-lang="zh">已收录 {months.n} {AGE_UNIT_ZH[months.unit]}</span>
+              <span data-lang="en">Listed {months.n} {AGE_UNIT_EN[months.unit]}</span>
+            </span>
           )}
         </div>
         {site.multiplier !== null && (
           <div class="text-center px-4 py-2 rounded-xl bg-bg-secondary border border-border">
-            <p class="text-[10px] text-text-muted" data-i18n="detail.multiplier">倍率</p>
+            <p class="text-xs text-text-muted" data-i18n="detail.multiplier">倍率</p>
             <p class="text-xl font-bold font-mono">{site.multiplier}x</p>
           </div>
         )}
@@ -112,38 +115,53 @@ const toolSnippets = (site.tools ?? [])
         </a>
       </div>
 
-      <!-- 实时状态（客户端拉取监测 API） -->
+      <!-- 实时状态（客户端拉取监测 API）+ 7 天趋势 -->
       <div id="live-status" class="mt-6 p-4 rounded-xl bg-bg-secondary border border-border text-sm text-text-secondary">
         <span class="text-text-muted" data-i18n="detail.live">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
+        <div id="trend-wrap" class="hidden mt-3 pt-3 border-t border-border">
+          <p class="text-xs text-text-muted mb-1.5">
+            <span data-lang="zh">近 7 天可用率（每格约 30 分钟）</span><span data-lang="en">Last 7 days uptime (each bar ≈ 30 min)</span>
+          </p>
+          <div id="trend" class="flex items-end gap-[2px] h-8"></div>
+        </div>
       </div>
 
       <div class="mt-8 space-y-6">
         <div>
           <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.intro">简介</h2>
           {site.summaryEn ? (
-            <p class="text-sm text-text-secondary leading-relaxed">
+            <p class="text-base text-text-secondary leading-relaxed">
               <span data-lang="zh">{site.summary}</span><span data-lang="en">{site.summaryEn}</span>
             </p>
           ) : (
-            <p class="text-sm text-text-secondary leading-relaxed">{site.summary}</p>
+            <p class="text-base text-text-secondary leading-relaxed">{site.summary}</p>
           )}
         </div>
         {site.description && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.more">详细信息</h2>
             {site.descriptionEn ? (
-              <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+              <p class="text-base text-text-secondary leading-relaxed whitespace-pre-line">
                 <span data-lang="zh">{site.description}</span><span data-lang="en">{site.descriptionEn}</span>
               </p>
             ) : (
-              <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
+              <p class="text-base text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
             )}
+          </div>
+        )}
+        {site.notice?.text && (
+          <div>
+            <h2 class="text-sm font-medium text-text-muted mb-2">
+              <span data-lang="zh">站点公告</span><span data-lang="en">Site notice</span>
+              <span class="ml-2 text-xs font-normal text-text-muted">📅 <span data-lang="zh">收录于 {site.notice.fetchedAt}</span><span data-lang="en">updated {site.notice.fetchedAt}</span></span>
+            </h2>
+            <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line p-3 rounded-xl bg-bg-secondary border border-border">{site.notice.text}</p>
           </div>
         )}
         {site.bonus && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.bonus">注册赠送</h2>
-            <p class="text-sm text-status-stable">🎁 {site.bonus}</p>
+            <p class="text-base text-status-stable font-medium">🎁 {site.bonusEn ? <><span data-lang="zh">{site.bonus}</span><span data-lang="en">{site.bonusEn}</span></> : site.bonus}</p>
           </div>
         )}
         {site.inviteCode && (
@@ -195,12 +213,12 @@ const toolSnippets = (site.tools ?? [])
             </div>
             <details class="group border border-border rounded-xl bg-bg-secondary">
               <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors" data-i18n="detail.curlExample">curl 调用示例</summary>
-              <pre class="px-4 pb-3 text-[11px] leading-relaxed text-text-secondary overflow-x-auto"><code>{curlExample}</code></pre>
+              <pre class="px-4 pb-3 text-xs leading-relaxed text-text-secondary overflow-x-auto"><code>{curlExample}</code></pre>
             </details>
             {toolSnippets.map((s) => (
               <details class="mt-2 border border-border rounded-xl bg-bg-secondary">
                 <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors">{s.title} <span class="text-text-muted">配置示例</span></summary>
-                <pre class="px-4 pb-3 text-[11px] leading-relaxed text-text-secondary overflow-x-auto"><code>{s.code}</code></pre>
+                <pre class="px-4 pb-3 text-xs leading-relaxed text-text-secondary overflow-x-auto"><code>{s.code}</code></pre>
               </details>
             ))}
           </div>
@@ -221,7 +239,7 @@ const toolSnippets = (site.tools ?? [])
                 <div class="relative pl-4">
                   <span class="absolute -left-[3.5px] top-1.5 w-1.5 h-1.5 rounded-full bg-accent/60"></span>
                   <p class="text-xs text-text-muted font-mono mb-0.5">{ev.date}</p>
-                  <p class="text-sm text-text-secondary leading-relaxed">{ev.text}</p>
+                  <p class="text-base text-text-secondary leading-relaxed">{ev.text}</p>
                 </div>
               ))}
             </div>
@@ -238,6 +256,7 @@ const toolSnippets = (site.tools ?? [])
   <script>
     // 实时状态 + 收藏 + AFF 感知
     const siteId = location.pathname.split('/').pop();
+    const en = localStorage.getItem('tf-lang') === 'en';
     fetch('/api/uptime')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -245,18 +264,63 @@ const toolSnippets = (site.tools ?? [])
         if (!d || !el) return;
         const u = d[siteId];
         if (!u || !u.checks) {
-          el.textContent = localStorage.getItem('tf-lang') === 'en' ? 'No monitor data yet' : '暂无监测数据';
+          el.textContent = en ? 'No monitor data yet' : '暂无监测数据';
           return;
         }
         const pct = u.uptime24h != null ? `${Math.round(u.uptime24h * 100)}%` : '—';
-        el.innerHTML = u.up
-          ? `<span style="color:#22c55e">● 在线</span> · 延迟 ${u.latencyMs ?? '?'}ms · 24h 可用率 ${pct}`
-          : `<span style="color:#ef4444">● 不可达</span> · 24h 可用率 ${pct}`;
+        const apiPart =
+          u.apiUp === true
+            ? (en ? ' · API endpoint OK' : ' · API 端点正常')
+            : u.apiUp === false
+              ? (en ? ' · API endpoint DOWN' : ' · API 端点异常')
+              : '';
+        el.innerHTML = !u.up
+          ? `<span style="color:#ef4444">● ${en ? 'unreachable' : '不可达'}</span> · ${en ? '24h uptime' : '24h 可用率'} ${pct}`
+          : u.apiUp === false
+            ? `<span style="color:#f59e0b">● ${en ? 'web up, API down' : '网页在线 · API 异常'}</span> · ${en ? '24h uptime' : '24h 可用率'} ${pct}`
+            : `<span style="color:#22c55e">● ${en ? 'up' : '在线'}</span> · ${en ? 'latency' : '延迟'} ${u.latencyMs ?? '?'}ms${apiPart} · ${en ? '24h uptime' : '24h 可用率'} ${pct}`;
       })
       .catch(() => {
         const el = document.getElementById('live-value');
         if (el) el.textContent = '暂无监测数据';
       });
+
+    // 7 天趋势条（数据量大时按相邻聚合，保证不超过 ~120 格不溢出容器）
+    fetch('/api/uptime/history/' + encodeURIComponent(siteId || ''))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        let checks = (d && d.checks) || [];
+        if (checks.length < 2) return;
+        if (checks.length > 120) {
+          const size = Math.ceil(checks.length / 120);
+          const buckets = [];
+          for (let i = 0; i < checks.length; i += size) {
+            const g = checks.slice(i, i + size);
+            buckets.push({
+              t: g[0].t,
+              ok: g.filter((c) => c.ok).length > g.length / 2,
+              ms: g.reduce((s, c) => s + (c.ms ?? 0), 0) / g.length,
+              api: g.some((c) => c.api === false) ? false : undefined,
+              n: g.length,
+            });
+          }
+          checks = buckets;
+        }
+        const wrap = document.getElementById('trend-wrap');
+        const box = document.getElementById('trend');
+        if (!wrap || !box) return;
+        for (const c of checks) {
+          const bar = document.createElement('div');
+          const time = new Date(c.t).toLocaleString(en ? 'en-US' : 'zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+          bar.className = 'flex-1 min-w-[2px] rounded-sm';
+          bar.style.height = c.ok ? (c.ms != null && c.ms < 1500 ? '100%' : '70%') : '30%';
+          bar.style.background = c.ok ? (c.api === false ? '#f59e0b' : '#22c55e') : '#ef4444';
+          bar.title = `${time} · ${c.ok ? (en ? 'up' : '在线') : en ? 'down' : '不可达'}${c.ms != null ? ` ${Math.round(c.ms)}ms` : ''}${c.api === false ? (en ? ' · API down' : ' · API异常') : ''}`;
+          box.appendChild(bar);
+        }
+        wrap.classList.remove('hidden');
+      })
+      .catch(() => {});
 
     const inviteBtn = document.getElementById('invite-btn');
     if (inviteBtn) {
@@ -315,6 +379,9 @@ const toolSnippets = (site.tools ?? [])
     name: site.name + ' - TokenFree',
     description: site.summary,
     url: new URL('/site/' + site.id, Astro.site ?? 'https://www.tokenfree.wiki').href,
+    datePublished: site.createdAt,
+    dateModified: site.updatedAt,
+    inLanguage: 'zh-CN',
     breadcrumb: {
       '@type': 'BreadcrumbList',
       itemListElement: [

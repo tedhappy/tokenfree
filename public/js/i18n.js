@@ -7,12 +7,14 @@ window.TF_I18N_EN = {
   'nav.about': 'About',
   'nav.recommend': 'Pick',
   'footer.disclaimer': 'For reference only. We are not responsible for any relay site.',
+  'footer.aff': 'Some sign-up links contain our referral code — it never affects the credits or experience you get.',
   'footer.about': 'About',
   'footer.admin': 'Admin',
 
   // 首页
   'hero.title': 'The Best AI Token Relays',
-  'hero.sub': '10 editor-tested AI API relays: free credits, low multipliers, live monitoring — all at a glance.',
+  'hero.sub': 'Free tokens for everyone — your token freedom starts here.',
+  'hero.sub2': 'Editor-tested AI API relays: free credits · low multipliers · live monitoring, all at a glance.',
   'hero.sites': 'sites',
   'hero.stable': 'stable',
   'hero.live': 'live',
@@ -26,6 +28,17 @@ window.TF_I18N_EN = {
 
   // 404
   '404.back': 'Back to home',
+
+  // 投稿页
+  'submit.title': 'Submit a Site',
+  'submit.sub': 'Share a relay you found. Listings go live after editor review.',
+  'submit.feedbackHint': 'Feedback mode: the editor will verify this site’s price/availability changes.',
+  'submit.name': 'Site name *',
+  'submit.url': 'Site URL *',
+  'submit.summary': 'One-line summary * (multiplier, bonus, models…)',
+  'submit.contact': 'Your contact (optional, editors only)',
+  'submit.send': 'Submit',
+  'submit.rules': 'AI API relays only. Spam is discarded. Max 5 submissions per hour.',
 
   // 详情页
   'detail.back': '← Back to list',

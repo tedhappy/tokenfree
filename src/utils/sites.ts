@@ -25,6 +25,10 @@ export interface Site {
   summaryEn?: string;
   /** 榜单获奖理由（如"最佳白嫖"），榜单卡片缎带展示 */
   award?: string;
+  /** 获奖理由英文 */
+  awardEn?: string;
+  /** 注册赠送英文 */
+  bonusEn?: string;
   /** API Base URL（注册后客户端配置用），设置后详情页展示一键复制 */
   apiBase?: string;
   status: 'stable' | 'unstable' | 'offline';
@@ -34,6 +38,10 @@ export interface Site {
   tools?: string[];
   /** 体验日志：[{date:'2026-08-22', text:'调价到0.02x'}]，按日期倒序展示 */
   events?: Array<{ date: string; text: string }>;
+  /** 站点公告（自动同步自 /api/notice，fetchedAt 为抓取日期） */
+  notice?: { text: string; fetchedAt: string } | null;
+  /** 最近一次自动核验的原始结果（延迟/标题/模型数/最低分组倍率） */
+  autoInfo?: Record<string, any> | null;
   isFeatured: boolean;
   sortOrder: number;
   verifiedAt: string;
@@ -55,6 +63,8 @@ function normalize(s: any): Site {
     apiBase: '',
     summaryEn: '',
     descriptionEn: '',
+    notice: null,
+    autoInfo: null,
     ...s,
   };
 }
@@ -84,13 +94,24 @@ export function goUrl(site: Site): string {
   return `/go?url=${encodeURIComponent(target)}&id=${encodeURIComponent(site.id)}`;
 }
 
-/** 收录时长（月）：按 createdAt 计算，用于"已收录 X 个月"信任徽章 */
-export function monthsSince(dateStr?: string): number {
-  if (!dateStr) return 0;
+export type AgeUnit = 'day' | 'month' | 'year';
+
+/** 收录时长（按 createdAt 计算，用于"已收录 X 天/个月/年"信任徽章）：
+ *  不足 1 天返回 null（不展示徽章），杜绝未满月虚标为"1 个月" */
+export function ageParts(dateStr?: string): { n: number; unit: AgeUnit } | null {
+  if (!dateStr) return null;
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return 0;
-  return Math.max(1, Math.floor((Date.now() - d.getTime()) / (30 * 24 * 3600 * 1000)));
+  if (isNaN(d.getTime())) return null;
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days < 1) return null;
+  if (days < 30) return { n: days, unit: 'day' };
+  const months = Math.floor(days / 30);
+  if (months < 12) return { n: months, unit: 'month' };
+  return { n: Math.floor(months / 12), unit: 'year' };
 }
+
+export const AGE_UNIT_ZH: Record<AgeUnit, string> = { day: '天', month: '个月', year: '年' };
+export const AGE_UNIT_EN: Record<AgeUnit, string> = { day: 'd', month: 'mo', year: 'yr' };
 
 export const TOOLS: Array<{ id: string; name: string }> = [
   { id: 'claude-code', name: 'Claude Code' },

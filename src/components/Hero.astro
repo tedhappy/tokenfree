@@ -13,8 +13,11 @@ const { siteCount, stableCount } = Astro.props;
         AI Token 中转站精选榜
       </span>
     </h1>
-    <p class="text-text-secondary text-sm sm:text-base max-w-lg mx-auto mb-6" data-i18n="hero.sub">
-      编辑实测筛选的 10 个可用中转站：免费额度、低价倍率、实时监测，一站看清
+    <p class="text-text-secondary text-sm sm:text-base max-w-xl mx-auto mb-2" data-i18n="hero.sub">
+      让每个人都能免费用 Token，实现 Token 自由
+    </p>
+    <p class="text-text-muted text-xs sm:text-sm max-w-xl mx-auto mb-8" data-i18n="hero.sub2">
+      编辑实测筛选的可用中转站：免费额度 · 低价倍率 · 实时监测，一站看清
     </p>
     <div class="flex justify-center mb-8">
       <a
@@ -26,34 +29,33 @@ const { siteCount, stableCount } = Astro.props;
       </a>
     </div>
     <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-status-stable/10 text-status-stable border border-status-stable/20">
-        <span class="font-semibold">{siteCount}</span> 个站点
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-status-stable/10 text-status-stable border border-status-stable/20 flex items-center gap-1">
+        <span class="font-bold text-lg leading-none">{siteCount}</span> <span data-i18n="hero.sites">个站点</span>
       </span>
-      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-accent-muted text-accent border border-accent/20">
-        <span class="font-semibold">{stableCount}</span> 个稳定
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-accent-muted text-accent border border-accent/20 flex items-center gap-1">
+        <span class="font-bold text-lg leading-none">{stableCount}</span> <span data-i18n="hero.stable">个稳定</span>
       </span>
-      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-bg-secondary text-text-secondary border border-border">
-        实时在线 <span id="hero-health" class="font-semibold text-text-primary">…</span>
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-bg-secondary text-text-secondary border border-border flex items-center gap-1">
+        <span data-i18n="hero.live">实时在线</span> <span id="hero-health" class="font-bold text-lg leading-none text-text-primary">…</span>
       </span>
     </div>
   </div>
 </section>
 
 <script>
-  // 全站健康度：聚合监测 API
+  // 全站健康度：24h 可用率均值（比瞬时探测更稳，避免单站抖动导致数字跳动）
   fetch('/api/uptime')
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       const el = document.getElementById('hero-health');
       if (!el) return;
       const entries = Object.values(d || {});
-      const checked = entries.filter((e: any) => e.checks > 0);
-      if (!checked.length) {
+      const withData = entries.filter((e: any) => e.checks > 0 && e.uptime24h != null);
+      if (!withData.length) {
         el.textContent = '—';
         return;
       }
-      const up = checked.filter((e: any) => e.up).length;
-      const pct = Math.round((up / checked.length) * 100);
+      const pct = Math.round((withData.reduce((s: number, e: any) => s + e.uptime24h, 0) / withData.length) * 100);
       el.textContent = `${pct}%`;
       el.style.color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
     })

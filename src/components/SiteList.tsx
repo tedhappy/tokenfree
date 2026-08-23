@@ -24,6 +24,9 @@ export interface SiteItem {
   summaryEn?: string;
   /** 榜单获奖理由（如"最佳白嫖"） */
   award?: string;
+  /** 英文获奖理由 / 注册赠送 */
+  awardEn?: string;
+  bonusEn?: string;
   status: 'stable' | 'unstable' | 'offline';
   network?: 'direct' | 'proxy' | 'unknown';
   tools?: string[];
@@ -35,6 +38,8 @@ interface UptimeEntry {
   lastCheck: number;
   up: boolean;
   latencyMs: number | null;
+  /** API 端点（/v1/models）最近一次探测：true/false，null=无法判断 */
+  apiUp?: boolean | null;
   uptime24h: number | null;
   checks: number;
 }
@@ -59,6 +64,11 @@ const UI = {
   all: ['全部', 'All'],
   sortDefault: ['编辑榜单', 'Editor ranking'],
   sortMult: ['倍率从低到高', 'Multiplier low→high'],
+  sortHot: ['热度优先', 'Most visited'],
+  sortNew: ['最新收录', 'Recently added'],
+  multAll: ['倍率不限', 'Any multiplier'],
+  freeOnly: ['有免费额度', 'Has free credits'],
+  reset: ['重置', 'Reset'],
   fav: ['我的收藏', 'Favorites'],
   results: ['个结果', 'results'],
   empty: ['没有找到匹配的站点', 'No matching sites'],
@@ -68,6 +78,7 @@ const UI = {
   direct: ['直连', 'Direct'],
   proxy: ['代理', 'Proxy'],
   online: ['在线', 'up'],
+  apiDown: ['网页在线 · API 异常', 'web up · API down'],
   unreachable: ['监测不可达', 'Unreachable'],
   cardView: ['卡片视图', 'Card view'],
   tableView: ['表格视图', 'Table view'],
@@ -94,7 +105,12 @@ const UI = {
   filter: ['筛选', 'Filter'],
   months: ['已收录', 'Listed'],
   monthsUnit: ['个月', 'mo'],
+  dayUnit: ['天', 'd'],
+  yearUnit: ['年', 'yr'],
   hot: ['次访问', 'visits'],
+  cSummary: ['简介', 'Summary'],
+  cRealShort: ['实际倍率', 'Real'],
+  visitShort: ['访问', 'Visit'],
 } as const;
 
 // 快捷标签预设：优先展示高频筛选维度
@@ -121,12 +137,34 @@ function realMultiplier(site: SiteItem): number | null {
   return (site.multiplier * site.topupRate) / USD_CNY;
 }
 
-/** 收录时长（月） */
-function monthsSince(dateStr?: string): number {
-  if (!dateStr) return 0;
+/** 收录时长：不足 1 天返回 null，杜绝未满月虚标为"1 个月" */
+function ageParts(dateStr?: string): { n: number; unit: 'day' | 'month' | 'year' } | null {
+  if (!dateStr) return null;
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return 0;
-  return Math.max(1, Math.floor((Date.now() - d.getTime()) / (30 * 24 * 3600 * 1000)));
+  if (isNaN(d.getTime())) return null;
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days < 1) return null;
+  if (days < 30) return { n: days, unit: 'day' };
+  const months = Math.floor(days / 30);
+  if (months < 12) return { n: months, unit: 'month' };
+  return { n: Math.floor(months / 12), unit: 'year' };
+}
+
+/** 站龄文案：zh "3 天 / 2 个月 / 1 年"，en "3 d / 2 mo / 1 yr" */
+function ageText(p: { n: number; unit: string } | null, lang: 0 | 1): string {
+  if (!p) return '';
+  const units = lang
+    ? { day: 'd', month: 'mo', year: 'yr' }
+    : { day: '天', month: '个月', year: '年' };
+  return `${p.n} ${units[p.unit as 'day']}`;
+}
+
+/** 实时状态展示：不可达(红) > 网页在线但API异常(黄) > 在线(绿) */
+function liveState(live: UptimeEntry | undefined, lang: 0 | 1): { color: string; label: string } | null {
+  if (!live) return null;
+  if (!live.up) return { color: '#ef4444', label: UI.unreachable[lang] };
+  if (live.apiUp === false) return { color: '#f59e0b', label: UI.apiDown[lang] };
+  return { color: '#22c55e', label: UI.online[lang] };
 }
 
 function Avatar({ name }: { name: string }) {
@@ -148,7 +186,9 @@ export default function SiteList({ initialSites, models }: Props) {
   const [activeModel, setActiveModel] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [favOnly, setFavOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<'default' | 'multiplier'>('default');
+  const [freeOnly, setFreeOnly] = useState(false);
+  const [maxMult, setMaxMult] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<'default' | 'multiplier' | 'hot' | 'new'>('default');
   const [view, setView] = useState<'card' | 'table'>('card');
   const [showFilters, setShowFilters] = useState(false);
   const [uptime, setUptime] = useState<Record<string, UptimeEntry>>({});
@@ -161,6 +201,9 @@ export default function SiteList({ initialSites, models }: Props) {
 
   useEffect(() => {
     setLang(localStorage.getItem('tf-lang') === 'en' ? 1 : 0);
+    // 支持 /?q=关键词 直达搜索（搜索引擎站内搜索入口 / 外链分享）
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) setQuery(q.slice(0, 60));
     fetch('/api/uptime')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setUptime(d))
@@ -253,6 +296,7 @@ export default function SiteList({ initialSites, models }: Props) {
         (s) =>
           s.name.toLowerCase().includes(q) ||
           s.summary.toLowerCase().includes(q) ||
+          (s as any).description?.toLowerCase().includes(q) ||
           s.bonus.toLowerCase().includes(q) ||
           (s.inviteCode || '').toLowerCase().includes(q) ||
           s.tags.some((t) => t.toLowerCase().includes(q))
@@ -261,6 +305,8 @@ export default function SiteList({ initialSites, models }: Props) {
     if (activeModel) list = list.filter((s) => s.models.includes(activeModel));
     if (activeTag) list = list.filter((s) => s.tags.includes(activeTag));
     if (favOnly) list = list.filter((s) => favs.has(s.id));
+    if (freeOnly) list = list.filter((s) => s.bonus || /送|签到|免费|公益/.test(s.summary));
+    if (maxMult !== null) list = list.filter((s) => s.multiplier !== null && s.multiplier <= maxMult);
     if (sortBy === 'default') {
       // 榜单默认序：精选优先（保持原有相对顺序）
       list = [...list].sort((a, b) => Number(b.isFeatured ?? false) - Number(a.isFeatured ?? false));
@@ -273,17 +319,26 @@ export default function SiteList({ initialSites, models }: Props) {
         return a.multiplier - b.multiplier;
       });
     }
+    if (sortBy === 'hot') {
+      list = [...list].sort((a, b) => (hot[b.id] || 0) - (hot[a.id] || 0));
+    }
+    if (sortBy === 'new') {
+      list = [...list].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
+    }
     return list;
-  }, [initialSites, query, activeModel, activeTag, favOnly, favs, sortBy]);
+  }, [initialSites, query, activeModel, activeTag, favOnly, favs, freeOnly, maxMult, sortBy, hot]);
 
   const compareSites = initialSites.filter((s) => compare.has(s.id));
-  const activeFilterCount = (activeModel ? 1 : 0) + (activeTag ? 1 : 0) + (favOnly ? 1 : 0);
+  const activeFilterCount =
+    (activeModel ? 1 : 0) + (activeTag ? 1 : 0) + (favOnly ? 1 : 0) + (freeOnly ? 1 : 0) + (maxMult !== null ? 1 : 0);
 
   const clearAll = () => {
     setQuery('');
     setActiveModel(null);
     setActiveTag(null);
     setFavOnly(false);
+    setFreeOnly(false);
+    setMaxMult(null);
   };
 
   const chipCls = (active: boolean) =>
@@ -331,11 +386,13 @@ export default function SiteList({ initialSites, models }: Props) {
             </button>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'default' | 'multiplier')}
+              onChange={(e) => setSortBy(e.target.value as 'default' | 'multiplier' | 'hot' | 'new')}
               className="bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent/50"
             >
               <option value="default">{t('sortDefault')}</option>
               <option value="multiplier">{t('sortMult')}</option>
+              <option value="hot">{t('sortHot')}</option>
+              <option value="new">{t('sortNew')}</option>
             </select>
             <div className="flex rounded-lg border border-border overflow-hidden">
               <button
@@ -370,6 +427,24 @@ export default function SiteList({ initialSites, models }: Props) {
                 </button>
               ))}
             </div>
+            {/* 倍率区间快筛（本站核心决策维度） */}
+            <div className="flex items-center gap-2 mt-2 overflow-x-auto">
+              <span className="shrink-0 text-xs text-text-muted pr-1">⚡</span>
+              <button onClick={() => setMaxMult(null)} className={chipCls(maxMult === null)}>{t('multAll')}</button>
+              {[0.01, 0.1, 0.5].map((m) => (
+                <button key={m} onClick={() => setMaxMult(maxMult === m ? null : m)} className={chipCls(maxMult === m)}>
+                  ≤{m}x
+                </button>
+              ))}
+              <button
+                onClick={() => setFreeOnly(!freeOnly)}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  freeOnly ? 'bg-status-stable/15 border-status-stable/40 text-status-stable' : 'border-border text-text-secondary hover:border-border-hover hover:text-text-primary'
+                }`}
+              >
+                🎁 {t('freeOnly')}
+              </button>
+            </div>
             <div className="flex items-center gap-2 mt-2 overflow-x-auto">
               <button
                 onClick={() => setFavOnly(!favOnly)}
@@ -394,6 +469,14 @@ export default function SiteList({ initialSites, models }: Props) {
                   #{t}
                 </button>
               ))}
+              {(activeModel || activeTag || favOnly || freeOnly || maxMult !== null) && (
+                <button
+                  onClick={clearAll}
+                  className="shrink-0 text-xs px-2.5 py-1 rounded-full border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors"
+                >
+                  ✕ {t('reset')}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -419,18 +502,19 @@ export default function SiteList({ initialSites, models }: Props) {
             <thead>
               <tr className="text-left text-xs text-text-muted border-b border-border">
                 <th className="px-4 py-3 font-normal"></th>
-                <th className="px-4 py-3 font-normal">站点</th>
-                <th className="px-4 py-3 font-normal">倍率</th>
-                <th className="px-4 py-3 font-normal">实际倍率</th>
-                <th className="px-4 py-3 font-normal">简介</th>
-                <th className="px-4 py-3 font-normal">模型</th>
+                <th className="px-4 py-3 font-normal">{t('cName')}</th>
+                <th className="px-4 py-3 font-normal">{t('cMult')}</th>
+                <th className="px-4 py-3 font-normal">{t('cRealShort')}</th>
+                <th className="px-4 py-3 font-normal">{t('cSummary')}</th>
+                <th className="px-4 py-3 font-normal">{t('cModels')}</th>
                 <th className="px-4 py-3 font-normal"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((site) => {
                 const live = uptime[site.id];
-                const dotColor = live ? (live.up ? '#22c55e' : '#ef4444') : statusMap[site.status].color;
+                const ls = liveState(live, lang);
+                const dotColor = ls ? ls.color : statusMap[site.status].color;
                 const real = realMultiplier(site);
                 const href = goHref(site);
                 return (
@@ -442,13 +526,13 @@ export default function SiteList({ initialSites, models }: Props) {
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       <span className="inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle" style={{ background: dotColor }} />
-                      {live?.up && live.latencyMs != null && <span className="text-[10px] font-mono text-text-muted mr-1.5 align-middle">{live.latencyMs}ms</span>}
+                      {live?.up && live.latencyMs != null && <span className="text-xs font-mono text-text-muted mr-1.5 align-middle">{live.latencyMs}ms</span>}
                       <a href={`/site/${site.id}`} className="font-medium hover:text-accent transition-colors">{site.name}</a>
                     </td>
-                    <td className="px-4 py-2.5 font-mono whitespace-nowrap" style={{ color: multiplierColor(site.multiplier) }}>
+                    <td className="px-4 py-2.5 font-mono font-bold text-base whitespace-nowrap" style={{ color: multiplierColor(site.multiplier) }}>
                       {site.multiplier !== null ? `${site.multiplier}x` : '—'}
                     </td>
-                    <td className="px-4 py-2.5 font-mono whitespace-nowrap text-xs">
+                    <td className="px-4 py-2.5 font-mono text-sm whitespace-nowrap">
                       {real !== null ? <span className="px-1.5 py-0.5 rounded" style={{ color: multiplierColor(real), backgroundColor: `${multiplierColor(real)}14` }}>≈{real.toFixed(2)}x</span> : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-text-secondary max-w-xs truncate">{summaryOf(site)}</td>
@@ -465,7 +549,7 @@ export default function SiteList({ initialSites, models }: Props) {
                     <td className="px-4 py-2.5 text-right">
                       {href && (
                         <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="text-xs px-2.5 py-1 rounded bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors whitespace-nowrap">
-                          访问
+                          {t('visitShort')}
                         </a>
                       )}
                     </td>
@@ -480,13 +564,18 @@ export default function SiteList({ initialSites, models }: Props) {
           {filtered.map((site) => {
             const st = statusMap[site.status];
             const live = uptime[site.id];
-            const dotColor = live ? (live.up ? '#22c55e' : '#ef4444') : st.color;
-            const dotTitle = live ? (live.up ? (lang ? `up · ${live.latencyMs ?? '?'}ms` : `在线 · ${live.latencyMs ?? '?'}ms`) : t('unreachable')) : st.label[lang];
+            const ls = liveState(live, lang);
+            const dotColor = ls ? ls.color : st.color;
+            const dotTitle = ls
+              ? (live!.up && live!.latencyMs != null
+                  ? `${ls.label} · ${live!.latencyMs}ms`
+                  : ls.label)
+              : st.label[lang];
             const href = goHref(site);
             const real = realMultiplier(site);
             const inCompare = compare.has(site.id);
             const rank = rankMap.get(site.id);
-            const months = monthsSince(site.createdAt);
+            const age = ageParts(site.createdAt);
             const hotCount = hot[site.id] || 0;
             return (
               <div
@@ -499,10 +588,11 @@ export default function SiteList({ initialSites, models }: Props) {
               >
                 <button
                   onClick={() => toggleFav(site.id)}
-                  className={`absolute top-3.5 right-3.5 text-sm leading-none transition-all ${
+                  className={`absolute top-3.5 right-3.5 p-1.5 -m-1.5 text-sm leading-none transition-all ${
                     favs.has(site.id)
                       ? 'text-accent opacity-100'
-                      : 'text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent'
+                      // 移动端无 hover：常显半透明；桌面端保持悬停浮现
+                      : 'text-text-muted opacity-50 md:opacity-0 md:group-hover:opacity-100 hover:text-accent'
                   }`}
                   title="收藏"
                 >
@@ -511,12 +601,12 @@ export default function SiteList({ initialSites, models }: Props) {
 
                 {/* 获奖理由缎带 / 精选标记 */}
                 {site.award && (
-                  <span className="absolute top-0 left-5 -translate-y-1/2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent text-white shadow-sm">
-                    🏆 {site.award}
+                  <span className="absolute top-0 left-5 -translate-y-1/2 text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-white shadow-sm">
+                    🏆 {lang && site.awardEn ? site.awardEn : site.award}
                   </span>
                 )}
                 {!site.award && site.isFeatured && (
-                  <span className="absolute top-0 left-5 -translate-y-1/2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent text-white shadow-sm">
+                  <span className="absolute top-0 left-5 -translate-y-1/2 text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-white shadow-sm">
                     ⭐ {lang ? 'Featured' : '精选'}
                   </span>
                 )}
@@ -534,24 +624,32 @@ export default function SiteList({ initialSites, models }: Props) {
                         {site.name}
                       </a>
                     </div>
-                    {/* 信任/状态 meta 行：状态 · 延迟 · 网络 */}
+                    {/* 信任/状态 meta 行：状态 · 延迟 · 网络（API 异常升级为黄色告警块） */}
                     <div className="flex items-center gap-2 flex-wrap mt-1">
-                      <span className="flex items-center gap-1 text-[11px]" style={{ color: dotColor }} title={dotTitle}>
+                      <span
+                        className={`flex items-center gap-1 text-xs ${live?.up && live.apiUp === false ? 'px-1.5 py-0.5 rounded-md' : ''}`}
+                        style={
+                          live?.up && live.apiUp === false
+                            ? { color: dotColor, backgroundColor: `${dotColor}1f` }
+                            : { color: dotColor }
+                        }
+                        title={dotTitle}
+                      >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
-                        {live ? (live.up ? t('online') : t('unreachable')) : st.label[lang]}
+                        {ls ? ls.label : st.label[lang]}
                       </span>
                       {live?.up && live.latencyMs != null && (
-                        <span className="text-[11px] font-mono text-text-muted">⚡{live.latencyMs}ms</span>
+                        <span className="text-xs font-mono text-text-muted">⚡{live.latencyMs}ms</span>
                       )}
-                      {site.network === 'direct' && <span className="text-[11px] text-status-stable">{t('direct')}</span>}
-                      {site.network === 'proxy' && <span className="text-[11px] text-status-unstable">{t('proxy')}</span>}
-                      {months > 0 && (
-                        <span className="text-[11px] text-text-muted" title={site.createdAt}>
-                          {t('months')} {months} {t('monthsUnit')}
+                      {site.network === 'direct' && <span className="text-xs text-status-stable">{t('direct')}</span>}
+                      {site.network === 'proxy' && <span className="text-xs text-status-unstable">{t('proxy')}</span>}
+                      {age && (
+                        <span className="text-xs text-text-muted" title={site.createdAt}>
+                          {t('months')} {ageText(age, lang)}
                         </span>
                       )}
                       {hotCount > 0 && (
-                        <span className="text-[11px] text-text-muted" title={lang ? 'total visits' : '累计访问'}>
+                        <span className="text-xs text-text-muted" title={lang ? 'total visits' : '累计访问'}>
                           🔥 {hotCount}
                         </span>
                       )}
@@ -560,7 +658,7 @@ export default function SiteList({ initialSites, models }: Props) {
                   {site.multiplier !== null && (
                     <div className="shrink-0 text-right">
                       <span
-                        className="block text-sm font-mono font-bold px-2.5 py-1 rounded-lg"
+                        className="block text-lg font-mono font-bold px-2.5 py-1 rounded-lg"
                         style={{
                           color: multiplierColor(site.multiplier),
                           backgroundColor: `${multiplierColor(site.multiplier)}1a`,
@@ -569,7 +667,7 @@ export default function SiteList({ initialSites, models }: Props) {
                         {site.multiplier}x
                       </span>
                       {real !== null && (
-                        <span className="block text-[10px] font-mono mt-1 text-text-muted" title={t('realNote')}>
+                        <span className="block text-xs font-mono mt-1 text-text-muted" title={t('realNote')}>
                           {lang ? 'real' : '实际'} ≈{real.toFixed(2)}x
                         </span>
                       )}
@@ -578,14 +676,14 @@ export default function SiteList({ initialSites, models }: Props) {
                 </div>
 
                 {site.bonus ? (
-                  <p className="text-xs text-status-stable/90 truncate mb-1.5">🎁 {site.bonus}</p>
+                  <p className="text-sm text-status-stable/90 mb-1.5">🎁 {lang && site.bonusEn ? site.bonusEn : site.bonus}</p>
                 ) : null}
-                <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mb-3 min-h-[2.5rem]">{summaryOf(site)}</p>
+                <p className="text-[15px] text-text-secondary leading-relaxed line-clamp-2 mb-3 min-h-[2.5rem]">{summaryOf(site)}</p>
 
                 {site.inviteCode ? (
                   <button
                     onClick={() => copyInvite(site)}
-                    className="mb-3 inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors"
+                    className="mb-3 inline-flex items-center gap-1 text-xs font-mono px-2 py-1 rounded border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors"
                   >
                     🎫 {site.inviteCode} · {copiedId === site.id ? t('copied') : t('copy')}
                   </button>
@@ -609,10 +707,11 @@ export default function SiteList({ initialSites, models }: Props) {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={() => toggleCompare(site.id)}
-                      className={`text-xs px-2 py-1.5 rounded-lg border transition-colors ${
+                      className={`text-xs px-2.5 py-2 m-[-4px] rounded-lg border transition-colors ${
                         inCompare
                           ? 'bg-accent text-white border-accent'
-                          : 'border-border text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent hover:border-accent/40'
+                          // 移动端无 hover：常显半透明；桌面端保持悬停浮现
+                          : 'border-border text-text-muted opacity-60 md:opacity-0 md:group-hover:opacity-100 hover:text-accent hover:border-accent/40'
                       }`}
                       title={t('compare')}
                     >
@@ -623,7 +722,7 @@ export default function SiteList({ initialSites, models }: Props) {
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer nofollow"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors font-medium"
+                        className="shrink-0 text-sm px-3.5 py-2 rounded-lg bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors font-medium"
                       >
                         {t('visit')}
                       </a>
@@ -663,12 +762,12 @@ export default function SiteList({ initialSites, models }: Props) {
                 {(
                   [
                     ['cName', (s: SiteItem) => <a key="n" href={`/site/${s.id}`} className="font-semibold text-accent hover:underline">{s.name}</a>],
-                    ['cMult', (s: SiteItem) => <span key="m" className="font-mono font-semibold" style={{ color: multiplierColor(s.multiplier) }}>{s.multiplier !== null ? `${s.multiplier}x` : '—'}</span>],
-                    ['cReal', (s: SiteItem) => { const r = realMultiplier(s); return <span key="r" className="font-mono">{r !== null ? `≈${r.toFixed(2)}x` : '—'}</span>; }],
-                    ['cStatus', (s: SiteItem) => { const l = uptime[s.id]; const c = l ? (l.up ? '#22c55e' : '#ef4444') : statusMap[s.status].color; const label = l ? (l.up ? t('online') : t('unreachable')) : statusMap[s.status].label[lang]; return <span key="s" style={{ color: c }}>● {label}</span>; }],
-                    ['cLatency', (s: SiteItem) => <span key="l" className="font-mono">{uptime[s.id]?.up ? (uptime[s.id].latencyMs != null ? `${uptime[s.id].latencyMs}ms` : '—') : '—'}</span>],
-                    ['cUptime', (s: SiteItem) => <span key="u" className="font-mono">{uptime[s.id]?.uptime24h != null ? `${Math.round(uptime[s.id].uptime24h! * 100)}%` : '—'}</span>],
-                    ['cAge', (s: SiteItem) => { const m = monthsSince(s.createdAt); return <span key="a" className="font-mono">{m > 0 ? `${m} ${t('monthsUnit')}` : '—'}</span>; }],
+                    ['cMult', (s: SiteItem) => <span key="m" className="font-mono font-bold text-base" style={{ color: multiplierColor(s.multiplier) }}>{s.multiplier !== null ? `${s.multiplier}x` : '—'}</span>],
+                    ['cReal', (s: SiteItem) => { const r = realMultiplier(s); return <span key="r" className="font-mono text-base">{r !== null ? `≈${r.toFixed(2)}x` : '—'}</span>; }],
+                    ['cStatus', (s: SiteItem) => { const ls = liveState(uptime[s.id], lang); const c = ls ? ls.color : statusMap[s.status].color; const label = ls ? ls.label : statusMap[s.status].label[lang]; return <span key="s" style={{ color: c }}>● {label}</span>; }],
+                    ['cLatency', (s: SiteItem) => <span key="l" className="font-mono text-base">{uptime[s.id]?.up ? (uptime[s.id].latencyMs != null ? `${uptime[s.id].latencyMs}ms` : '—') : '—'}</span>],
+                    ['cUptime', (s: SiteItem) => <span key="u" className="font-mono text-base">{uptime[s.id]?.uptime24h != null ? `${Math.round(uptime[s.id].uptime24h! * 100)}%` : '—'}</span>],
+                    ['cAge', (s: SiteItem) => { const a = ageParts(s.createdAt); return <span key="a" className="font-mono">{a ? ageText(a, lang) : '—'}</span>; }],
                     ['cBonus', (s: SiteItem) => <span key="b" className="text-status-stable text-xs">{s.bonus || '—'}</span>],
                     ['cInvite', (s: SiteItem) => (s.inviteCode ? <button key="i" onClick={() => copyInvite(s)} className="font-mono text-xs px-2 py-0.5 rounded border border-accent/30 text-accent hover:bg-accent-muted">{copiedId === s.id ? t('copied') : s.inviteCode}</button> : <span key="i" className="text-text-muted">—</span>)],
                     ['cNet', (s: SiteItem) => (s.network === 'direct' ? t('direct') : s.network === 'proxy' ? t('proxy') : '—')],
@@ -684,7 +783,7 @@ export default function SiteList({ initialSites, models }: Props) {
                 ))}
               </tbody>
             </table>
-            <p className="mt-4 text-[10px] text-text-muted leading-relaxed">{t('realNote')}</p>
+            <p className="mt-4 text-xs text-text-muted leading-relaxed">{t('realNote')}</p>
           </div>
         </div>
       )}

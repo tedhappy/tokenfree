@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { runCollect } from './collect.js';
+import { runEnrich } from './enrich.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -37,6 +39,10 @@ const SESSION_TTL_HOURS = 24;
 const MONITOR_INTERVAL_MIN = Number(process.env.MONITOR_INTERVAL_MIN || 30);
 const MONITOR_TIMEOUT_MS = 8000;
 const MONITOR_CONCURRENCY = 8;
+// 自动采集：从同类导航站抓取候选进投稿队列（小时，0 关闭；默认每天一次）
+const COLLECT_INTERVAL_HOURS = Number(process.env.COLLECT_INTERVAL_HOURS ?? 24);
+// 自动核验/信息回填后是否自动重建前台（默认开；关闭后需手动点「重建前台」）
+const REBUILD_ON_CHANGE = process.env.REBUILD_ON_CHANGE !== '0';
 
 if (!ADMIN_PASSWORD && process.env.NODE_ENV === 'production') {
   console.error('[fatal] 生产环境必须设置 ADMIN_PASSWORD 环境变量');
@@ -109,9 +115,9 @@ function persistUptime() {
   writeJson(UPTIME_FILE, obj);
 }
 
-async function checkSite(url) {
+async function timedFetch(url, timeoutMs = MONITOR_TIMEOUT_MS) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), MONITOR_TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const start = Date.now();
   try {
     const res = await fetch(url, {
@@ -120,14 +126,37 @@ async function checkSite(url) {
       signal: ctrl.signal,
       headers: { 'User-Agent': 'Mozilla/5.0 TokenFree-Monitor/1.0' },
     });
-    // 2xx/3xx/401/403 都算站点活着（登录墙不代表挂了）
-    const ok = res.status < 500;
-    return { ok, ms: Date.now() - start };
-  } catch {
-    return { ok: false, ms: Date.now() - start };
+    return { res, ms: Date.now() - start };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** 探测 /v1/models 判断 API 端点是否正常：
+ *  401/403/405 = 端点存在且鉴权正常（true）；5xx = 端点存在但故障（false）；
+ *  404/超时/非 JSON 的 200 = 无法判断（null） */
+async function checkApiEndpoint(origin) {
+  try {
+    const { res } = await timedFetch(`${origin}/v1/models`, 6000);
+    if ([401, 403, 405].includes(res.status)) return true;
+    if (res.status >= 500) return false;
+    if (res.status === 200) {
+      const ct = res.headers.get('content-type') || '';
+      return ct.includes('json') ? true : null; // HTML 200 多为 SPA 兜底，不算
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkSite(url) {
+  const origin = new URL(url).origin;
+  const [home, api] = await Promise.all([
+    timedFetch(url).then(({ res, ms }) => ({ ok: res.status < 500, ms })).catch(() => ({ ok: false, ms: null })),
+    checkApiEndpoint(origin),
+  ]);
+  return { ok: home.ok, ms: home.ms, api };
 }
 
 async function runMonitor() {
@@ -135,16 +164,25 @@ async function runMonitor() {
   monitoring = true;
   try {
     const sites = readJson(SITES_FILE, []).filter((s) => s.status !== 'offline' && s.url);
+    // 清理已下架/删除站点的陈旧监测记录，避免污染全站在线率
+    const liveIds = new Set(sites.map((s) => s.id));
+    let pruned = false;
+    for (const id of [...uptime.keys()]) {
+      if (!liveIds.has(id)) {
+        uptime.delete(id);
+        pruned = true;
+      }
+    }
     let done = 0;
     const queue = [...sites];
     const worker = async () => {
       while (queue.length) {
         const site = queue.shift();
-        const { ok, ms } = await checkSite(site.url);
+        const { ok, ms, api } = await checkSite(site.url);
         const rec =
           uptime.get(site.id) || { checks: [], lastCheck: 0 };
-        rec.checks.push({ t: Date.now(), ok, ms });
-        if (rec.checks.length > 60) rec.checks = rec.checks.slice(-60); // 保留约30小时历史
+        rec.checks.push({ t: Date.now(), ok, ms, api });
+        if (rec.checks.length > 336) rec.checks = rec.checks.slice(-336); // 保留约 7 天历史（30 分钟间隔）
         rec.lastCheck = Date.now();
         uptime.set(site.id, rec);
         done++;
@@ -152,23 +190,29 @@ async function runMonitor() {
     };
     await Promise.all(Array.from({ length: MONITOR_CONCURRENCY }, worker));
     persistUptime();
-    return { ok: true, checked: done, at: new Date().toISOString() };
+    return { ok: true, checked: done, pruned: pruned ? true : undefined, at: new Date().toISOString() };
   } finally {
     monitoring = false;
   }
 }
 
 function uptimeSummary() {
+  // 只输出当前榜单内站点的数据（防止历史遗留记录影响前台聚合）
+  const currentIds = new Set(readJson(SITES_FILE, []).map((s) => s.id));
   const out = {};
   for (const [siteId, rec] of uptime.entries()) {
+    if (!currentIds.has(siteId)) continue;
     const recent = rec.checks.slice(-48); // 约24小时
     const upCount = recent.filter((c) => c.ok).length;
     const lastOk = [...rec.checks].reverse().find((c) => c.ok);
     const lastFail = [...rec.checks].reverse().find((c) => !c.ok);
+    // API 端点状态：取最近一次可判断的探测结果
+    const lastApi = [...rec.checks].reverse().find((c) => c.api === true || c.api === false);
     out[siteId] = {
       lastCheck: rec.lastCheck,
       up: lastOk && (!lastFail || lastOk.t >= lastFail.t),
       latencyMs: lastOk ? lastOk.ms : null,
+      apiUp: lastApi ? lastApi.api : null,
       uptime24h: recent.length ? upCount / recent.length : null,
       checks: recent.length,
     };
@@ -187,11 +231,10 @@ app.post('/api/login', async (c) => {
     return c.json({ error: '尝试次数过多，请 15 分钟后再试' }, 429);
   }
   const { password } = await c.req.json().catch(() => ({}));
-  const ok =
-    ADMIN_PASSWORD &&
-    typeof password === 'string' &&
-    password.length === ADMIN_PASSWORD.length &&
-    crypto.timingSafeEqual(Buffer.from(password), Buffer.from(ADMIN_PASSWORD));
+  // timingSafeEqual 字节数不等会抛异常，先比字节长度（多字节密码也安全返回 401）
+  const pwdBuf = typeof password === 'string' ? Buffer.from(password) : null;
+  const admBuf = Buffer.from(ADMIN_PASSWORD);
+  const ok = Boolean(pwdBuf) && pwdBuf.length === admBuf.length && crypto.timingSafeEqual(pwdBuf, admBuf);
   if (!ok) {
     const r = loginAttempts.get(ip) || { count: 0, lockedUntil: 0 };
     r.count += 1;
@@ -312,10 +355,34 @@ app.get('/go', async (c) => {
 // ---- 监测（公开读 + 鉴权触发）----
 app.get('/api/uptime', (c) => c.json(uptimeSummary()));
 
+// 单站监测历史（最近 7 天），详情页趋势图用
+app.get('/api/uptime/history/:id', (c) => {
+  const id = c.req.param('id');
+  const rec = uptime.get(id);
+  if (!rec) return c.json({ checks: [] });
+  return c.json({ checks: rec.checks.slice(-336).map(({ t, ok, ms, api }) => ({ t, ok, ms, api })) });
+});
+
 app.post('/api/monitor/run', (c) => {
   if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const result = runMonitor();
   return result.then((r) => c.json(r));
+});
+
+// ---- 自动采集（鉴权触发；结果进投稿队列）----
+app.post('/api/collect/run', (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  return runCollect()
+    .then((r) => c.json(r))
+    .catch((e) => c.json({ error: e.message }, 500));
+});
+
+// ---- 站点信息自动核验/回填（鉴权触发；有变化时自动重建前台）----
+app.post('/api/enrich/run', (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  return runEnrich({ rebuild: tryRebuild })
+    .then((r) => c.json(r))
+    .catch((e) => c.json({ error: e.message }, 500));
 });
 
 // ---- 投稿（公开提交 + 鉴权管理）----
@@ -385,6 +452,10 @@ app.get('/api/stats', (c) => {
   const suspect = sites
     .filter((s) => s.status !== 'offline' && up[s.id] && !up[s.id].up && (up[s.id].checks || 0) >= 3)
     .map((s) => ({ id: s.id, name: s.name, checks: up[s.id].checks }));
+  // 推广链接待补：唯一需要人工操作的字段（去对应站注册拿自己的 aff 码）
+  const affPending = sites
+    .filter((s) => s.status !== 'offline' && s.url && !s.affUrl)
+    .map((s) => ({ id: s.id, name: s.name, url: s.url }));
   return c.json({
     total: sites.length,
     stable: sites.filter((s) => s.status === 'stable').length,
@@ -394,6 +465,7 @@ app.get('/api/stats', (c) => {
     clicks,
     uptime: up,
     suspect,
+    affPending,
     monitor: { intervalMin: MONITOR_INTERVAL_MIN, pending: monitoring },
   });
 });
@@ -430,6 +502,18 @@ app.post('/api/rebuild', async (c) => {
     building = false;
   }
 });
+
+// 数据有变化时重建前台（供自动任务用；受 REBUILD_ON_CHANGE 控制）
+async function tryRebuild() {
+  if (!REBUILD_ON_CHANGE) return;
+  if (building) throw new Error('已有构建在进行中');
+  building = true;
+  try {
+    await runBuild();
+  } finally {
+    building = false;
+  }
+}
 
 // ---- 配置（公告/社群/AFF，公开读 + 鉴权写）----
 app.get('/api/config', (c) => c.json(readJson(CONFIG_FILE, {})));
@@ -472,5 +556,29 @@ if (MONITOR_INTERVAL_MIN > 0) {
   setTimeout(() => runMonitor().catch(() => {}), 30_000);
 }
 
-console.log(`[admin] listening on http://0.0.0.0:${PORT} (monitor every ${MONITOR_INTERVAL_MIN}min)`);
+// 启动自动采集 + 信息核验定时器（结果进投稿队列 / 回填站点数据，等待人工审核）
+if (COLLECT_INTERVAL_HOURS > 0) {
+  const dailyJob = async () => {
+    try {
+      const c = await runCollect();
+      console.log(`[collector] 定时采集：+${c.added} 个候选入投稿队列`);
+    } catch (e) {
+      console.error('[collector] 定时采集失败:', e.message);
+    }
+    try {
+      const e = await runEnrich({ rebuild: tryRebuild });
+      const msg = `核验 ${e.checked} 站，${e.changed.length} 站有更新，共 ${e.eventsAdded} 条记录${e.rebuildTriggered ? '，已重建前台' : ''}`;
+      console.log(`[enrich] ${msg}`);
+    } catch (e) {
+      console.error('[enrich] 定时核验失败:', e.message);
+    }
+  };
+  setInterval(dailyJob, COLLECT_INTERVAL_HOURS * 3600_000);
+  // 启动 5 分钟后跑第一轮，避开启动高峰
+  setTimeout(dailyJob, 5 * 60_000);
+}
+
+console.log(
+  `[admin] listening on http://0.0.0.0:${PORT} (monitor every ${MONITOR_INTERVAL_MIN}min, collect every ${COLLECT_INTERVAL_HOURS}h)`
+);
 serve({ fetch: app.fetch, port: PORT, hostname: HOST });

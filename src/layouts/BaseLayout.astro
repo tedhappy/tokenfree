@@ -7,11 +7,14 @@ interface Props {
 }
 const {
   title = 'TokenFree - AI Token 中转站精选榜',
-  description = '编辑实测筛选的 AI Token 中转站精选榜：免费额度、低价倍率、实时监测，帮你快速找到可用、稳定的 AI 服务入口。',
+  description = '让每个人都能免费用 Token，实现 Token 自由——编辑实测的中转站精选榜：免费额度、低价倍率、实时监测。',
 } = Astro.props;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://www.tokenfree.wiki').href;
 // canonical：统一域名避免重复内容
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfree.wiki').href;
+// 搜索引擎站长验证（可选，构建时注入：.env 里配 PUBLIC_GOOGLE_SITE_VERIFICATION / PUBLIC_BING_SITE_VERIFICATION）
+const googleVerify = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const bingVerify = import.meta.env.PUBLIC_BING_SITE_VERIFICATION;
 ---
 
 <html lang="zh-CN">
@@ -20,12 +23,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfr
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="applicable-device" content="pc,mobile" />
+    <meta property="og:site_name" content="TokenFree" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
+    {googleVerify && <meta name="google-site-verification" content={googleVerify} />}
+    {bingVerify && <meta name="msvalidate.01" content={bingVerify} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
     {canonical && <link rel="canonical" href={canonical} />}
     <script is:inline src="/js/i18n.js"></script>
@@ -42,11 +50,21 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.tokenfr
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'TokenFree',
+      alternateName: 'TokenFree 中转站精选榜',
       description,
       url: Astro.site?.toString() ?? 'https://www.tokenfree.wiki',
+      inLanguage: ['zh-CN', 'en'],
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: new URL('/?q={search_term_string}', Astro.site ?? 'https://www.tokenfree.wiki').href,
+        },
+        'query-input': 'required name=search_term_string',
+      },
     })} />
   </head>
-  <body class="bg-bg text-text-primary min-h-screen font-sans antialiased">
+  <body class="bg-bg text-text-primary text-base min-h-screen font-sans antialiased">
     <!-- 顶部品牌光晕（极淡，氛围用） -->
     <div class="pointer-events-none fixed inset-x-0 top-0 h-[420px] overflow-hidden z-0" aria-hidden="true">
       <div class="absolute left-1/2 -translate-x-1/2 -top-[220px] w-[820px] h-[480px] rounded-full opacity-[0.13]" style="background: radial-gradient(ellipse at center, var(--c-accent), transparent 65%);"></div>

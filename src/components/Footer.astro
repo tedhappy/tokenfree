@@ -5,16 +5,19 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="border-t border-border py-8">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-muted">
-    <p data-i18n="footer.disclaimer">&copy; {year} TokenFree. 仅供参考，不对任何中转站的安全性负责。</p>
-    <div class="flex items-center gap-4 flex-wrap justify-center">
-      {qq && <a href={`https://qm.qq.com/cgi-bin/qm/qr?k=${qq}`} target="_blank" rel="noopener noreferrer" class="hover:text-text-secondary transition-colors">QQ群</a>}
-      {telegram && <a href={telegram} target="_blank" rel="noopener noreferrer" class="hover:text-text-secondary transition-colors">Telegram</a>}
-      <a href="/submit" class="hover:text-text-secondary transition-colors" data-i18n="nav.submit">投稿</a>
-      <a href="/recommend" class="hover:text-text-secondary transition-colors" data-i18n="nav.recommend">选站</a>
-      <a href="/faq" class="hover:text-text-secondary transition-colors" data-i18n="nav.faq">FAQ</a>
-      <a href="/about" class="hover:text-text-secondary transition-colors" data-i18n="footer.about">关于</a>
-      <a href="/admin" class="hover:text-text-secondary transition-colors" data-i18n="footer.admin">管理</a>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-3 text-xs text-text-muted">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+      <p data-i18n="footer.disclaimer">&copy; {year} TokenFree. 仅供参考，不对任何中转站的安全性负责。</p>
+      <div class="flex items-center gap-4 flex-wrap justify-center">
+        {qq && <a href={`https://qm.qq.com/cgi-bin/qm/qr?k=${qq}`} target="_blank" rel="noopener noreferrer" class="hover:text-text-secondary transition-colors">QQ群</a>}
+        {telegram && <a href={telegram} target="_blank" rel="noopener noreferrer" class="hover:text-text-secondary transition-colors">Telegram</a>}
+        <a href="/submit" class="hover:text-text-secondary transition-colors" data-i18n="nav.submit">投稿</a>
+        <a href="/recommend" class="hover:text-text-secondary transition-colors" data-i18n="nav.recommend">选站</a>
+        <a href="/faq" class="hover:text-text-secondary transition-colors" data-i18n="nav.faq">FAQ</a>
+        <a href="/about" class="hover:text-text-secondary transition-colors" data-i18n="footer.about">关于</a>
+        <a href="/admin" class="hover:text-text-secondary transition-colors" data-i18n="footer.admin">管理</a>
+      </div>
     </div>
+    <p class="text-center" data-i18n="footer.aff">部分注册链接含本站推广码，不影响你获得的额度与体验。</p>
   </div>
 </footer>
