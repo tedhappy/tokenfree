@@ -1,6 +1,6 @@
 ---
 // 公告条：客户端拉取 /api/config 实时显示，可按条关闭（localStorage 记忆）；
-// 内容超出宽度时自动横向滚动（跑马灯），短内容静止不动
+// 始终跑马灯横向滚动（内容双份实现无缝循环），悬停暂停
 ---
 
 <div id="announce-bar" class="hidden"></div>
@@ -8,17 +8,16 @@
 <style>
   @keyframes ann-marquee {
     0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
+    100% { transform: translateX(-50%); }
   }
-  #ann-track.ann-scroll {
-    display: inline-block;
+  #ann-track {
+    display: inline-flex;
     white-space: nowrap;
-    padding-right: 4rem;
-    animation: ann-marquee 22s linear infinite;
+    animation: ann-marquee 26s linear infinite;
   }
-  #ann-track.ann-scroll:hover { animation-play-state: paused; }
+  #ann-track:hover { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) {
-    #ann-track.ann-scroll { animation: none; }
+    #ann-track { animation: none; }
   }
 </style>
 
@@ -37,26 +36,21 @@
       if (!items.length) return;
       const en = localStorage.getItem('tf-lang') === 'en';
       bar.className = 'bg-accent-muted border-b border-accent/20 overflow-hidden';
+      const half = items
+        .map(
+          (a: any) =>
+            `<span class="text-text-secondary mr-10"><span class="text-text-muted mr-1.5">${a.date}</span>${a.text}</span>`
+        )
+        .join('');
+      // 双份内容 + 位移 50% = 无缝循环跑马灯（短内容也有持续动效）
       bar.innerHTML = `
         <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-3 text-xs">
           <span class="text-accent shrink-0">📢 ${en ? 'Notice' : '公告'}</span>
           <div class="flex-1 min-w-0 overflow-hidden">
-            <div id="ann-track">
-              ${items
-                .map(
-                  (a: any) =>
-                    `<span class="text-text-secondary mr-10"><span class="text-text-muted mr-1.5">${a.date}</span>${a.text}</span>`
-                )
-                .join('')}
-            </div>
+            <div id="ann-track">${half}${half}</div>
           </div>
           <button id="ann-close" class="text-text-muted hover:text-text-primary shrink-0" aria-label="${en ? 'Close notice' : '关闭公告'}">✕</button>
         </div>`;
-      // 内容溢出才滚动，短内容保持静止
-      const track = document.getElementById('ann-track');
-      if (track && track.scrollWidth > track.parentElement!.clientWidth + 8) {
-        track.classList.add('ann-scroll');
-      }
       document.getElementById('ann-close')?.addEventListener('click', () => {
         items.forEach((a: any) => localStorage.setItem('tf-ann-off-' + a.id, '1'));
         bar.remove();
