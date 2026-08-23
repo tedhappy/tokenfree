@@ -769,8 +769,18 @@ async function showDashboard() {
 
 // ---------- 投稿审核 ----------
 function subSourceLabel(s) {
-  if (s.ip === 'collector') return { text: '自动采集', color: '#8b6dff' };
-  return { text: '用户投稿', color: '#22c55e' };
+  if (s.ip === 'collector') return { text: '自动采集', cls: 'sub-badge-collector' };
+  return { text: '用户投稿', cls: 'sub-badge-user' };
+}
+
+function subUrlDisplay(url) {
+  try {
+    const u = new URL(url);
+    const path = u.pathname === '/' ? '' : u.pathname;
+    return u.host + path;
+  } catch {
+    return url || '';
+  }
 }
 
 async function showSubmissions(editingId = null) {
@@ -778,7 +788,7 @@ async function showSubmissions(editingId = null) {
   const editing = editingId ? subs.find((s) => s.id === editingId) : null;
   document.getElementById('app').innerHTML = `
     ${topbar('subs')}
-    <main class="container">
+    <main class="container container-wide">
       <div class="section-head">
         <h2 class="section-title">投稿审核（${subs.length}）</h2>
       </div>
@@ -818,25 +828,32 @@ async function showSubmissions(editingId = null) {
           <p class="empty-desc">用户提交的站点会出现在这里。也可以在「监测」页点「立即采集」自动发现新站候选。</p>
           <button id="goto-collect" class="btn btn-ghost">前往监测页采集 →</button>
         </div>` : `
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>来源</th><th>联系方式</th><th>时间</th><th>操作</th></tr></thead>
+      <div class="table-wrap subs-table-wrap">
+        <table class="subs-table">
+          <thead><tr><th>站点</th><th>简介</th><th>来源 / 备注</th><th>时间</th><th>操作</th></tr></thead>
           <tbody>
             ${subs.map(s => {
               const src = subSourceLabel(s);
+              const remark = s.contact || '';
               return `
               <tr>
-                <td class="cell-strong">${esc(s.name)}</td>
-                <td class="cell-dim" style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${esc(s.url)}">${esc(s.url)}</td>
-                <td style="max-width:220px;white-space:normal">${esc(s.summary)}</td>
-                <td><span style="font-size:11px;color:${src.color}">${src.text}</span></td>
-                <td class="cell-dim" style="max-width:140px;white-space:normal">${esc(s.contact || '—')}</td>
-                <td class="cell-dim" style="white-space:nowrap">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
+                <td class="sub-site">
+                  <div class="sub-name">${esc(s.name)}</div>
+                  ${s.url ? `<a class="sub-url" href="${esc(s.url)}" target="_blank" rel="noreferrer" title="${esc(s.url)}">${esc(subUrlDisplay(s.url))}</a>` : '<span class="sub-url">—</span>'}
+                </td>
+                <td class="sub-summary cell-clamp-2" title="${esc(s.summary)}">${esc(s.summary)}</td>
+                <td class="sub-meta">
+                  <span class="sub-badge ${src.cls}">${src.text}</span>
+                  ${remark ? `<span class="sub-remark cell-clamp-1" title="${esc(remark)}">${esc(remark)}</span>` : ''}
+                </td>
+                <td class="sub-time cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
                 <td class="cell-actions cell-actions-sticky">
-                  ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost">查看</a>` : ''}
-                  <button class="btn btn-ghost" data-edit-sub="${esc(s.id)}">编辑</button>
-                  <button class="btn btn-primary" data-approve="${esc(s.id)}">收录</button>
-                  <button class="btn btn-danger" data-reject="${esc(s.id)}">丢弃</button>
+                  <div class="sub-actions">
+                    ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-xs">查看</a>` : ''}
+                    <button class="btn btn-ghost btn-xs" data-edit-sub="${esc(s.id)}">编辑</button>
+                    <button class="btn btn-primary btn-xs" data-approve="${esc(s.id)}">收录</button>
+                    <button class="btn btn-danger btn-xs" data-reject="${esc(s.id)}">丢弃</button>
+                  </div>
                 </td>
               </tr>`;
             }).join('')}

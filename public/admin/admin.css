@@ -72,6 +72,7 @@ button { font: inherit; }
 
 .container { max-width: 1024px; margin: 0 auto; padding: 24px 16px 48px; }
 .container-sm { max-width: 640px; }
+.container-wide { max-width: 1200px; }
 
 /* ---- 卡片与统计 ---- */
 .card {
@@ -137,7 +138,49 @@ tbody tr:hover { background: rgba(127, 127, 127, 0.05); }
 .cell-dim { color: var(--t2); }
 .cell-actions { text-align: right; white-space: nowrap; }
 .cell-actions button, .cell-actions a.btn { margin-left: 4px; padding: 3px 10px; font-size: 12px; }
-.cell-actions-sticky { position: sticky; right: 0; background: var(--bg2); box-shadow: -6px 0 8px -4px rgba(0,0,0,.08); }
+.cell-actions-sticky {
+  position: sticky; right: 0; z-index: 2;
+  background: var(--bg2);
+  box-shadow: -8px 0 12px -6px rgba(0,0,0,.06);
+}
+tbody tr:hover .cell-actions-sticky { background: rgba(127, 127, 127, 0.05); }
+.btn-xs { padding: 2px 8px !important; font-size: 11px !important; margin-left: 0 !important; }
+
+/* ---- 投稿审核表格 ---- */
+.subs-table-wrap { overflow-x: auto; }
+.subs-table { table-layout: fixed; width: 100%; min-width: 760px; }
+.subs-table th, .subs-table td { white-space: normal; vertical-align: top; padding: 10px 12px; }
+.subs-table th:nth-child(1) { width: 15%; }
+.subs-table th:nth-child(2) { width: 34%; }
+.subs-table th:nth-child(3) { width: 18%; }
+.subs-table th:nth-child(4) { width: 11%; }
+.subs-table th:nth-child(5) { width: 22%; }
+.sub-name { font-weight: 500; line-height: 1.35; margin-bottom: 3px; }
+.sub-url {
+  display: block; font-size: 11px; color: var(--t3); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sub-url:hover { color: var(--accent); }
+.sub-time { white-space: nowrap; font-size: 12px; }
+.sub-meta { display: flex; flex-direction: column; gap: 4px; }
+.sub-badge {
+  display: inline-block; align-self: flex-start;
+  font-size: 11px; line-height: 1.4; padding: 1px 7px; border-radius: 999px;
+}
+.sub-badge-collector { color: #8b6dff; background: rgba(139, 109, 255, 0.12); }
+.sub-badge-user { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+.sub-remark { font-size: 11px; color: var(--t3); line-height: 1.4; }
+.cell-clamp-1 {
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.45;
+}
+.cell-clamp-2 {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.45; color: var(--t2); font-size: 12px;
+}
+.sub-actions {
+  display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;
+}
 
 /* ---- 表单 ---- */
 label.field-label { display: block; font-size: 12px; color: var(--t3); margin-bottom: 6px; }
