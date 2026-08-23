@@ -22,10 +22,24 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# 运行时数据（由后台服务写入，不属于源码）
+# 运行时数据（由后台服务/后台管理界面写入，不属于源码，避免 git pull 冲突）
+# 注意：这些文件在服务器上会被后台自动改写（监测/核验/后台编辑），
+# 故不纳入版本控制；换服务器/重装时需手动备份以下文件：
+#   src/data/sites.json      站点数据（含后台编辑的简介/倍率/赠送等 + 自动核验字段）
+#   src/data/config.json     站点配置（公告/设置/FAQ/Hero 文案等）
+#   src/data/models.json     模型标签
+#   src/data/clicks.json     点击统计
+#   src/data/uptime.json     可用性监测历史
+#   src/data/submissions.json 投稿队列
+#   src/data/collect-seen.json 采集去重记录
+#   src/data/audit.json      操作审计日志
+src/data/sites.json
+src/data/config.json
+src/data/models.json
 src/data/clicks.json
 src/data/uptime.json
 src/data/submissions.json
 src/data/collect-seen.json
+src/data/audit.json
 
 .zcode/

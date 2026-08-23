@@ -62,9 +62,36 @@ node server/index.js
 node server/collect.js
 ```
 
-## 数据说明
+## 数据说明（重要：运行时数据不入 Git）
 
-站点数据存在 `src/data/sites.json`，支持 Git 版本控制。当前初始数据整理自公开渠道（2026-08-22），已去除推广码。`scripts/import-nav.mjs` 为数据生成脚本。运行时数据（点击/监测/投稿）在 `src/data/*.json`，已被 gitignore，注意服务器端备份。
+**所有 `src/data/*.json` 数据文件都不纳入 Git 版本控制**，原因如下：
+
+这些文件会被**服务器运行时自动改写**，如果放进 Git 会导致每次 `git pull` 都冲突：
+
+| 文件 | 被谁改写 | 改写内容 |
+|------|---------|---------|
+| `sites.json` | 后台「站点」编辑 + `enrich` 自动核验 | 简介/倍率/赠送等手工字段 + `autoInfo`/`domainRegisteredAt` 等自动字段 |
+| `config.json` | 后台「公告/设置/内容」页 | 公告、QQ 群、Hero 文案、FAQ、关于页 |
+| `models.json` | 后台「模型」页 | 模型标签 |
+| `clicks.json` / `uptime.json` / `submissions.json` / `audit.json` | 后台服务 | 点击统计 / 监测历史 / 投稿队列 / 审计日志 |
+
+**这意味着：**
+
+1. ✅ 在线编辑内容（站点简介、公告、设置等）后，`git pull` **不会再冲突**，直接拉取更新即可
+2. ⚠️ **代价**：这些数据**没有 Git 版本历史**，无法回滚、换服务器也不会自动带过去
+3. ⚠️ **换服务器 / 重装 / 恢复备份时，必须手动拷贝整个 `src/data/` 目录**：
+
+```bash
+# 迁移服务器时，先在旧服务器打包
+tar czf tokenfree-data.tar.gz src/data/
+
+# 新服务器解压
+tar xzf tokenfree-data.tar.gz
+```
+
+4. 📦 **日常备份建议**：定期备份 `src/data/` 目录（后台「设置」页的「导出备份」按钮可一键导出全量 JSON）
+
+> 首次部署时，`src/data/` 目录需要从「初始数据」初始化。仓库中保留了 `scripts/import-nav.mjs` 数据生成脚本，可从公开渠道重新生成初始站点数据。
 
 ## 目录结构
 
