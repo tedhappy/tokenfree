@@ -1,0 +1,22 @@
+public/admin/admin.css
+  s_fbb68de319cc81::t_fcf29102552d1f 141-183
+  s_fbb68de319cc81::t_7f090599e93d2d 75
+public/admin/index.html
+  s_fbb68de319cc81::t_bbc24c18744672 772-783,791,831-833,837,840-849,851-856
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "a6dfd29720121e605f10c1b5b71c4e272e2b11f9",
+  "prompts": {},
+  "sessions": {
+    "s_fbb68de319cc81": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d5d7ae73-3c53-43d1-9c25-13d990218b3c",
+        "model": "composer-2.5"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
