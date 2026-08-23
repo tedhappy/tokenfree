@@ -265,10 +265,6 @@ async function showSettings() {
             <input id="cfg-qqnum" class="inp" value="${esc(cfg.qqNumber || '')}" placeholder="如 123456789" />
           </div>
         </div>
-        <div class="form-row">
-          <label class="field-label">Telegram 链接（选填，暂未在页面展示）</label>
-          <input id="cfg-tg" class="inp" value="${esc(cfg.telegram || '')}" placeholder="https://t.me/xxxx" />
-        </div>
       </details>
 
       <details class="card">
@@ -337,7 +333,6 @@ async function showSettings() {
     announcements: window._cfg.announcements || [],
     qq: document.getElementById('cfg-qq').value.trim(),
     qqNumber: document.getElementById('cfg-qqnum').value.trim(),
-    telegram: document.getElementById('cfg-tg').value.trim(),
     hero: {
       title: document.getElementById('cfg-hero-title').value.trim(),
       titleEn: document.getElementById('cfg-hero-title-en').value.trim(),
