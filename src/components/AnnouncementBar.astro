@@ -5,7 +5,8 @@
 
 <div id="announce-bar" class="hidden"></div>
 
-<style>
+<style is:global>
+  /* 公告条内容由 JS 运行时注入（无 Astro 作用域属性），必须用全局样式 */
   @keyframes ann-marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }

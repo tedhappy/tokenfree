@@ -29,6 +29,8 @@ export interface Site {
   awardEn?: string;
   /** 注册赠送英文 */
   bonusEn?: string;
+  /** 域名注册日（RDAP 注册局记录），用于计算已运营时长 */
+  domainRegisteredAt?: string;
   /** API Base URL（注册后客户端配置用），设置后详情页展示一键复制 */
   apiBase?: string;
   status: 'stable' | 'unstable' | 'offline';
@@ -92,6 +94,12 @@ export async function getSiteCount(): Promise<number> {
 export function goUrl(site: Site): string {
   const target = site.affUrl || site.url;
   return `/go?url=${encodeURIComponent(target)}&id=${encodeURIComponent(site.id)}`;
+}
+
+/** 判断站点是否有"免费额度/赠送"（用于"免费额度"筛选）。
+ *  依据：注册赠送字段非空，或简介/标签里出现赠送相关关键词。 */
+export function hasFreeCredit(site: Site): boolean {
+  return Boolean(site.bonus) || /送|签到|免费|公益/.test(site.summary + site.tags.join(''));
 }
 
 export type AgeUnit = 'day' | 'month' | 'year';

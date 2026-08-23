@@ -1,13 +1,18 @@
 ---
 import '../styles/theme.css';
+import config from '../data/config.json';
 
 interface Props {
   title?: string;
   description?: string;
 }
+const hero = (config as any).hero || {};
+const defaultDescription = (hero.sub && hero.sub2)
+  ? `${hero.sub}——${hero.sub2}`
+  : '让每个人都能免费用 Token，实现 Token 自由——编辑实测的中转站精选榜：免费额度、低价倍率、实时监测。';
 const {
   title = 'TokenFree - AI Token 中转站精选榜',
-  description = '让每个人都能免费用 Token，实现 Token 自由——编辑实测的中转站精选榜：免费额度、低价倍率、实时监测。',
+  description = defaultDescription,
 } = Astro.props;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://www.tokenfree.wiki').href;
 // canonical：统一域名避免重复内容

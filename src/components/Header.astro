@@ -1,5 +1,14 @@
 ---
 // TokenFree logo：渐变方块 + T 字 + 向下箭头（token 流动）
+import config from '../data/config.json';
+const { qq, qqNumber } = config as { qq?: string; qqNumber?: string };
+const qqHref = !qq
+  ? ''
+  : /^https?:\/\//.test(qq)
+    ? qq
+    : qq.startsWith('q/')
+      ? `https://qm.qq.com/${qq}`
+      : `https://qm.qq.com/cgi-bin/qm/qr?k=${qq}`;
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-md border-b border-border">
@@ -20,21 +29,77 @@
       <span class="font-semibold text-sm tracking-tight">TokenFree</span>
     </a>
     <div class="flex items-center gap-1 sm:gap-3">
-      <nav class="flex items-center gap-1 sm:gap-4">
+      <nav class="hidden md:flex items-center gap-1 sm:gap-4">
         <a href="/" class="text-sm text-text-secondary hover:text-text-primary transition-colors px-1" data-i18n="nav.home">首页</a>
+        {qq && (
+          <button
+            id="qq-group-btn"
+            class="text-sm px-2.5 py-1 rounded-full bg-accent-muted/70 text-accent hover:bg-accent-muted transition-colors flex items-center gap-1 shrink-0"
+            title="QQ 群「token自由」"
+          >
+            💬 <span data-i18n="nav.group">加群</span>
+          </button>
+        )}
         <a href="/submit" class="text-sm text-text-secondary hover:text-text-primary transition-colors px-1" data-i18n="nav.submit">投稿</a>
-        <a href="/faq" class="text-sm text-text-secondary hover:text-text-primary transition-colors px-1 hidden xs:inline sm:inline" data-i18n="nav.faq">FAQ</a>
+        <a href="/faq" class="text-sm text-text-secondary hover:text-text-primary transition-colors px-1" data-i18n="nav.faq">FAQ</a>
         <a href="/about" class="text-sm text-text-secondary hover:text-text-primary transition-colors px-1" data-i18n="nav.about">关于</a>
       </nav>
-      <span class="w-px h-4 bg-border"></span>
+      <span class="hidden md:block w-px h-4 bg-border"></span>
       <button id="lang-toggle" class="text-xs text-text-muted hover:text-text-primary transition-colors" title="Language">EN</button>
       <button id="theme-toggle" class="text-text-muted hover:text-text-primary transition-colors" title="Theme">
         <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
       </button>
+      <button id="menu-toggle" class="md:hidden text-text-muted hover:text-text-primary transition-colors" title="菜单" aria-label="菜单">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- 移动端抽屉导航 -->
+<div id="menu-drawer" class="hidden fixed inset-0 z-[90]">
+  <div id="menu-overlay" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  <nav class="absolute right-0 top-0 h-full w-64 max-w-[80vw] bg-bg-secondary border-l border-border shadow-2xl flex flex-col p-4 gap-1">
+    <div class="flex items-center justify-between mb-4">
+      <span class="font-semibold text-sm">TokenFree</span>
+      <button id="menu-close" class="text-text-muted hover:text-text-primary text-xl leading-none" aria-label="关闭">✕</button>
+    </div>
+    <a href="/" class="menu-link px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary" data-i18n="nav.home">首页</a>
+    <a href="/submit" class="menu-link px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary" data-i18n="nav.submit">投稿</a>
+    <a href="/faq" class="menu-link px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary" data-i18n="nav.faq">FAQ</a>
+    <a href="/about" class="menu-link px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary" data-i18n="nav.about">关于</a>
+    {qq && (
+      <button id="qq-group-btn-mobile" class="menu-link mt-2 px-3 py-2.5 rounded-lg text-sm bg-accent-muted/70 text-accent text-left flex items-center gap-1.5">
+        💬 <span data-i18n="nav.group">加群</span>
+      </button>
+    )}
+  </nav>
+</div>
+
+{qq && (
+  <div id="qq-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="QQ 群">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="qq-modal-overlay"></div>
+    <div class="relative w-full max-w-xs rounded-2xl bg-bg-secondary border border-border shadow-2xl p-6 text-center">
+      <button id="qq-modal-close" class="absolute top-3 right-3 text-text-muted hover:text-text-primary text-lg leading-none" aria-label="关闭">✕</button>
+      <h2 class="text-base font-semibold mb-1">
+        <span data-lang="zh">加入 QQ 群「token自由」</span><span data-lang="en">Join QQ Group</span>
+      </h2>
+      <p class="text-xs text-text-muted mb-4">
+        <span data-lang="zh">扫码进群，交流中转站资讯与白嫖情报</span><span data-lang="en">Scan to join &amp; share relay tips</span>
+      </p>
+      <img src="/qq.png?v=2" alt="QQ 群二维码" class="w-56 h-56 mx-auto rounded-xl border border-border object-contain bg-white" />
+      {qqNumber && (
+        <button id="qq-number-copy" class="mt-4 inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors" data-number={qqNumber}>
+          <span data-lang="zh">群号 {qqNumber} · 点击复制</span><span data-lang="en">Group {qqNumber} · copy</span>
+        </button>
+      )}
+      <a href={qqHref} target="_blank" rel="noopener noreferrer" class="mt-3 block text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors">
+        <span data-lang="zh">一键加群 ↗</span><span data-lang="en">Join now ↗</span>
+      </a>
+    </div>
+  </div>
+)}
 
 <script>
   function syncThemeIcons() {
@@ -59,4 +124,46 @@
     location.reload();
   });
   setLabel();
+
+  // 移动端抽屉导航
+  const menuDrawer = document.getElementById('menu-drawer');
+  const openMenu = () => {
+    menuDrawer?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  const closeMenu = () => {
+    menuDrawer?.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+  document.getElementById('menu-toggle')?.addEventListener('click', openMenu);
+  document.getElementById('menu-close')?.addEventListener('click', closeMenu);
+  document.getElementById('menu-overlay')?.addEventListener('click', closeMenu);
+  menuDrawer?.querySelectorAll('.menu-link').forEach((a) => a.addEventListener('click', closeMenu));
+
+  // 加群弹窗
+  const qqModal = document.getElementById('qq-modal');
+  const openQq = () => {
+    qqModal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  const closeQq = () => {
+    qqModal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+  document.getElementById('qq-group-btn')?.addEventListener('click', openQq);
+  document.getElementById('qq-group-btn-mobile')?.addEventListener('click', () => { closeMenu(); openQq(); });
+  document.getElementById('qq-modal-close')?.addEventListener('click', closeQq);
+  document.getElementById('qq-modal-overlay')?.addEventListener('click', closeQq);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeQq(); closeMenu(); }
+  });
+  const copyBtn = document.getElementById('qq-number-copy');
+  copyBtn?.addEventListener('click', () => {
+    const n = copyBtn.getAttribute('data-number') || '';
+    navigator.clipboard?.writeText(n).then(() => {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = localStorage.getItem('tf-lang') === 'en' ? '已复制 ✓' : '已复制 ✓';
+      setTimeout(() => (copyBtn.textContent = orig), 1500);
+    }).catch(() => {});
+  });
 </script>

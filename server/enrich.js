@@ -74,6 +74,36 @@ function isJsonMaybe(s) {
   return s && !/^\s*</.test(s) && /[{[]/.test(s.slice(0, 5));
 }
 
+// ---------- 域名注册日（RDAP 注册局记录，用于"已运营 N 天"）----------
+// 返回可注册主域：www.guyscode.com → guyscode.com，ai.xxx.com → xxx.com
+function registrable(host) {
+  let h = host.replace(/^www\./, '');
+  const labels = h.split('.');
+  if (labels.length > 2) h = labels.slice(-2).join('.');
+  return h;
+}
+
+async function lookupDomainRegistration(host) {
+  const domain = registrable(host);
+  const tld = domain.split('.').pop();
+  const endpoints = [`https://rdap.org/domain/${domain}`];
+  if (['com', 'net', 'cc'].includes(tld)) endpoints.unshift(`https://rdap.verisign.com/${tld}/v1/domain/${domain}`);
+  if (tld === 'cn') endpoints.unshift(`https://rdap.cnnic.cn/domain/${domain}`);
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(10000),
+        headers: { Accept: 'application/rdap+json', 'User-Agent': 'TokenFree-Enrich/1.0' },
+      });
+      if (!res.ok) continue;
+      const j = await res.json().catch(() => null);
+      const reg = j?.events?.find((e) => e.eventAction === 'registration');
+      if (reg?.eventDate) return reg.eventDate.slice(0, 10);
+    } catch {}
+  }
+  return null;
+}
+
 // ---------- 模型名 → 站点模型标签（保守映射：只认明确命名的） ----------
 const MODEL_TAG_RULES = [
   ['gpt', /gpt|chatgpt|(^|[^a-z0-9])o[134](-|$)|codex|davinci/i],
@@ -191,6 +221,15 @@ async function doRunEnrich({ rebuild }) {
       }
       if (r.info.up) report.up++;
       site.autoInfo = r.info;
+
+      // 域名注册日：仅在缺失时查询（查到即永久缓存）
+      if (!site.domainRegisteredAt) {
+        const host = hostOf(site.url);
+        if (host) {
+          const regDate = await lookupDomainRegistration(host);
+          if (regDate) site.domainRegisteredAt = regDate;
+        }
+      }
 
       const changes = [];
       const today = new Date().toISOString().slice(0, 10);

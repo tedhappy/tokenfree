@@ -16,48 +16,20 @@ const models = modelsJson as Array<{ id: string; name: string; color: string }>;
 const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], offline: ['已失效', '#ef4444'] }[site.status];
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
 const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
-const months = ageParts(site.createdAt);
-const curlExample = site.apiBase ? `curl ${site.apiBase}/chat/completions \\
-  -H "Authorization: Bearer sk-你的key" \\
-  -H "Content-Type: application/json" \\
-  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'` : '';
-// 按站点工具兼容性生成客户端配置示例（key 统一占位）
-const TOOL_SNIPPETS: Record<string, { title: string; titleEn: string; code: string }> = {
-  'claude-code': {
-    title: 'Claude Code',
-    titleEn: 'Claude Code',
-    code: `export ANTHROPIC_BASE_URL=${site.apiBase?.replace(/\/v1\/?$/, '') ?? ''}
-export ANTHROPIC_AUTH_TOKEN=sk-你的key`,
-  },
-  cursor: {
-    title: 'Cursor',
-    titleEn: 'Cursor',
-    code: `# Settings → Models → OpenAI API Key
-# OpenAI Base URL 填：
-${site.apiBase ?? ''}
-# API Key 填站点注册后生成的 sk- key`,
-  },
-  'codex-cli': {
-    title: 'Codex CLI',
-    titleEn: 'Codex CLI',
-    code: `# ~/.codex/config.toml
-model_provider = "custom"
-[model_provider.custom]
-base_url = "${site.apiBase ?? ''}"
-wire_api = "chat"`,
-  },
-  cline: {
-    title: 'Cline',
-    titleEn: 'Cline',
-    code: `# VSCode Cline 设置 → API Provider (OpenAI Compatible)
-# Base URL：
-${site.apiBase ?? ''}
-# API Key：站点注册后生成的 sk- key`,
-  },
-};
-const toolSnippets = (site.tools ?? [])
-  .map((t) => TOOL_SNIPPETS[t])
-  .filter((s) => s && site.apiBase);
+
+// 相关站点推荐：按共享模型数量降序，其次共享标签，排除自身与失效站
+const allSites = await getAllSites();
+const related = allSites
+  .filter((s) => s.id !== site.id && s.status !== 'offline')
+  .map((s) => {
+    const sharedModels = s.models.filter((m) => site.models.includes(m)).length;
+    const sharedTags = s.tags.filter((t) => site.tags.includes(t)).length;
+    return { site: s, score: sharedModels * 2 + sharedTags };
+  })
+  .filter((r) => r.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 4)
+  .map((r) => r.site);
 ---
 
 <BaseLayout title={`${site.name} - 倍率/模型/实测 | TokenFree`} description={site.summary}>
@@ -84,12 +56,18 @@ const toolSnippets = (site.tools ?? [])
           {site.award && (
             <span class="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white"><span data-lang="zh">🏆 {site.award}</span>{site.awardEn && <span data-lang="en">🏆 {site.awardEn}</span>}</span>
           )}
-          {months && (
-            <span class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-bg-secondary border border-border text-text-secondary">📅
-              <span data-lang="zh">已收录 {months.n} {AGE_UNIT_ZH[months.unit]}</span>
-              <span data-lang="en">Listed {months.n} {AGE_UNIT_EN[months.unit]}</span>
-            </span>
-          )}
+          {(() => {
+            const op = ageParts(site.domainRegisteredAt);
+            return op ? (
+              <span
+                class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-status-stable/10 border border-status-stable/30 text-status-stable"
+                title={`域名注册于 ${site.domainRegisteredAt}（注册局记录）`}
+              >
+                🚀 <span data-lang="zh">已运营 {op.n} {AGE_UNIT_ZH[op.unit]}</span>
+                <span data-lang="en">live {op.n} {AGE_UNIT_EN[op.unit]}</span>
+              </span>
+            ) : null;
+          })()}
         </div>
         {site.multiplier !== null && (
           <div class="text-center px-4 py-2 rounded-xl bg-bg-secondary border border-border">
@@ -110,7 +88,7 @@ const toolSnippets = (site.tools ?? [])
         <button id="fav-btn" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
           <span data-i18n="detail.fav">☆ 收藏</span>
         </button>
-        <a href={`/submit?site=${encodeURIComponent(site.id)}&name=${encodeURIComponent(site.name)}`} class="text-sm px-4 py-2 rounded-lg border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors" title="反馈价格变动、失效等问题">
+        <a href={`/submit?site=${encodeURIComponent(site.id)}&name=${encodeURIComponent(site.name)}&url=${encodeURIComponent(site.url)}&summary=${encodeURIComponent(site.summary)}`} class="text-sm px-4 py-2 rounded-lg border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors" title="反馈价格变动、失效等问题">
           <span data-i18n="detail.report">⚠ 报告问题</span>
         </a>
       </div>
@@ -203,26 +181,6 @@ const toolSnippets = (site.tools ?? [])
             </div>
           </div>
         )}
-        {site.apiBase && curlExample && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.quickstart">快速开始</h2>
-            <div class="mb-2">
-              <button id="apibase-btn" class="inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors">
-                {site.apiBase} · <span data-i18n="detail.copy">复制</span>
-              </button>
-            </div>
-            <details class="group border border-border rounded-xl bg-bg-secondary">
-              <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors" data-i18n="detail.curlExample">curl 调用示例</summary>
-              <pre class="px-4 pb-3 text-xs leading-relaxed text-text-secondary overflow-x-auto"><code>{curlExample}</code></pre>
-            </details>
-            {toolSnippets.map((s) => (
-              <details class="mt-2 border border-border rounded-xl bg-bg-secondary">
-                <summary class="px-4 py-2.5 text-xs text-text-secondary cursor-pointer select-none hover:text-text-primary transition-colors">{s.title} <span class="text-text-muted">配置示例</span></summary>
-                <pre class="px-4 pb-3 text-xs leading-relaxed text-text-secondary overflow-x-auto"><code>{s.code}</code></pre>
-              </details>
-            ))}
-          </div>
-        )}
         {site.tags.length > 0 && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tags">标签</h2>
@@ -250,6 +208,33 @@ const toolSnippets = (site.tools ?? [])
           <p><span data-i18n="detail.updated">更新时间</span>：{site.updatedAt}</p>
         </div>
       </div>
+
+      {related.length > 0 && (
+        <div class="mt-10 border-t border-border pt-6">
+          <h2 class="text-sm font-medium text-text-muted mb-3">
+            <span data-lang="zh">相关站点</span><span data-lang="en">Related sites</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {related.map((r) => (
+              <a
+                href={`/site/${r.id}`}
+                class="flex items-center gap-3 p-3 rounded-xl border border-border bg-bg-secondary hover:border-accent/40 hover:bg-accent-muted/40 transition-colors"
+              >
+                <span class="w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-sm shrink-0" style={`background: ${models.find((m) => r.models.includes(m.id))?.color ?? '#7c5cfc'}20; color: ${models.find((m) => r.models.includes(m.id))?.color ?? '#7c5cfc'}`}>
+                  {r.name.trim().charAt(0).toUpperCase()}
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm font-medium text-text-primary truncate">{r.name}</span>
+                  {r.multiplier !== null && (
+                    <span class="block text-xs font-mono text-text-muted">{r.multiplier}x</span>
+                  )}
+                </span>
+                <span class="text-xs text-text-muted shrink-0">→</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   </main>
   <Footer />
@@ -327,20 +312,6 @@ const toolSnippets = (site.tools ?? [])
       inviteBtn.onclick = () => {
         navigator.clipboard?.writeText(inviteBtn.textContent?.replace(/^🎫\s*/, '').split('·')[0].trim() || '').then(() => {
           const label = inviteBtn.querySelector('[data-i18n]');
-          if (label) {
-            const orig = label.textContent;
-            label.textContent = localStorage.getItem('tf-lang') === 'en' ? 'Copied ✓' : '已复制 ✓';
-            setTimeout(() => (label.textContent = orig), 1500);
-          }
-        }).catch(() => {});
-      };
-    }
-
-    const apibaseBtn = document.getElementById('apibase-btn');
-    if (apibaseBtn) {
-      apibaseBtn.onclick = () => {
-        navigator.clipboard?.writeText(apibaseBtn.textContent?.split('·')[0].trim() || '').then(() => {
-          const label = apibaseBtn.querySelector('[data-i18n]');
           if (label) {
             const orig = label.textContent;
             label.textContent = localStorage.getItem('tf-lang') === 'en' ? 'Copied ✓' : '已复制 ✓';

@@ -3,6 +3,7 @@ window.TF_I18N_EN = {
   // 导航与通用
   'nav.home': 'Home',
   'nav.submit': 'Submit',
+  'nav.group': 'Group',
   'nav.faq': 'FAQ',
   'nav.about': 'About',
   'nav.recommend': 'Pick',
@@ -60,10 +61,7 @@ window.TF_I18N_EN = {
   'detail.real': 'Effective multiplier',
   'detail.age': 'Listed',
   'detail.ageUnit': 'mo',
-  'detail.quickstart': 'Quick Start',
-  'detail.curlExample': 'curl example',
   'detail.report': '⚠ Report issue',
-  'submit.feedbackHint': 'Feedback mode: editors will verify price / availability changes soon.',
   'detail.favDone': '★ Favorited',
   'detail.verified': 'Verified',
   'detail.updated': 'Updated',

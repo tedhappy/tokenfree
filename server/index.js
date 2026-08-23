@@ -19,6 +19,7 @@ const CLICKS_FILE = path.join(DATA_DIR, 'clicks.json');
 const UPTIME_FILE = path.join(DATA_DIR, 'uptime.json');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+const AUDIT_FILE = path.join(DATA_DIR, 'audit.json');
 
 // ---- 加载 .env（简单实现，已有环境变量优先；便于服务器免敲 export）----
 try {
@@ -69,6 +70,20 @@ function writeJson(file, data) {
   const tmp = file + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
   fs.renameSync(tmp, file);
+}
+
+// ---- 操作审计日志（记录管理员关键操作，支持追溯）----
+function logAudit(action, target, detail = '') {
+  try {
+    const logs = readJson(AUDIT_FILE, []);
+    logs.unshift({
+      time: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      action,
+      target,
+      detail,
+    });
+    writeJson(AUDIT_FILE, logs.slice(0, 500)); // 最多保留 500 条
+  } catch {}
 }
 
 function newToken() {
@@ -278,6 +293,7 @@ app.post('/api/sites', async (c) => {
   site.updatedAt = new Date().toISOString().slice(0, 10);
   sites.push(site);
   writeJson(SITES_FILE, sites);
+  logAudit('新增站点', site.name, `id=${site.id}`);
   return c.json(site, 201);
 });
 
@@ -292,6 +308,7 @@ app.put('/api/sites/:id', async (c) => {
   updated.updatedAt = new Date().toISOString().slice(0, 10);
   sites[idx] = { ...sites[idx], ...updated };
   writeJson(SITES_FILE, sites);
+  logAudit('更新站点', sites[idx].name, `id=${id}`);
   return c.json(sites[idx]);
 });
 
@@ -299,10 +316,12 @@ app.delete('/api/sites/:id', (c) => {
   if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   let sites = readJson(SITES_FILE, []);
+  const target = sites.find((s) => s.id === id);
   const before = sites.length;
   sites = sites.filter((s) => s.id !== id);
   if (sites.length === before) return c.json({ error: '站点不存在' }, 404);
   writeJson(SITES_FILE, sites);
+  logAudit('删除站点', target?.name || id, `id=${id}`);
   return c.json({ ok: true });
 });
 
@@ -435,10 +454,12 @@ app.delete('/api/submissions/:id', (c) => {
   if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   let subs = readJson(SUBMISSIONS_FILE, []);
+  const target = subs.find((s) => s.id === id);
   const before = subs.length;
   subs = subs.filter((s) => s.id !== id);
   if (subs.length === before) return c.json({ error: '不存在' }, 404);
   writeJson(SUBMISSIONS_FILE, subs);
+  logAudit('审核投稿（丢弃/收录）', target?.name || id, `id=${id}`);
   return c.json({ ok: true });
 });
 
@@ -462,6 +483,7 @@ app.get('/api/stats', (c) => {
     unstable: sites.filter((s) => s.status === 'unstable').length,
     offline: sites.filter((s) => s.status === 'offline').length,
     featured: sites.filter((s) => s.isFeatured).length,
+    submissionsCount: readJson(SUBMISSIONS_FILE, []).length,
     clicks,
     uptime: up,
     suspect,
@@ -523,7 +545,14 @@ app.put('/api/config', async (c) => {
   const cfg = await c.req.json();
   if (typeof cfg !== 'object' || !cfg) return c.json({ error: '格式错误' }, 400);
   writeJson(CONFIG_FILE, cfg);
+  logAudit('更新配置', 'config.json', cfg.announcements ? `公告 ${cfg.announcements.length} 条` : '');
   return c.json({ ok: true });
+});
+
+// ---- 操作审计日志（鉴权）----
+app.get('/api/audit', (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  return c.json(readJson(AUDIT_FILE, []));
 });
 
 // ---- 数据导出备份（鉴权）----

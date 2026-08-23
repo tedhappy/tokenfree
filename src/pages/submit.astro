@@ -39,15 +39,17 @@ import Footer from '../components/Footer.astro';
   </main>
   <Footer />
   <script>
-    // 反馈预填：/submit?site=id&name=名称（来自详情页"报告问题"）
+    // 反馈预填：/submit?site=id&name=名称&url=地址&summary=简介（来自详情页"报告问题"）
     const prefill = new URLSearchParams(location.search);
     if (prefill.get('site')) {
       const hint = document.getElementById('feedback-hint');
       hint?.classList.remove('hidden');
       const nameEl = document.getElementById('s-name') as HTMLInputElement | null;
+      const urlEl = document.getElementById('s-url') as HTMLInputElement | null;
       const summaryEl = document.getElementById('s-summary') as HTMLTextAreaElement | null;
       if (nameEl && !nameEl.value) nameEl.value = prefill.get('name') || prefill.get('site') || '';
-      if (summaryEl && !summaryEl.value) summaryEl.value = '【反馈】';
+      if (urlEl && !urlEl.value) urlEl.value = prefill.get('url') || '';
+      if (summaryEl && !summaryEl.value) summaryEl.value = prefill.get('summary') || '';
     }
 
     const form = document.getElementById('submit-form') as HTMLFormElement;

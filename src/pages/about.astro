@@ -2,6 +2,30 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import config from '../data/config.json';
+
+// 关于页内容后台可配（config.json about 字段）；未配置时用默认文案
+const about = (config as any).about || {};
+const intro = about.intro || 'TokenFree 是一个 AI Token 中转站精选榜，由编辑实测筛选可用、稳定的中转站，帮你快速找到免费额度和低价倍率入口。';
+const note = about.note || '所有站点信息均来自公开渠道整理，编辑会尽量标注核验日期，但中转站状态变化较快，使用前请自行判断。';
+const disclaimerTitle = about.disclaimerTitle || '免责声明';
+const disclaimerItems = Array.isArray(about.disclaimerItems) && about.disclaimerItems.length
+  ? about.disclaimerItems
+  : [
+      '本站仅提供信息索引，不参与任何中转站的运营与充值。',
+      '中转站存在跑路风险，请谨慎充值，建议小额试用。',
+      '建议注册 2-3 家互为备份，规避单点故障。',
+    ];
+const criteriaTitle = about.criteriaTitle || '收录标准';
+const criteriaItems = Array.isArray(about.criteriaItems) && about.criteriaItems.length
+  ? about.criteriaItems
+  : [
+      '站点可正常访问、注册',
+      '倍率、赠送信息透明',
+      '无大量用户负面反馈',
+    ];
+const contactTitle = about.contactTitle || '提交与反馈';
+const contactText = about.contactText || '想提交新站点或反馈问题？欢迎联系站长。';
 ---
 
 <BaseLayout title="关于 - TokenFree" description="关于 TokenFree 和免责声明">
@@ -10,38 +34,26 @@ import Footer from '../components/Footer.astro';
     <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
       <h1 class="text-2xl font-bold mb-6">关于 TokenFree</h1>
       <div class="space-y-6 text-base text-text-secondary leading-relaxed">
-        <p>
-          TokenFree 是一个 AI Token 中转站精选榜，由编辑实测筛选可用、稳定的中转站，
-          帮你快速找到免费额度和低价倍率入口。
-        </p>
-        <p>
-          所有站点信息均来自公开渠道整理，编辑会尽量标注核验日期，但中转站状态变化较快，
-          使用前请自行判断。
-        </p>
+        <p>{intro}</p>
+        <p>{note}</p>
 
         <div class="p-4 rounded-xl border border-status-unstable/30 bg-status-unstable/5">
-          <h2 class="text-text-primary font-medium mb-2">⚠️ 免责声明</h2>
+          <h2 class="text-text-primary font-medium mb-2">⚠️ {disclaimerTitle}</h2>
           <ul class="space-y-1.5 list-disc list-inside">
-            <li>本站仅提供信息索引，不参与任何中转站的运营与充值。</li>
-            <li>中转站存在跑路风险，请谨慎充值，建议小额试用。</li>
-            <li>建议注册 2-3 家互为备份，规避单点故障。</li>
+            {disclaimerItems.map((item) => <li>{item}</li>)}
           </ul>
         </div>
 
         <div>
-          <h2 class="text-text-primary font-medium mb-2">收录标准</h2>
+          <h2 class="text-text-primary font-medium mb-2">{criteriaTitle}</h2>
           <ul class="space-y-1.5 list-disc list-inside">
-            <li>站点可正常访问、注册</li>
-            <li>倍率、赠送信息透明</li>
-            <li>无大量用户负面反馈</li>
+            {criteriaItems.map((item) => <li>{item}</li>)}
           </ul>
         </div>
 
         <div>
-          <h2 class="text-text-primary font-medium mb-2">提交与反馈</h2>
-          <p>
-            想提交新站点或反馈问题？欢迎联系站长。
-          </p>
+          <h2 class="text-text-primary font-medium mb-2">{contactTitle}</h2>
+          <p>{contactText}</p>
         </div>
       </div>
     </div>

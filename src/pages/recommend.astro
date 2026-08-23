@@ -67,8 +67,10 @@ const lite = sites.map((s) => ({
   </main>
   <Footer />
   <script define:vars={{ lite, models }}>
+  // 免费额度判定（与 utils/sites.hasFreeCredit 一致）
+  const hasFreeCredit = (s) => Boolean(s.bonus) || /送|签到|免费|公益/.test(s.summary + (s.tags || []).join(''));
   let uptimeData = {};
-  fetch('/api/uptime').then((r) => (r.ok ? r.json() : null)).then((d) => { uptimeData = d || {}; }).catch(() => {});
+  const uptimeReady = fetch('/api/uptime').then((r) => (r.ok ? r.json() : null)).then((d) => { uptimeData = d || {}; }).catch(() => { uptimeData = {}; });
     const answers = {};
     document.querySelectorAll('#quiz [data-q]').forEach((group) => {
       const q = group.dataset.q;
@@ -85,7 +87,9 @@ const lite = sites.map((s) => ({
       });
     });
 
-    document.getElementById('rec-go').onclick = () => {
+    document.getElementById('rec-go').onclick = async () => {
+      // 等待监测数据返回后再做"直连"判断，避免异步竞态
+      await uptimeReady;
       let list = [...lite];
       if (answers.model) list = list.filter((s) => s.models.includes(answers.model));
       // 国内直连：用本站实测延迟代理（>2.5s 或不可达视为直连体验差）
@@ -94,7 +98,7 @@ const lite = sites.map((s) => ({
         if (ok.length) list = ok;
       }
       if (answers.budget === 'free') {
-        const free = list.filter((s) => /送|签到|免费|公益/.test(s.bonus + s.summary + s.tags.join()));
+        const free = list.filter((s) => hasFreeCredit(s));
         if (free.length) list = free;
       }
       // 评分排序：精选 > 低倍率 > 有赠送

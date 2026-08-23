@@ -37,9 +37,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:17.008Z",
+      "checkedAt": "2026-08-23T02:57:16.120Z",
       "up": true,
-      "latencyMs": 1248,
+      "latencyMs": 2999,
       "title": "ApxRelay",
       "modelsDetected": 0,
       "minRatio": null,
@@ -47,7 +47,8 @@
       "noticeUpdated": false
     },
     "awardEn": "Best Event Pricing",
-    "bonusEn": "No signup bonus; join group for 0.001x events"
+    "bonusEn": "No signup bonus; join group for 0.001x events",
+    "domainRegisteredAt": "2026-07-02"
   },
   {
     "id": "hubway",
@@ -93,9 +94,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:17.022Z",
+      "checkedAt": "2026-08-23T02:57:14.983Z",
       "up": true,
-      "latencyMs": 1222,
+      "latencyMs": 1496,
       "title": "HUBWAY - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -145,9 +146,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:17.047Z",
+      "checkedAt": "2026-08-23T02:57:14.722Z",
       "up": true,
-      "latencyMs": 1241,
+      "latencyMs": 768,
       "title": "Uni Token",
       "modelsDetected": 0,
       "minRatio": null,
@@ -155,7 +156,8 @@
       "noticeUpdated": false
     },
     "awardEn": "Best Free Trial",
-    "bonusEn": "Free ChatGPT day card on signup (limited time)"
+    "bonusEn": "Free ChatGPT day card on signup (limited time)",
+    "domainRegisteredAt": "2026-07-10"
   },
   {
     "id": "ctai",
@@ -191,17 +193,18 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:21.231Z",
+      "checkedAt": "2026-08-23T02:57:22.737Z",
       "up": true,
-      "latencyMs": 2847,
-      "title": "CTAI - AI API Gateway",
+      "latencyMs": 8015,
+      "title": "",
       "modelsDetected": 0,
       "minRatio": null,
       "freeGroup": false,
       "noticeUpdated": false
     },
     "awardEn": "Best GPT Price",
-    "bonusEn": "$5 via their group"
+    "bonusEn": "$5 via their group",
+    "domainRegisteredAt": "2026-04-29"
   },
   {
     "id": "guyscode",
@@ -239,9 +242,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:18.743Z",
+      "checkedAt": "2026-08-23T02:57:17.713Z",
       "up": true,
-      "latencyMs": 1720,
+      "latencyMs": 1645,
       "title": "Guyscode - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -249,14 +252,15 @@
       "noticeUpdated": false
     },
     "awardEn": "Most Established",
-    "bonusEn": "$3 from owner + daily check-in"
+    "bonusEn": "$3 from owner + daily check-in",
+    "domainRegisteredAt": "2026-05-12"
   },
   {
-    "id": "发财api",
+    "id": "facai-api",
     "name": "发财API",
     "url": "https://api.dali2897.com/register",
     "multiplier": 0.07,
-    "bonus": "注册送2余额，签到随机送",
+    "bonus": "注册不直接赠送；首充满10元后自动送2元（限QQ邮箱注册）",
     "models": [
       "gpt",
       "deepseek",
@@ -272,7 +276,7 @@
       "生图",
       "邀请"
     ],
-    "summary": "注册送2余额，签到随机送，plus 0.07x，可生图",
+    "summary": "签到随机送，plus 0.07x，可生图，首充10元送2元",
     "description": "注册有2余额、签到随机送，签到天数越多送的越多。plus 0.07x、pro 0.18x，非常耐用，可生图。邀请累计奖励制度。",
     "status": "stable",
     "isFeatured": true,
@@ -281,7 +285,7 @@
     "createdAt": "2026-08-22",
     "updatedAt": "2026-08-23",
     "award": "签到福利",
-    "summaryEn": "$2 on signup, random check-in rewards, 0.07x plus tier, image gen",
+    "summaryEn": "Random check-in rewards, plus 0.07x tier, image gen; ¥2 after first ¥10 top-up",
     "apiBase": "https://api.dali2897.com/v1",
     "tools": [
       "cursor",
@@ -305,12 +309,16 @@
       {
         "date": "2026-08-23",
         "text": "站点公告已收录"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "依据站点官方公告更新注册赠送规则：注册不再直接赠送，改为首充满10元后自动赠送2元"
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:18.800Z",
+      "checkedAt": "2026-08-23T02:57:18.112Z",
       "up": true,
-      "latencyMs": 1752,
+      "latencyMs": 1991,
       "title": "发财API",
       "modelsDetected": 146,
       "minRatio": 0.01,
@@ -322,10 +330,11 @@
       "fetchedAt": "2026-08-23"
     },
     "awardEn": "Best Check-in Rewards",
-    "bonusEn": "¥2 balance + random check-in rewards"
+    "bonusEn": "No instant signup bonus; ¥2 after first ¥10 top-up (QQ-mail registration only)",
+    "domainRegisteredAt": "2026-01-19"
   },
   {
-    "id": "登仙api",
+    "id": "dengxian-api",
     "name": "登仙API",
     "url": "https://api.denxio.top/register",
     "multiplier": null,
@@ -364,9 +373,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:20.012Z",
+      "checkedAt": "2026-08-23T02:57:25.724Z",
       "up": true,
-      "latencyMs": 1269,
+      "latencyMs": 1068,
       "title": "登仙公益站 - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -374,7 +383,8 @@
       "noticeUpdated": false
     },
     "awardEn": "Purely Free (Community)",
-    "bonusEn": "10 Xianyuan credits + 0.5-1/day check-in"
+    "bonusEn": "10 Xianyuan credits + 0.5-1/day check-in",
+    "domainRegisteredAt": "2026-05-09"
   },
   {
     "id": "super-nb",
@@ -414,9 +424,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:19.781Z",
+      "checkedAt": "2026-08-23T02:57:19.041Z",
       "up": true,
-      "latencyMs": 978,
+      "latencyMs": 925,
       "title": "SUPER NB - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -472,9 +482,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:21.937Z",
+      "checkedAt": "2026-08-23T02:57:24.530Z",
       "up": true,
-      "latencyMs": 928,
+      "latencyMs": 871,
       "title": "New API",
       "modelsDetected": 97,
       "minRatio": 0.001,
@@ -522,9 +532,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T01:45:21.032Z",
+      "checkedAt": "2026-08-23T02:57:24.589Z",
       "up": true,
-      "latencyMs": 723,
+      "latencyMs": 751,
       "title": "OurChat",
       "modelsDetected": 0,
       "minRatio": null,
@@ -536,6 +546,7 @@
       "fetchedAt": "2026-08-23"
     },
     "awardEn": "Fastest Response",
-    "bonusEn": "$2 on signup"
+    "bonusEn": "$2 on signup",
+    "domainRegisteredAt": "2026-06-10"
   }
 ]

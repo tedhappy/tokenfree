@@ -22,13 +22,11 @@ const stableCount = allSites.filter((s) => s.status === 'stable').length;
     <AnnouncementBar />
     <Hero siteCount={siteCount} stableCount={stableCount} />
     <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
-      <section>
-        <h2 class="text-lg font-medium text-text-primary mb-1 flex items-center gap-2">
+      <section id="sites" class="scroll-mt-20">
+        <h2 class="text-lg font-medium text-text-primary mb-4 flex items-center gap-2">
           <span class="w-1 h-4 bg-accent rounded-full"></span>
           <span data-lang="zh">全部站点</span><span data-lang="en">All Sites</span>
         </h2>
-        <p class="text-xs text-text-muted mb-4" data-lang="zh">🏆 获奖理由由编辑实测评定，默认榜单序即编辑推荐排名；可用筛选和排序快速定位</p>
-        <p class="text-xs text-text-muted mb-4" data-lang="en">🏆 Awards are editor-tested; the default ranking is our recommendation — filter &amp; sort to narrow down</p>
         <SiteList client:load initialSites={allSites} models={models} />
       </section>
     </div>

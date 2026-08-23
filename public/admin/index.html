@@ -33,6 +33,65 @@ const STATUS = { stable:'稳定', unstable:'不稳定', offline:'已失效' };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// ---------- 未保存离开提醒（beforeunload 通用守卫）----------
+function enableDirtyGuard(containerSel) {
+  let dirty = false;
+  const root = document.querySelector(containerSel);
+  if (!root) return () => {};
+  const mark = () => { dirty = true; };
+  root.querySelectorAll('input, textarea, select').forEach((el) => {
+    el.addEventListener('input', mark);
+    el.addEventListener('change', mark);
+  });
+  const onBefore = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
+  window.addEventListener('beforeunload', onBefore);
+  return () => { dirty = false; window.removeEventListener('beforeunload', onBefore); };
+}
+
+// ---------- 自定义确认弹窗（替代原生 confirm，支持危险/普通区分）----------
+function confirmDialog(msg, opts = {}) {
+  const { danger = false, okText = '确定', cancelText = '取消' } = opts;
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'confirm-overlay';
+    wrap.innerHTML = `
+      <div class="confirm-box">
+        <p class="confirm-msg">${esc(msg)}</p>
+        <div class="confirm-actions">
+          <button class="btn btn-ghost confirm-cancel">${esc(cancelText)}</button>
+          <button class="btn ${danger ? 'btn-danger-solid' : 'btn-primary'} confirm-ok">${esc(okText)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const close = (val) => { wrap.remove(); resolve(val); };
+    wrap.querySelector('.confirm-cancel').onclick = () => close(false);
+    wrap.querySelector('.confirm-ok').onclick = () => close(true);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(false); });
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); close(false); }
+    });
+  });
+}
+
+// ---------- Toast 通知（轻量，不打断操作流）----------
+function toast(msg, type = 'success', ms = 2600) {
+  let wrap = document.getElementById('toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toast-wrap';
+    document.body.appendChild(wrap);
+  }
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 250);
+  }, ms);
+}
+
 // ---------- 登录 ----------
 function showLogin(msg = '') {
   document.getElementById('app').innerHTML = `
@@ -61,18 +120,16 @@ function showLogin(msg = '') {
 // ---------- 顶栏 ----------
 function topbar(active) {
   const btn = (id, label, key) => `<button id="nav-${id}" class="${active === key ? 'active' : ''}">${label}</button>`;
+  const grp = (label, inner) => `<span class="nav-group">${label ? `<span class="nav-group-label">${label}</span>` : ''}${inner}</span>`;
   return `
     <header class="topbar">
       <div class="topbar-inner">
         <span class="brand">TokenFree 管理</span>
         <div class="topbar-actions">
           <a href="/" target="_blank">前台</a>
-          ${btn('dash', '站点', 'dash')}
-          ${btn('subs', '投稿', 'subs')}
-          ${btn('uptime', '监测', 'uptime')}
-          ${btn('models', '模型', 'models')}
-          ${btn('ann', '公告', 'ann')}
-          ${btn('settings', '设置', 'settings')}
+          ${grp('内容', `${btn('dash', '站点', 'dash')}${btn('subs', '投稿', 'subs')}${btn('content', '内容', 'content')}${btn('ann', '公告', 'ann')}`)}
+          ${grp('运营', `${btn('uptime', '监测', 'uptime')}${btn('models', '模型', 'models')}`)}
+          ${grp('', `${btn('settings', '设置', 'settings')}${btn('audit', '日志', 'audit')}`)}
           <button id="logout">退出</button>
         </div>
       </div>
@@ -81,7 +138,7 @@ function topbar(active) {
 
 function bindTopbar() {
   document.getElementById('logout').onclick = () => { localStorage.removeItem('tf_admin_token'); token = ''; showLogin(); };
-  const map = { 'nav-dash': showDashboard, 'nav-subs': showSubmissions, 'nav-uptime': showUptime, 'nav-models': showModels, 'nav-ann': showAnnouncements, 'nav-settings': showSettings };
+  const map = { 'nav-dash': showDashboard, 'nav-subs': showSubmissions, 'nav-uptime': showUptime, 'nav-models': showModels, 'nav-content': showContent, 'nav-ann': showAnnouncements, 'nav-settings': showSettings, 'nav-audit': showAudit };
   for (const [id, fn] of Object.entries(map)) {
     const el = document.getElementById(id);
     if (el) el.onclick = fn;
@@ -166,17 +223,19 @@ async function showAnnouncements(editingId = null) {
   };
   document.querySelectorAll('[data-edit-ann]').forEach((b) => (b.onclick = () => showAnnouncements(b.dataset.editAnn)));
   document.querySelectorAll('[data-del-ann]').forEach((b) => (b.onclick = async () => {
-    if (!confirm('确定删除该公告？')) return;
+    if (!(await confirmDialog('确定删除该公告？删除后不可恢复。', { danger: true }))) return;
     const anns = (window._cfg.announcements || []).filter((a) => a.id !== b.dataset.delAnn);
     await api('/api/config', { method: 'PUT', body: JSON.stringify({ ...window._cfg, announcements: anns }) });
     showAnnouncements();
   }));
 }
 
-// ---------- 设置（社群）----------
+// ---------- 设置（社群 + 首页 + 页脚）----------
 async function showSettings() {
   const cfg = await api('/api/config');
   window._cfg = cfg;
+  const hero = cfg.hero || {};
+  const footer = cfg.footer || {};
   document.getElementById('app').innerHTML = `
     ${topbar('settings')}
     <main class="container container-sm">
@@ -184,36 +243,308 @@ async function showSettings() {
         <h2 class="section-title">站点设置</h2>
         <button id="export-btn" class="btn btn-ghost">导出备份</button>
       </div>
-      <div class="card">
+
+      <details class="card" open>
+        <summary class="card-title accordion-summary">社群</summary>
         <div class="form-grid">
           <div class="form-row">
-            <label class="field-label">QQ 群链接 key（qm.qq.com 链接里的 k= 参数）</label>
-            <input id="cfg-qq" class="inp" value="${esc(cfg.qq || '')}" placeholder="如 h7ImuW5uve" />
+            <label class="field-label">QQ 群链接（粘贴完整链接，或只填 k= 参数 / q/ 短码）</label>
+            <input id="cfg-qq" class="inp" value="${esc(cfg.qq || '')}" placeholder="https://qm.qq.com/q/xxxx 或 h7ImuW5uve" />
           </div>
           <div class="form-row">
-            <label class="field-label">Telegram 链接</label>
-            <input id="cfg-tg" class="inp" value="${esc(cfg.telegram || '')}" placeholder="https://t.me/…" />
+            <label class="field-label">QQ 群号（选填，顶部加群弹窗里展示+一键复制）</label>
+            <input id="cfg-qqnum" class="inp" value="${esc(cfg.qqNumber || '')}" placeholder="如 123456789" />
           </div>
         </div>
-        <p class="hint">社群链接保存后需「重建前台」才会显示；公告请到「公告」页管理（实时生效）。</p>
-        <div class="form-actions">
-          <button id="cfg-save" class="btn btn-primary">保存</button>
+        <div class="form-row">
+          <label class="field-label">Telegram 链接（选填，暂未在页面展示）</label>
+          <input id="cfg-tg" class="inp" value="${esc(cfg.telegram || '')}" placeholder="https://t.me/xxxx" />
         </div>
+      </details>
+
+      <details class="card">
+        <summary class="card-title accordion-summary">首页标题（Hero）</summary>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="field-label">主标题（中文）</label>
+            <input id="cfg-hero-title" class="inp" value="${esc(hero.title || '')}" placeholder="AI Token 中转站精选榜" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">主标题（英文）</label>
+            <input id="cfg-hero-title-en" class="inp" value="${esc(hero.titleEn || '')}" placeholder="The Best AI Token Relays" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">副标题（中文）</label>
+          <input id="cfg-hero-sub" class="inp" value="${esc(hero.sub || '')}" placeholder="让每个人都能免费用 Token" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">副标题（英文）</label>
+          <input id="cfg-hero-sub-en" class="inp" value="${esc(hero.subEn || '')}" placeholder="Free tokens for everyone" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">说明（中文）</label>
+          <input id="cfg-hero-sub2" class="inp" value="${esc(hero.sub2 || '')}" placeholder="编辑实测筛选的可用中转站…" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">说明（英文）</label>
+          <input id="cfg-hero-sub2-en" class="inp" value="${esc(hero.sub2En || '')}" placeholder="Editor-tested AI API relays…" />
+        </div>
+      </details>
+
+      <details class="card">
+        <summary class="card-title accordion-summary">页脚文案</summary>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="field-label">免责声明（中文）</label>
+            <input id="cfg-footer-disc" class="inp" value="${esc(footer.disclaimer || '')}" placeholder="仅供参考，不对任何中转站的安全性负责。" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">免责声明（英文）</label>
+            <input id="cfg-footer-disc-en" class="inp" value="${esc(footer.disclaimerEn || '')}" placeholder="For reference only." />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">推广码说明（中文）</label>
+          <input id="cfg-footer-aff" class="inp" value="${esc(footer.aff || '')}" placeholder="部分注册链接含本站推广码…" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">推广码说明（英文）</label>
+          <input id="cfg-footer-aff-en" class="inp" value="${esc(footer.affEn || '')}" placeholder="Some sign-up links contain…" />
+        </div>
+      </details>
+
+      <p class="hint">文案与社群链接保存后需「重建前台」才会显示；公告请到「公告」页管理（实时生效）。</p>
+      <div class="form-actions">
+        <button id="cfg-save" class="btn btn-primary">保存设置</button>
+        <button id="cfg-rebuild" class="btn btn-ghost">保存并重建前台</button>
       </div>
     </main>`;
 
   bindTopbar();
   document.getElementById('export-btn').onclick = exportData;
+  const clearGuard = enableDirtyGuard('#app main');
+  const collect = () => ({
+    announcements: window._cfg.announcements || [],
+    qq: document.getElementById('cfg-qq').value.trim(),
+    qqNumber: document.getElementById('cfg-qqnum').value.trim(),
+    telegram: document.getElementById('cfg-tg').value.trim(),
+    hero: {
+      title: document.getElementById('cfg-hero-title').value.trim(),
+      titleEn: document.getElementById('cfg-hero-title-en').value.trim(),
+      sub: document.getElementById('cfg-hero-sub').value.trim(),
+      subEn: document.getElementById('cfg-hero-sub-en').value.trim(),
+      sub2: document.getElementById('cfg-hero-sub2').value.trim(),
+      sub2En: document.getElementById('cfg-hero-sub2-en').value.trim(),
+    },
+    footer: {
+      disclaimer: document.getElementById('cfg-footer-disc').value.trim(),
+      disclaimerEn: document.getElementById('cfg-footer-disc-en').value.trim(),
+      aff: document.getElementById('cfg-footer-aff').value.trim(),
+      affEn: document.getElementById('cfg-footer-aff-en').value.trim(),
+    },
+  });
   document.getElementById('cfg-save').onclick = async () => {
-    const cfg = {
-      announcements: window._cfg.announcements || [],
-      qq: document.getElementById('cfg-qq').value.trim(),
-      telegram: document.getElementById('cfg-tg').value.trim(),
-    };
-    await api('/api/config', { method: 'PUT', body: JSON.stringify(cfg) });
-    alert('已保存');
+    await api('/api/config', { method: 'PUT', body: JSON.stringify(collect()) });
+    clearGuard();
+    toast('已保存');
     showSettings();
   };
+  document.getElementById('cfg-rebuild').onclick = async () => {
+    await api('/api/config', { method: 'PUT', body: JSON.stringify(collect()) });
+    clearGuard();
+    try {
+      await api('/api/rebuild', { method: 'POST' });
+      toast('已保存并重建前台');
+    } catch (e) {
+      toast('已保存，但重建失败：' + e.message, 'error', 4000);
+    }
+    showSettings();
+  };
+}
+
+// ---------- 操作审计日志 ----------
+async function showAudit() {
+  const logs = await api('/api/audit');
+  document.getElementById('app').innerHTML = `
+    ${topbar('audit')}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">操作日志（${logs.length}）</h2>
+      </div>
+      ${logs.length === 0 ? '<div class="card empty-state"><p class="empty-icon">📝</p><p class="empty-title">暂无操作记录</p><p class="empty-desc">对站点、投稿、配置、模型的操作会记录在这里，用于追溯。</p></div>' : `
+      <div class="card" style="padding:0">
+        ${logs.map((l) => `
+          <div class="audit-row">
+            <span class="audit-time">${esc(l.time)}</span>
+            <span class="audit-action">${esc(l.action)}</span>
+            <span class="cell-strong">${esc(l.target)}</span>
+            ${l.detail ? `<span class="cell-dim">${esc(l.detail)}</span>` : ''}
+          </div>`).join('')}
+      </div>`}
+    </main>`;
+  bindTopbar();
+}
+
+// ---------- 内容管理（FAQ + 关于页）----------
+async function showContent(tab = 'faq') {
+  const cfg = await api('/api/config');
+  window._cfg = cfg;
+  const faqs = cfg.faq || [];
+  const faqsEn = cfg.faqEn || [];
+  const about = cfg.about || {};
+  document.getElementById('app').innerHTML = `
+    ${topbar('content')}
+    <main class="container container-sm">
+      <div class="section-head">
+        <h2 class="section-title">内容管理</h2>
+        <div class="section-actions">
+          <button id="tab-faq" class="btn ${tab === 'faq' ? 'btn-primary' : 'btn-ghost'}">FAQ</button>
+          <button id="tab-about" class="btn ${tab === 'about' ? 'btn-primary' : 'btn-ghost'}">关于页</button>
+        </div>
+      </div>
+      ${tab === 'faq' ? `
+      <div class="card">
+        <h3 class="card-title">FAQ（${faqs.length} 条）</h3>
+        <p class="hint" style="margin-top:-4px;margin-bottom:14px">每条 FAQ 分中文/英文两个版本。英文留空时前台回退显示中文。可拖动右侧按钮调整顺序。</p>
+        <div id="faq-list">${faqs.map((f, i) => {
+          const fe = faqsEn[i] || {};
+          return `
+          <div class="faq-item" data-i="${i}">
+            <div class="faq-item-head">
+              <span class="faq-item-index">#${i + 1}</span>
+              <button type="button" class="btn btn-ghost faq-del" data-i="${i}" style="padding:2px 8px;font-size:12px">删除</button>
+            </div>
+            <div class="form-grid">
+              <div class="form-row"><label class="field-label">中文问题</label><input class="inp faq-q" data-lang="zh" value="${esc(f.q)}" /></div>
+              <div class="form-row"><label class="field-label">英文问题</label><input class="inp faq-q" data-lang="en" value="${esc(fe.q || '')}" /></div>
+            </div>
+            <div class="form-row"><label class="field-label">中文答案</label><textarea class="inp faq-a" data-lang="zh" rows="2">${esc(f.a)}</textarea></div>
+            <div class="form-row"><label class="field-label">英文答案</label><textarea class="inp faq-a" data-lang="en" rows="2">${esc(fe.a || '')}</textarea></div>
+          </div>`;
+        }).join('')}</div>
+        <button id="faq-add" class="btn btn-ghost" style="width:100%;border-style:dashed">+ 添加一条</button>
+        <div class="form-actions">
+          <button id="faq-save" class="btn btn-primary">保存 FAQ</button>
+        </div>
+      </div>` : `
+      <div class="card">
+        <h3 class="card-title">关于页内容</h3>
+        <div class="form-row">
+          <label class="field-label">简介</label>
+          <textarea id="about-intro" class="inp" rows="2">${esc(about.intro || '')}</textarea>
+        </div>
+        <div class="form-row">
+          <label class="field-label">说明</label>
+          <textarea id="about-note" class="inp" rows="2">${esc(about.note || '')}</textarea>
+        </div>
+        <div class="form-row">
+          <label class="field-label">免责声明标题</label>
+          <input id="about-disc-title" class="inp" value="${esc(about.disclaimerTitle || '')}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">免责声明条目（每行一条）</label>
+          <textarea id="about-disc-items" class="inp" rows="3">${esc((about.disclaimerItems || []).join('\n'))}</textarea>
+        </div>
+        <div class="form-row">
+          <label class="field-label">收录标准标题</label>
+          <input id="about-cri-title" class="inp" value="${esc(about.criteriaTitle || '')}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">收录标准条目（每行一条）</label>
+          <textarea id="about-cri-items" class="inp" rows="3">${esc((about.criteriaItems || []).join('\n'))}</textarea>
+        </div>
+        <div class="form-row">
+          <label class="field-label">提交与反馈标题</label>
+          <input id="about-contact-title" class="inp" value="${esc(about.contactTitle || '')}" />
+        </div>
+        <div class="form-row">
+          <label class="field-label">提交与反馈内容</label>
+          <textarea id="about-contact-text" class="inp" rows="2">${esc(about.contactText || '')}</textarea>
+        </div>
+        <div class="form-actions">
+          <button id="about-save" class="btn btn-primary">保存关于页</button>
+        </div>
+      </div>`}
+      <p class="hint">内容保存后需「重建前台」才会生效（在「站点」页点「重建前台」）。</p>
+    </main>`;
+
+  bindTopbar();
+  const clearGuard = enableDirtyGuard('#app main');
+  document.getElementById('tab-faq').onclick = () => { clearGuard(); showContent('faq'); };
+  document.getElementById('tab-about').onclick = () => { clearGuard(); showContent('about'); };
+
+  if (tab === 'faq') {
+    const collectFaq = () => {
+      const faq = [];
+      const faqEn = [];
+      document.querySelectorAll('.faq-item').forEach((item) => {
+        const qzh = item.querySelector('.faq-q[data-lang="zh"]')?.value.trim();
+        const azh = item.querySelector('.faq-a[data-lang="zh"]')?.value.trim();
+        const qen = item.querySelector('.faq-q[data-lang="en"]')?.value.trim();
+        const aen = item.querySelector('.faq-a[data-lang="en"]')?.value.trim();
+        if (!qzh && !qen) return; // 跳过完全空的条目
+        faq.push({ q: qzh || qen, a: azh || aen || '' });
+        if (qen || aen) faqEn.push({ q: qen || qzh, a: aen || azh || '' });
+      });
+      return { faq, faqEn };
+    };
+    document.getElementById('faq-add').onclick = () => {
+      const list = document.getElementById('faq-list');
+      const i = list.children.length;
+      const div = document.createElement('div');
+      div.className = 'faq-item';
+      div.innerHTML = `
+        <div class="faq-item-head"><span class="faq-item-index">#${i + 1}</span><button type="button" class="btn btn-ghost faq-del" style="padding:2px 8px;font-size:12px">删除</button></div>
+        <div class="form-grid">
+          <div class="form-row"><label class="field-label">中文问题</label><input class="inp faq-q" data-lang="zh" /></div>
+          <div class="form-row"><label class="field-label">英文问题</label><input class="inp faq-q" data-lang="en" /></div>
+        </div>
+        <div class="form-row"><label class="field-label">中文答案</label><textarea class="inp faq-a" data-lang="zh" rows="2"></textarea></div>
+        <div class="form-row"><label class="field-label">英文答案</label><textarea class="inp faq-a" data-lang="en" rows="2"></textarea></div>`;
+      list.appendChild(div);
+      reindexFaq();
+    };
+    const reindexFaq = () => {
+      document.querySelectorAll('.faq-item').forEach((item, i) => {
+        const idx = item.querySelector('.faq-item-index');
+        if (idx) idx.textContent = '#' + (i + 1);
+      });
+    };
+    document.getElementById('faq-list').addEventListener('click', (e) => {
+      const del = (e.target as HTMLElement).closest('.faq-del');
+      if (del) {
+        (e.target as HTMLElement).closest('.faq-item')?.remove();
+        reindexFaq();
+      }
+    });
+    document.getElementById('faq-save').onclick = async () => {
+      const { faq, faqEn } = collectFaq();
+      const cfg = { ...window._cfg, faq, faqEn: faqEn.length ? faqEn : [] };
+      await api('/api/config', { method: 'PUT', body: JSON.stringify(cfg) });
+      clearGuard();
+      toast('已保存，记得重建前台');
+      showContent('faq');
+    };
+  } else {
+    document.getElementById('about-save').onclick = async () => {
+      const about = {
+        intro: document.getElementById('about-intro').value.trim(),
+        note: document.getElementById('about-note').value.trim(),
+        disclaimerTitle: document.getElementById('about-disc-title').value.trim(),
+        disclaimerItems: document.getElementById('about-disc-items').value.split('\n').map((s) => s.trim()).filter(Boolean),
+        criteriaTitle: document.getElementById('about-cri-title').value.trim(),
+        criteriaItems: document.getElementById('about-cri-items').value.split('\n').map((s) => s.trim()).filter(Boolean),
+        contactTitle: document.getElementById('about-contact-title').value.trim(),
+        contactText: document.getElementById('about-contact-text').value.trim(),
+      };
+      const cfg = { ...window._cfg, about };
+      await api('/api/config', { method: 'PUT', body: JSON.stringify(cfg) });
+      clearGuard();
+      toast('已保存，记得重建前台');
+      showContent('about');
+    };
+  }
 }
 
 // ---------- 导出备份 ----------
@@ -238,8 +569,27 @@ async function showDashboard() {
         ${[['总站点', stats.total], ['稳定', stats.stable], ['不稳定', stats.unstable], ['已失效', stats.offline]]
           .map(([l, v]) => `<div class="card"><p class="stat-label">${l}</p><p class="stat-value">${v}</p></div>`).join('')}
       </div>
+      ${(() => {
+        const todos = [];
+        if (stats.submissionsCount) todos.push({ color: '#8b6dff', label: `${stats.submissionsCount} 个投稿待审核`, action: 'nav-subs', hint: '去审核收录' });
+        if (stats.affPending && stats.affPending.length) todos.push({ color: '#f59e0b', label: `${stats.affPending.length} 个推广链接待补`, action: 'aff', hint: '去注册拿推广码' });
+        if (stats.suspect && stats.suspect.length) todos.push({ color: '#ef4444', label: `${stats.suspect.length} 个疑似失效站点`, action: 'suspect', hint: '连续不可达，去处理' });
+        if (!todos.length) return `<div class="card todo-all-done" style="border-color:rgba(34,197,94,.25);margin-bottom:20px"><p style="font-size:13px;color:#22c55e">✓ 暂无待办事项，一切正常</p></div>`;
+        return `
+        <div class="card" style="margin-bottom:20px">
+          <p class="card-title" style="border:none;padding:0;margin-bottom:12px">待办事项</p>
+          <div class="todo-list">
+            ${todos.map(t => `
+              <div class="todo-item" data-todo="${t.action}">
+                <span class="model-dot" style="background:${t.color}"></span>
+                <span class="cell-strong">${t.label}</span>
+                <span class="todo-hint">${t.hint} →</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+      })()}
       ${stats.affPending && stats.affPending.length ? `
-        <div class="card" style="border-color:rgba(139,109,255,.35);margin-bottom:20px">
+        <div id="aff-panel" class="card" style="border-color:rgba(139,109,255,.35);margin-bottom:20px">
           <p style="font-size:13px;font-weight:500;color:#8b6dff;margin-bottom:8px">🔗 推广链接待补（${stats.affPending.length} 个）——唯一需要人工操作的字段，其余信息均自动采集</p>
           <div style="display:flex;flex-direction:column;gap:6px">
             ${stats.affPending.map(s => `
@@ -249,7 +599,7 @@ async function showDashboard() {
                 <button class="btn btn-ghost" data-aff="${esc(s.id)}" data-name="${esc(s.name)}" style="margin-left:auto">粘贴推广链接</button>
               </div>`).join('')}
           </div>
-        </div>` : `<div class="card" style="border-color:rgba(34,197,94,.25);margin-bottom:20px"><p style="font-size:13px;color:#22c55e">✓ 全部站点已设置推广链接</p></div>`}
+        </div>` : ''}
       ${stats.suspect && stats.suspect.length ? `
         <div class="card" style="border-color:rgba(239,68,68,.3);margin-bottom:20px">
           <p style="font-size:13px;font-weight:500;color:#f87171;margin-bottom:8px">⚠ 监测发现 ${stats.suspect.length} 个疑似失效站点（连续不可达）</p>
@@ -264,10 +614,30 @@ async function showDashboard() {
           <button id="add-site" class="btn btn-primary">+ 新增站点</button>
         </div>
       </div>
+      <div class="card" style="padding:12px;margin-bottom:14px">
+        <div class="site-filter-bar">
+          <input id="site-search" class="inp" placeholder="搜索站点名称、标签、简介…" style="flex:1;min-width:180px" />
+          <select id="site-status-filter" class="inp" style="width:auto">
+            <option value="">全部状态</option>
+            ${Object.entries(STATUS).map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}
+          </select>
+          <span id="site-filter-count" class="hint" style="margin:0;white-space:nowrap"></span>
+        </div>
+        <div class="site-bulk-bar" id="site-bulk-bar" style="display:none;margin-top:10px">
+          <span id="bulk-count" class="hint" style="margin:0">已选 0 个</span>
+          <select id="bulk-status" class="inp" style="width:auto">
+            <option value="">批量改状态…</option>
+            ${Object.entries(STATUS).map(([v,l]) => `<option value="${v}">改为${l}</option>`).join('')}
+          </select>
+          <button id="bulk-featured" class="btn btn-ghost">批量设为精选</button>
+          <button id="bulk-clear" class="btn btn-ghost">取消选择</button>
+        </div>
+      </div>
       <p class="hint" style="margin:-6px 0 14px">改动站点数据后需点击「重建前台」，前台页面才会更新。</p>
       <div class="table-wrap">
-        <table>
+        <table id="site-table">
           <thead><tr>
+            <th style="width:32px"><input type="checkbox" id="select-all" title="全选" /></th>
             <th>名称</th><th>倍率</th><th>状态</th><th>网络</th><th>精选</th><th>点击</th><th>核验</th><th></th>
           </tr></thead>
           <tbody>
@@ -276,7 +646,8 @@ async function showDashboard() {
               const live = u && u.checks ? (u.up ? '●' : '✕') : '';
               const liveColor = u && u.checks ? (u.up ? '#22c55e' : '#ef4444') : '#55556a';
               return `
-              <tr>
+              <tr data-site-row data-name="${esc(s.name)}" data-summary="${esc(s.summary)}" data-tags="${esc((s.tags||[]).join(','))}" data-status="${s.status}">
+                <td><input type="checkbox" class="site-check" data-id="${esc(s.id)}" /></td>
                 <td class="cell-strong">${esc(s.name)} <span style="color:${liveColor}" title="${u && u.up ? '在线 ' + (u.latencyMs ?? '?') + 'ms' : '不可达/无数据'}">${live}</span> <span style="font-size:11px;color:${s.affUrl ? '#22c55e' : '#f59e0b'}" title="${s.affUrl ? '推广链接已设置' : '推广链接待补'}">${s.affUrl ? 'AFF✓' : 'AFF待补'}</span></td>
                 <td class="cell-dim">${s.multiplier ?? '—'}</td>
                 <td>${STATUS[s.status] || s.status}</td>
@@ -296,11 +667,83 @@ async function showDashboard() {
     </main>`;
 
   bindTopbar();
+  // 站点列表搜索 + 状态筛选
+  const searchInput = document.getElementById('site-search');
+  const statusFilter = document.getElementById('site-status-filter');
+  const countEl = document.getElementById('site-filter-count');
+  const applySiteFilter = () => {
+    const q = (searchInput?.value || '').trim().toLowerCase();
+    const st = statusFilter?.value || '';
+    let shown = 0;
+    document.querySelectorAll('[data-site-row]').forEach((row) => {
+      const name = (row.dataset.name || '').toLowerCase();
+      const summary = (row.dataset.summary || '').toLowerCase();
+      const tags = (row.dataset.tags || '').toLowerCase();
+      const okQ = !q || name.includes(q) || summary.includes(q) || tags.includes(q);
+      const okSt = !st || row.dataset.status === st;
+      const show = okQ && okSt;
+      row.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    if (countEl) countEl.textContent = `共 ${shown} 个`;
+  };
+  searchInput?.addEventListener('input', applySiteFilter);
+  statusFilter?.addEventListener('change', applySiteFilter);
+  applySiteFilter();
+  // 批量操作：多选站点 + 批量改状态/精选
+  const bulkBar = document.getElementById('site-bulk-bar');
+  const bulkCount = document.getElementById('bulk-count');
+  const selectedIds = () => [...document.querySelectorAll('.site-check:checked')].map((c) => c.dataset.id);
+  const syncBulk = () => {
+    const n = selectedIds().length;
+    bulkBar.style.display = n > 0 ? 'flex' : 'none';
+    if (bulkCount) bulkCount.textContent = `已选 ${n} 个`;
+    const all = document.getElementById('select-all');
+    if (all) {
+      const checks = document.querySelectorAll('.site-check');
+      all.checked = checks.length > 0 && [...checks].every((c) => c.checked);
+    }
+  };
+  document.getElementById('select-all')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.site-check').forEach((c) => (c.checked = e.target.checked));
+    syncBulk();
+  });
+  document.querySelectorAll('.site-check').forEach((c) => c.addEventListener('change', syncBulk));
+  document.getElementById('bulk-clear')?.addEventListener('click', () => {
+    document.querySelectorAll('.site-check').forEach((c) => (c.checked = false));
+    syncBulk();
+  });
+  document.getElementById('bulk-status')?.addEventListener('change', async (e) => {
+    const st = e.target.value;
+    if (!st) return;
+    const ids = selectedIds();
+    if (!ids.length) return;
+    if (!(await confirmDialog(`确定将选中的 ${ids.length} 个站点改为「${STATUS[st]}」？`, { danger: st === 'offline', okText: '确定' }))) { e.target.value = ''; return; }
+    for (const id of ids) await api('/api/sites/' + id, { method: 'PUT', body: JSON.stringify({ status: st }) });
+    toast(`已更新 ${ids.length} 个站点状态`);
+    showDashboard();
+  });
+  document.getElementById('bulk-featured')?.addEventListener('click', async () => {
+    const ids = selectedIds();
+    if (!ids.length) return;
+    for (const id of ids) await api('/api/sites/' + id, { method: 'PUT', body: JSON.stringify({ isFeatured: true }) });
+    toast(`已将 ${ids.length} 个站点设为精选`);
+    showDashboard();
+  });
+  // 待办事项快捷跳转
+  document.querySelectorAll('[data-todo]').forEach((el) => {
+    el.onclick = () => {
+      const action = el.dataset.todo;
+      if (action === 'nav-subs') showSubmissions();
+      else if (action === 'aff') document.querySelector('#aff-panel')?.scrollIntoView({ behavior: 'smooth' });
+      else if (action === 'suspect') document.querySelector('[data-mark-off]')?.scrollIntoView({ behavior: 'smooth' });
+    };
+  });
   document.getElementById('add-site').onclick = () => showSiteForm(null);
   document.getElementById('rebuild').onclick = rebuildFrontend;
   document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => showSiteForm(window._sites.find(s => s.id === b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('确定删除该站点？')) return;
+    if (!(await confirmDialog('确定删除该站点？删除后不可恢复。', { danger: true, okText: '删除' }))) return;
     await api('/api/sites/' + b.dataset.del, { method: 'DELETE' });
     showDashboard();
   });
@@ -312,10 +755,10 @@ async function showDashboard() {
     const aff = prompt(`粘贴「${b.dataset.name}」你的推广链接（注册后在该站的控制台/邀请页面获取，含 aff 参数的完整链接）：`);
     if (aff === null) return;
     const v = aff.trim();
-    if (v && !/^https?:\/\//i.test(v)) { alert('请粘贴以 http(s):// 开头的完整链接'); return; }
+    if (v && !/^https?:\/\//i.test(v)) { toast('请粘贴以 http(s):// 开头的完整链接', 'error'); return; }
     await api('/api/sites/' + b.dataset.aff, { method: 'PUT', body: JSON.stringify({ affUrl: v }) });
     // 前台 /go 跳转链接是构建时烘焙的，保存后必须重建才生效
-    try { await api('/api/rebuild', { method: 'POST' }); } catch (e) { alert('推广链接已保存，但重建前台失败：' + e.message + '\n请稍后在首页点「重建前台」。'); }
+    try { await api('/api/rebuild', { method: 'POST' }); } catch (e) { toast('推广链接已保存，但重建前台失败：' + e.message, 'error', 4000); }
     showDashboard();
   });
 }
@@ -329,7 +772,13 @@ async function showSubmissions() {
       <div class="section-head">
         <h2 class="section-title">投稿审核（${subs.length}）</h2>
       </div>
-      ${subs.length === 0 ? '<p class="hint" style="margin:20px 0">暂无投稿</p>' : `
+      ${subs.length === 0 ? `
+        <div class="card empty-state">
+          <p class="empty-icon">📭</p>
+          <p class="empty-title">暂无投稿</p>
+          <p class="empty-desc">用户提交的站点会出现在这里。也可以在「监测」页点「立即采集」自动发现新站候选。</p>
+          <button id="goto-collect" class="btn btn-ghost">前往监测页采集 →</button>
+        </div>` : `
       <div class="table-wrap">
         <table>
           <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>联系方式</th><th>时间</th><th></th></tr></thead>
@@ -342,6 +791,7 @@ async function showSubmissions() {
                 <td class="cell-dim">${esc(s.contact || '—')}</td>
                 <td class="cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
                 <td class="cell-actions">
+                  ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost">查看</a>` : ''}
                   <button class="btn btn-ghost" data-approve="${esc(s.id)}">收录</button>
                   <button class="btn btn-danger" data-reject="${esc(s.id)}">丢弃</button>
                 </td>
@@ -352,6 +802,8 @@ async function showSubmissions() {
     </main>`;
 
   bindTopbar();
+  const gotoCollect = document.getElementById('goto-collect');
+  if (gotoCollect) gotoCollect.onclick = showUptime;
   document.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => {
     const sub = subs.find(x => x.id === b.dataset.approve);
     showSiteForm(null, { name: sub.name, url: sub.url, summary: sub.summary }, sub.id);
@@ -417,7 +869,7 @@ async function showUptime() {
     collectBtn.disabled = true; collectBtn.textContent = '采集中…（约1-2分钟）';
     try {
       const r = await api('/api/collect/run', { method: 'POST' });
-      alert(`采集完成：抓取 ${r.fetched} 个 → 新候选 ${r.candidates} 个 → 探测通过 ${r.verified} 个，已入投稿队列 ${r.added} 个（被拒 ${r.rejected} 个不可达/非中转站）。\n\n到「投稿」页审核收录。`);
+      toast(`采集完成：抓取 ${r.fetched} 个 → 新候选 ${r.candidates} 个 → 探测通过 ${r.verified} 个，已入投稿队列 ${r.added} 个（被拒 ${r.rejected} 个）。到「投稿」页审核收录。`, 'success', 5000);
       collectBtn.textContent = '立即采集';
       collectBtn.disabled = false;
     } catch (e) {
@@ -431,7 +883,7 @@ async function showUptime() {
     try {
       const r = await api('/api/enrich/run', { method: 'POST' });
       const lines = (r.changed || []).map(c => `· ${c.name}：${c.changes.join('；')}`).join('\n');
-      alert(`核验完成：在线 ${r.up}/${r.checked} 站，${r.changed.length} 站有更新，新增记录 ${r.eventsAdded} 条${r.rebuildTriggered ? '，前台已自动重建' : ''}。\n${lines || '（无变化）'}`);
+      toast(`核验完成：在线 ${r.up}/${r.checked} 站，${r.changed.length} 站有更新，新增记录 ${r.eventsAdded} 条${r.rebuildTriggered ? '，前台已自动重建' : ''}。${lines || '（无变化）'}`, 'success', 5000);
       enrichBtn.textContent = '立即核验';
       enrichBtn.disabled = false;
     } catch (e) {
@@ -477,111 +929,131 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
         <button id="back" class="btn btn-ghost">← 返回</button>
       </div>
       <form id="site-form" class="card">
-        <div class="form-row">
-          <label class="field-label">名称 *</label>
-          <input id="f-name" class="inp" required value="${esc(site.name)}" />
-        </div>
-        <div class="form-row">
-          <label class="field-label">URL（留空则前台显示"链接待补充"）</label>
-          <input id="f-url" class="inp" placeholder="https://…" value="${esc(site.url)}" />
-        </div>
-        <div class="form-row">
-          <label class="field-label">推广链接 affUrl（可选：设置后跳转用它，用于返佣）</label>
-          <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
-        </div>
-        <div class="form-grid">
+        <fieldset class="form-section">
+          <legend class="form-section-title">基本信息</legend>
           <div class="form-row">
-            <label class="field-label">倍率（如 0.4，留空为未知）</label>
-            <input id="f-mult" class="inp" type="number" step="0.01" min="0" value="${site.multiplier ?? ''}" />
+            <label class="field-label">名称 *</label>
+            <input id="f-name" class="inp" required value="${esc(site.name)}" />
           </div>
           <div class="form-row">
-            <label class="field-label">状态</label>
-            <select id="f-status" class="inp">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}" ${site.status===v?'selected':''}>${l}</option>`).join('')}</select>
+            <label class="field-label">URL（留空则前台显示"链接待补充"）</label>
+            <input id="f-url" class="inp" placeholder="https://…" value="${esc(site.url)}" />
           </div>
-        </div>
-        <div class="form-grid" style="margin-top:14px">
           <div class="form-row">
-            <label class="field-label">网络可达性</label>
-            <select id="f-network" class="inp">${Object.entries(NET_OPTS).map(([v,l]) => `<option value="${v}" ${(site.network||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select>
+            <label class="field-label">一句话简介 *</label>
+            <input id="f-summary" class="inp" required value="${esc(site.summary)}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">详细描述</label>
+            <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">价格与状态</legend>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field-label">倍率（如 0.4，留空为未知）</label>
+              <input id="f-mult" class="inp" type="number" step="0.01" min="0" value="${site.multiplier ?? ''}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">状态</label>
+              <select id="f-status" class="inp">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}" ${site.status===v?'selected':''}>${l}</option>`).join('')}</select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field-label">网络可达性</label>
+              <select id="f-network" class="inp">${Object.entries(NET_OPTS).map(([v,l]) => `<option value="${v}" ${(site.network||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select>
+            </div>
+            <div class="form-row">
+              <label class="field-label">充值汇率（每 1 刀额度所需人民币，如 7.5；用于折算实际倍率）</label>
+              <input id="f-toprate" class="inp" type="number" step="0.01" min="0" value="${site.topupRate ?? ''}" />
+            </div>
           </div>
           <div class="form-row">
             <label class="field-label">注册赠送</label>
             <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
           </div>
-        </div>
-        <div class="form-grid" style="margin-top:14px">
           <div class="form-row">
             <label class="field-label">邀请码 / 兑换口令（前台一键复制，可留空）</label>
             <input id="f-invite" class="inp" value="${esc(site.inviteCode || '')}" />
           </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">推广与运营</legend>
           <div class="form-row">
-            <label class="field-label">充值汇率（每 1 刀额度所需人民币，如 7.5；用于折算实际倍率）</label>
-            <input id="f-toprate" class="inp" type="number" step="0.01" min="0" value="${site.topupRate ?? ''}" />
+            <label class="field-label">推广链接 affUrl（可选：设置后跳转用它，用于返佣）</label>
+            <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
           </div>
-        </div>
-        <div class="form-grid" style="margin-top:14px">
           <div class="form-row">
             <label class="field-label">获奖理由（榜单缎带，如：最佳白嫖 / 最低价 / 最稳老站）</label>
             <input id="f-award" class="inp" value="${esc(site.award || '')}" />
           </div>
           <div class="form-row">
-            <label class="field-label">API Base URL（如 https://api.example.com/v1，详情页展示一键复制）</label>
+            <label class="field-label">API Base URL（如 https://api.example.com/v1）</label>
             <input id="f-apibase" class="inp" value="${esc(site.apiBase || '')}" placeholder="https://…/v1" />
           </div>
-        </div>
-        <div class="form-row" style="margin-top:14px">
-          <label class="field-label">英文简介（可选，EN 模式下替换中文摘要）</label>
-          <input id="f-summary-en" class="inp" value="${esc(site.summaryEn || '')}" />
-        </div>
-        <div class="form-row" style="margin-top:14px">
-          <label class="field-label">支持模型</label>
-          <div class="checkbox-row">
-            ${models.map(m => `<label class="checkbox-item">
-              <input type="checkbox" name="models" value="${esc(m.id)}" ${site.models.includes(m.id)?'checked':''} />
-              <span style="color:${esc(m.color)}">${esc(m.name)}</span></label>`).join('')}
-          </div>
-        </div>
-        <div class="form-row">
-          <label class="field-label">工具兼容</label>
-          <div class="checkbox-row">
-            ${TOOL_OPTS.map(t => `<label class="checkbox-item">
-              <input type="checkbox" name="tools" value="${t.id}" ${(site.tools||[]).includes(t.id)?'checked':''} />
-              ${t.name}</label>`).join('')}
-          </div>
-        </div>
-        <div class="form-row">
-          <label class="field-label">标签（逗号分隔，如：签到,生图,稳定）</label>
-          <input id="f-tags" class="inp" value="${esc((site.tags||[]).join(','))}" />
-        </div>
-        <div class="form-row">
-          <label class="field-label">一句话简介 *</label>
-          <input id="f-summary" class="inp" required value="${esc(site.summary)}" />
-        </div>
-        <div class="form-row">
-          <label class="field-label">详细描述</label>
-          <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
-        </div>
-        <div class="form-row" style="margin-top:14px">
-          <label class="field-label">英文详细描述（可选，EN 模式下替换中文描述）</label>
-          <textarea id="f-desc-en" class="inp" rows="3">${esc(site.descriptionEn || '')}</textarea>
-        </div>
-        <div class="form-row">
-          <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x。详情页按时间线展示）</label>
-          <textarea id="f-events" class="inp" rows="3" placeholder="2026-08-22 | 降价活动，Claude 0.01x">${(site.events || []).map(e => `${e.date} | ${e.text}`).join('\n')}</textarea>
-        </div>
-        <div class="form-grid">
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">模型与标签</legend>
           <div class="form-row">
-            <label class="field-label">核验日期</label>
-            <input id="f-verified" class="inp" type="date" value="${esc(site.verifiedAt || new Date().toISOString().slice(0,10))}" />
+            <label class="field-label">支持模型</label>
+            <div class="checkbox-row">
+              ${models.map(m => `<label class="checkbox-item">
+                <input type="checkbox" name="models" value="${esc(m.id)}" ${site.models.includes(m.id)?'checked':''} />
+                <span style="color:${esc(m.color)}">${esc(m.name)}</span></label>`).join('')}
+            </div>
           </div>
           <div class="form-row">
-            <label class="field-label">排序（小在前）</label>
-            <input id="f-sort" class="inp" type="number" value="${site.sortOrder ?? 99}" />
+            <label class="field-label">工具兼容</label>
+            <div class="checkbox-row">
+              ${TOOL_OPTS.map(t => `<label class="checkbox-item">
+                <input type="checkbox" name="tools" value="${t.id}" ${(site.tools||[]).includes(t.id)?'checked':''} />
+                ${t.name}</label>`).join('')}
+            </div>
           </div>
-        </div>
-        <div class="form-row" style="margin-top:14px">
-          <label class="checkbox-item"><input id="f-featured" type="checkbox" ${site.isFeatured?'checked':''} /> 编辑精选 ⭐</label>
-        </div>
+          <div class="form-row">
+            <label class="field-label">标签（逗号分隔，如：签到,生图,稳定）</label>
+            <input id="f-tags" class="inp" value="${esc((site.tags||[]).join(','))}" />
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">英文内容（可选）</legend>
+          <div class="form-row">
+            <label class="field-label">英文简介（EN 模式下替换中文摘要）</label>
+            <input id="f-summary-en" class="inp" value="${esc(site.summaryEn || '')}" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">英文详细描述（EN 模式下替换中文描述）</label>
+            <textarea id="f-desc-en" class="inp" rows="3">${esc(site.descriptionEn || '')}</textarea>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">记录与排序</legend>
+          <div class="form-row">
+            <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x）</label>
+            <textarea id="f-events" class="inp" rows="3" placeholder="2026-08-22 | 降价活动，Claude 0.01x">${(site.events || []).map(e => `${e.date} | ${e.text}`).join('\n')}</textarea>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field-label">核验日期</label>
+              <input id="f-verified" class="inp" type="date" value="${esc(site.verifiedAt || new Date().toISOString().slice(0,10))}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">排序（小在前）</label>
+              <input id="f-sort" class="inp" type="number" value="${site.sortOrder ?? 99}" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="checkbox-item"><input id="f-featured" type="checkbox" ${site.isFeatured?'checked':''} /> 编辑精选 ⭐</label>
+          </div>
+        </fieldset>
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">保存</button>
           <button type="button" id="cancel" class="btn btn-ghost">取消</button>
@@ -590,8 +1062,18 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
     </main>`;
 
   bindTopbar();
-  document.getElementById('back').onclick = showDashboard;
-  document.getElementById('cancel').onclick = showDashboard;
+  // 未保存离开提醒
+  let dirty = false;
+  const markDirty = () => { dirty = true; };
+  document.getElementById('site-form').querySelectorAll('input, textarea, select').forEach((el) => {
+    el.addEventListener('input', markDirty);
+    el.addEventListener('change', markDirty);
+  });
+  const beforeUnload = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
+  window.addEventListener('beforeunload', beforeUnload);
+  const leaveClean = () => { dirty = false; window.removeEventListener('beforeunload', beforeUnload); };
+  document.getElementById('back').onclick = () => { leaveClean(); showDashboard(); };
+  document.getElementById('cancel').onclick = () => { leaveClean(); showDashboard(); };
   document.getElementById('site-form').onsubmit = async (e) => {
     e.preventDefault();
     const body = {
@@ -625,6 +1107,8 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
     else await api('/api/sites/' + site.id, { method: 'PUT', body: JSON.stringify(body) });
     // 从投稿收录时，保存后自动删除该投稿
     if (afterSaveDeleteSub) await api('/api/submissions/' + afterSaveDeleteSub, { method: 'DELETE' }).catch(() => {});
+    leaveClean();
+    toast('已保存。记得点击「重建前台」让前台生效', 'success', 3500);
     showDashboard();
   };
 }
@@ -663,7 +1147,7 @@ async function showModels() {
   const backBtn = document.getElementById('back');
   if (backBtn) backBtn.onclick = showDashboard;
   document.querySelectorAll('[data-del-model]').forEach(b => b.onclick = async () => {
-    if (!confirm('确定删除该模型标签？')) return;
+    if (!(await confirmDialog('确定删除该模型标签？已关联站点的模型删除后前台会自动忽略。', { danger: true, okText: '删除' }))) return;
     const next = window._models.filter((_, i) => i !== Number(b.dataset.delModel));
     await api('/api/models', { method: 'PUT', body: JSON.stringify(next) });
     showModels();
@@ -675,7 +1159,7 @@ async function showModels() {
       name: document.getElementById('m-name').value.trim(),
       color: document.getElementById('m-color').value,
     };
-    if (window._models.some(x => x.id === m.id)) return alert('该 ID 已存在');
+    if (window._models.some(x => x.id === m.id)) return toast('该 ID 已存在', 'error');
     await api('/api/models', { method: 'PUT', body: JSON.stringify([...window._models, m]) });
     showModels();
   };

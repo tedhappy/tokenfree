@@ -6,6 +6,107 @@
       "text": "TokenFree 上线：精选收录 10 个可用中转站，实时监测运行中。欢迎投稿与反馈。"
     }
   ],
-  "qq": "",
-  "telegram": ""
+  "qq": "https://qm.qq.com/q/MhvNV7VTeW",
+  "telegram": "",
+  "qqNumber": "1014387062",
+  "hero": {
+    "title": "AI Token 中转站精选榜",
+    "titleEn": "The Best AI Token Relays",
+    "sub": "让每个人都能免费用 Token，实现 Token 自由",
+    "subEn": "Free tokens for everyone — your token freedom starts here.",
+    "sub2": "编辑实测筛选的可用中转站：免费额度 · 低价倍率 · 实时监测，一站看清",
+    "sub2En": "Editor-tested AI API relays: free credits · low multipliers · live monitoring, all at a glance."
+  },
+  "footer": {
+    "disclaimer": "仅供参考，不对任何中转站的安全性负责。",
+    "disclaimerEn": "For reference only. We are not responsible for any relay site.",
+    "aff": "部分注册链接含本站推广码，不影响你获得的额度与体验。",
+    "affEn": "Some sign-up links contain our referral code — it never affects the credits or experience you get."
+  },
+  "faq": [
+    {
+      "q": "什么是 AI API 中转站？",
+      "a": "中转站（relay）是在你和官方 API（OpenAI、Anthropic 等）之间的转发服务：你把 base_url 指向中转站，用它的 key 调用，它再转发到官方。好处是免去外币支付和网络问题，通常价格更低（倍率 < 1）。正常官转倍率在 0.7-1.5 之间。"
+    },
+    {
+      "q": "倍率（multiplier）是什么意思？",
+      "a": "倍率是相对官方定价的折扣系数。0.4x 表示按官方价的 40% 计费；0.01x 即 1%。注意部分站点充值比例不是 1:1（如 1 元 = 0.1 刀），实际成本要乘上充值比例。"
+    },
+    {
+      "q": "怎么使用中转站？",
+      "a": "注册账号 → 在后台生成 API Key → 把客户端的 base_url 换成中转站地址。支持 OpenAI 格式的客户端（ChatBox、NextChat、各类 CLI 编程工具）都可以直接用。部分站点区分分组，注册后先看清自己所在的分组倍率。"
+    },
+    {
+      "q": "怎么避免被坑？",
+      "a": "① 谨慎充值，先小额试用；② 同时注册 2-3 家互为备份，避免单点故障；③ 关注站点运营时长和社区口碑（LinuxDo 等）；④ 免费额度大的新站风险也大，重要数据别走不可信渠道；⑤ 本站标注的实时状态和核验日期仅供参考。"
+    },
+    {
+      "q": "免费额度/签到送的刀是真的吗？",
+      "a": "多数是真的，但注意：① 部分站点送的“刀”按高倍率计费，实际能用的量很小；② 有些站需要进群/做任务才发放；③ 送的额度通常限速或限模型。看到“注册送 100 刀”先看清倍率和限制再冲。"
+    },
+    {
+      "q": "中转站会跑路吗？",
+      "a": "会。中转站本质是灰色生意，跑路、被封、停服都常见。本站用“实时监测”标记站点可达性，连续不可达的站点会被标注。但监测只能说明“站点能打开”，不能保证“不跑路”。原则：不充值超过你能承受损失的金额。"
+    },
+    {
+      "q": "本站的数据是怎么来的，可信吗？",
+      "a": "站点信息每天自动核验：可达性、API 端点状态直接探测；倍率和模型列表直接读取站点官方定价接口，与人工记录不一致时保留原值并提醒复核，不会悄悄改动。新站收录前均经人工审核。所有核验记录在站点详情页的日志中可查。数据仅供参考，不构成任何担保。"
+    },
+    {
+      "q": "本站如何收录站点？",
+      "a": "信息来自公开渠道整理和用户投稿，编辑审核后收录。收录不代表背书，排序和精选仅代表编辑偏好。如果你是站长想收录/删除，欢迎通过投稿页联系。"
+    }
+  ],
+  "faqEn": [
+    {
+      "q": "What is an AI API relay site?",
+      "a": "A relay (proxy) sits between you and official APIs (OpenAI, Anthropic, etc.): you point base_url at the relay and use its key. Benefits: no foreign card needed, no network issues, and usually cheaper (multiplier < 1). Fair-priced official-forwarding relays usually sit at 0.7–1.5x."
+    },
+    {
+      "q": "What does multiplier mean?",
+      "a": "The multiplier is the discount vs official pricing: 0.4x = 40% of official price; 0.01x = 1%. Note some sites use non-1:1 top-up rates (e.g. 1 CNY = 0.1 USD) — multiply that in for real cost."
+    },
+    {
+      "q": "How do I use a relay?",
+      "a": "Register → generate an API key in the dashboard → set base_url in your client. OpenAI-compatible clients (ChatBox, NextChat, CLI coding tools) work directly. Check which group/plan your account is on — multipliers differ per group."
+    },
+    {
+      "q": "How to avoid getting burned?",
+      "a": "① Top up small, test first; ② keep 2-3 relays as backups; ③ check site age and community reputation (LinuxDo etc.); ④ big free credits on new sites = big risk; ⑤ treat live status and verified dates here as reference only."
+    },
+    {
+      "q": "Are the free credits / check-in rewards real?",
+      "a": "Mostly yes, but: ① some \"credits\" are billed at high multipliers so real value is tiny; ② some require joining groups or tasks; ③ free tiers are often rate-limited or model-limited. Read the multiplier and limits before rushing in."
+    },
+    {
+      "q": "Do relay sites run away?",
+      "a": "Yes. Relays are a gray-market business — exit scams, bans and shutdowns are common. Our live monitoring marks reachability, and consistently failing sites get flagged. But \"reachable\" never guarantees \"won't run\". Rule: never top up more than you can afford to lose."
+    },
+    {
+      "q": "Where does the data come from? Can I trust it?",
+      "a": "Every site is re-checked daily: reachability and API endpoint status are probed directly; multipliers and model lists are read from each site's own public pricing endpoint. When automated results disagree with our records, we keep the recorded value and flag it for review — nothing changes silently. New listings pass human review first, and every check leaves a record in the site's public log. All data is reference only, not a guarantee."
+    },
+    {
+      "q": "How does this directory list sites?",
+      "a": "From public sources and user submissions, reviewed by the editor. Listing is not endorsement; ordering and featuring reflect editor preference. Site owners can reach us via the submit page."
+    }
+  ],
+  "about": {
+    "intro": "TokenFree 是一个 AI Token 中转站精选榜，由编辑实测筛选可用、稳定的中转站，帮你快速找到免费额度和低价倍率入口。",
+    "note": "所有站点信息均来自公开渠道整理，编辑会尽量标注核验日期，但中转站状态变化较快，使用前请自行判断。",
+    "disclaimerTitle": "免责声明",
+    "disclaimerItems": [
+      "本站仅提供信息索引，不参与任何中转站的运营与充值。",
+      "中转站存在跑路风险，请谨慎充值，建议小额试用。",
+      "建议注册 2-3 家互为备份，规避单点故障。"
+    ],
+    "criteriaTitle": "收录标准",
+    "criteriaItems": [
+      "站点可正常访问、注册",
+      "倍率、赠送信息透明",
+      "无大量用户负面反馈"
+    ],
+    "contactTitle": "提交与反馈",
+    "contactText": "想提交新站点或反馈问题？欢迎联系站长。"
+  }
 }

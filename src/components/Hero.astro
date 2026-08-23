@@ -1,31 +1,47 @@
 ---
+import config from '../data/config.json';
 interface Props {
   siteCount: number;
   stableCount: number;
 }
 const { siteCount, stableCount } = Astro.props;
+// 首页文案后台可配（config.json hero 字段，改后需重建前台）；未配置时用默认文案
+const hero = (config as any).hero || {};
+const title = hero.title || 'AI Token 中转站精选榜';
+const titleEn = hero.titleEn || 'The Best AI Token Relays';
+const sub = hero.sub || '让每个人都能免费用 Token，实现 Token 自由';
+const subEn = hero.subEn || 'Free tokens for everyone — your token freedom starts here.';
+const sub2 = hero.sub2 || '编辑实测筛选的可用中转站：免费额度 · 低价倍率 · 实时监测，一站看清';
+const sub2En = hero.sub2En || 'Editor-tested AI API relays: free credits · low multipliers · live monitoring, all at a glance.';
 ---
 
 <section class="pt-16 pb-10 sm:pt-20 sm:pb-14">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight mb-4" data-i18n="hero.title">
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
       <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(120deg, var(--c-t1) 30%, var(--c-accent));">
-        AI Token 中转站精选榜
+        <span data-lang="zh">{title}</span><span data-lang="en">{titleEn}</span>
       </span>
     </h1>
-    <p class="text-text-secondary text-sm sm:text-base max-w-xl mx-auto mb-2" data-i18n="hero.sub">
-      让每个人都能免费用 Token，实现 Token 自由
+    <p class="text-text-secondary text-sm sm:text-base max-w-xl mx-auto mb-2">
+      <span data-lang="zh">{sub}</span><span data-lang="en">{subEn}</span>
     </p>
-    <p class="text-text-muted text-xs sm:text-sm max-w-xl mx-auto mb-8" data-i18n="hero.sub2">
-      编辑实测筛选的可用中转站：免费额度 · 低价倍率 · 实时监测，一站看清
+    <p class="text-text-muted text-xs sm:text-sm max-w-xl mx-auto mb-8">
+      <span data-lang="zh">{sub2}</span><span data-lang="en">{sub2En}</span>
     </p>
-    <div class="flex justify-center mb-8">
+    <div class="flex justify-center flex-wrap gap-3 mb-8">
       <a
         href="/recommend"
         class="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white font-medium shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
       >
         <span data-lang="zh">不知道选哪个？30 秒帮我选站</span><span data-lang="en">Not sure? Find my match in 30s</span>
         <span aria-hidden="true">→</span>
+      </a>
+      <a
+        href="#sites"
+        class="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 font-medium transition-all hover:-translate-y-0.5"
+      >
+        <span data-lang="zh">直接看榜单</span><span data-lang="en">Browse all sites</span>
+        <span aria-hidden="true">↓</span>
       </a>
     </div>
     <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
@@ -35,7 +51,7 @@ const { siteCount, stableCount } = Astro.props;
       <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-accent-muted text-accent border border-accent/20 flex items-center gap-1">
         <span class="font-bold text-lg leading-none">{stableCount}</span> <span data-i18n="hero.stable">个稳定</span>
       </span>
-      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-bg-secondary text-text-secondary border border-border flex items-center gap-1">
+      <span class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-bg-secondary text-text-secondary border border-border flex items-center gap-1" title="全站近 24 小时可用率均值（自动监测）">
         <span data-i18n="hero.live">实时在线</span> <span id="hero-health" class="font-bold text-lg leading-none text-text-primary">…</span>
       </span>
     </div>

@@ -2,8 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import config from '../data/config.json';
 
-const faqs = [
+const defaultFaqs = [
   {
     q: '什么是 AI API 中转站？',
     a: '中转站（relay）是在你和官方 API（OpenAI、Anthropic 等）之间的转发服务：你把 base_url 指向中转站，用它的 key 调用，它再转发到官方。好处是免去外币支付和网络问题，通常价格更低（倍率 < 1）。正常官转倍率在 0.7-1.5 之间。',
@@ -37,7 +38,7 @@ const faqs = [
     a: '信息来自公开渠道整理和用户投稿，编辑审核后收录。收录不代表背书，排序和精选仅代表编辑偏好。如果你是站长想收录/删除，欢迎通过投稿页联系。',
   },
 ]; // EN versions for data-lang spans
-const faqsEn = [
+const defaultFaqsEn = [
   {
     "q": "What is an AI API relay site?",
     "a": "A relay (proxy) sits between you and official APIs (OpenAI, Anthropic, etc.): you point base_url at the relay and use its key. Benefits: no foreign card needed, no network issues, and usually cheaper (multiplier < 1). Fair-priced official-forwarding relays usually sit at 0.7–1.5x."
@@ -71,6 +72,14 @@ const faqsEn = [
     "a": "From public sources and user submissions, reviewed by the editor. Listing is not endorsement; ordering and featuring reflect editor preference. Site owners can reach us via the submit page."
   }
 ];
+
+// FAQ 内容后台可配（config.json faq 字段）；未配置时用默认内容
+const cfgFaqs = (config as any).faq;
+const faqs = Array.isArray(cfgFaqs) && cfgFaqs.length ? cfgFaqs : defaultFaqs;
+const cfgFaqsEn = (config as any).faqEn;
+const faqsEn = Array.isArray(cfgFaqsEn) && cfgFaqsEn.length ? cfgFaqsEn : defaultFaqsEn;
+// 安全兜底：中英文条目数不一致时，缺英文的条目回退到中文，避免 faqsEn[i] 越界报错
+const enOf = (i: number) => faqsEn[i] || { q: faqs[i].q, a: faqs[i].a };
 ---
 
 <BaseLayout title="FAQ 与新手指南 - TokenFree" description="什么是 AI API 中转站、倍率怎么看、怎么防跑路 —— 新手指南">
@@ -80,15 +89,18 @@ const faqsEn = [
       <h1 class="text-2xl font-bold mb-2"><span data-lang="zh">FAQ 与新手指南</span><span data-lang="en">FAQ &amp; Guide</span></h1>
       <p class="text-sm text-text-secondary mb-8"><span data-lang="zh">中转站是什么、怎么用、怎么不被坑。</span><span data-lang="en">What relays are, how to use them, and how not to get burned.</span></p>
       <div class="space-y-3">
-        {faqs.map((f, i) => (
+        {faqs.map((f, i) => {
+          const fe = enOf(i);
+          return (
           <details class="group rounded-xl bg-bg-secondary border border-border" open={i === 0}>
             <summary class="px-5 py-4 cursor-pointer text-sm font-medium list-none flex items-center justify-between gap-2">
-              <span><span data-lang="zh">{f.q}</span><span data-lang="en">{faqsEn[i].q}</span></span>
+              <span><span data-lang="zh">{f.q}</span><span data-lang="en">{fe.q}</span></span>
               <svg class="w-4 h-4 text-text-muted shrink-0 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
             </summary>
-            <p class="px-5 pb-4 text-base text-text-secondary leading-relaxed"><span data-lang="zh">{f.a}</span><span data-lang="en">{faqsEn[i].a}</span></p>
+            <p class="px-5 pb-4 text-base text-text-secondary leading-relaxed"><span data-lang="zh">{f.a}</span><span data-lang="en">{fe.a}</span></p>
           </details>
-        ))}
+          );
+        })}
       </div>
     </div>
   </main>

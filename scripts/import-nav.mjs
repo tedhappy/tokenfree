@@ -83,7 +83,8 @@ const RAW = [
   ['Ben API', 'aHR0cHM6Ly9hcGkuYmVuemhvdXBvLnh5ei9zaWduLXVwP2FmZj1RTjBO', [], 0.0001, ['claude', 'gpt', 'grok'], '即将跑路，这几天全部0.0001倍率', '即将跑路，但这几天全部0.0001倍率，注册送0.05，能蹬很久！模型啥都有，Claude、ChatGPT、Grok等等。', 'unstable', false],
 ];
 
-const slug = (name) => name.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '') || 'site';
+// 中文字符会被剔除，仅保留 a-z0-9 和连字符，避免生成中文 id（URL/路由兼容性问题）
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'site';
 
 const today = '2026-08-22';
 const sites = [];
