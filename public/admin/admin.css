@@ -146,40 +146,41 @@ tbody tr:hover { background: rgba(127, 127, 127, 0.05); }
 tbody tr:hover .cell-actions-sticky { background: rgba(127, 127, 127, 0.05); }
 .btn-xs { padding: 2px 8px !important; font-size: 11px !important; margin-left: 0 !important; }
 
-/* ---- 投稿审核表格 ---- */
-.subs-table-wrap { overflow-x: auto; }
-.subs-table { table-layout: fixed; width: 100%; min-width: 760px; }
-.subs-table th, .subs-table td { white-space: normal; vertical-align: top; padding: 10px 12px; }
-.subs-table th:nth-child(1) { width: 15%; }
-.subs-table th:nth-child(2) { width: 34%; }
-.subs-table th:nth-child(3) { width: 18%; }
-.subs-table th:nth-child(4) { width: 11%; }
-.subs-table th:nth-child(5) { width: 22%; }
-.sub-name { font-weight: 500; line-height: 1.35; margin-bottom: 3px; }
+/* ---- 投稿审核（卡片列表，避免宽表格裁切）---- */
+.subs-list { display: flex; flex-direction: column; gap: 10px; }
+.sub-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px;
+}
+.sub-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  margin-bottom: 6px;
+}
+.sub-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.sub-name { font-weight: 500; font-size: 14px; line-height: 1.35; }
+.sub-time { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 .sub-url {
-  display: block; font-size: 11px; color: var(--t3); line-height: 1.35;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: inline-block; font-size: 11px; color: var(--t3); line-height: 1.4;
+  margin-bottom: 8px; word-break: break-all;
 }
 .sub-url:hover { color: var(--accent); }
-.sub-time { white-space: nowrap; font-size: 12px; }
-.sub-meta { display: flex; flex-direction: column; gap: 4px; }
+.sub-summary {
+  margin: 0 0 6px; font-size: 12px; line-height: 1.55; color: var(--t2);
+  word-break: break-word; overflow-wrap: anywhere;
+}
+.sub-remark {
+  margin: 0 0 10px; font-size: 11px; line-height: 1.45; color: var(--t3);
+  word-break: break-word;
+}
 .sub-badge {
-  display: inline-block; align-self: flex-start;
+  display: inline-block; flex-shrink: 0;
   font-size: 11px; line-height: 1.4; padding: 1px 7px; border-radius: 999px;
 }
 .sub-badge-collector { color: #8b6dff; background: rgba(139, 109, 255, 0.12); }
 .sub-badge-user { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
-.sub-remark { font-size: 11px; color: var(--t3); line-height: 1.4; }
-.cell-clamp-1 {
-  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
-  overflow: hidden; line-height: 1.45;
-}
-.cell-clamp-2 {
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden; line-height: 1.45; color: var(--t2); font-size: 12px;
-}
 .sub-actions {
-  display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;
+  display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 /* ---- 表单 ---- */

@@ -828,37 +828,30 @@ async function showSubmissions(editingId = null) {
           <p class="empty-desc">用户提交的站点会出现在这里。也可以在「监测」页点「立即采集」自动发现新站候选。</p>
           <button id="goto-collect" class="btn btn-ghost">前往监测页采集 →</button>
         </div>` : `
-      <div class="table-wrap subs-table-wrap">
-        <table class="subs-table">
-          <thead><tr><th>站点</th><th>简介</th><th>来源 / 备注</th><th>时间</th><th>操作</th></tr></thead>
-          <tbody>
+      <div class="subs-list">
             ${subs.map(s => {
               const src = subSourceLabel(s);
               const remark = s.contact || '';
               return `
-              <tr>
-                <td class="sub-site">
-                  <div class="sub-name">${esc(s.name)}</div>
-                  ${s.url ? `<a class="sub-url" href="${esc(s.url)}" target="_blank" rel="noreferrer" title="${esc(s.url)}">${esc(subUrlDisplay(s.url))}</a>` : '<span class="sub-url">—</span>'}
-                </td>
-                <td class="sub-summary cell-clamp-2" title="${esc(s.summary)}">${esc(s.summary)}</td>
-                <td class="sub-meta">
+            <article class="sub-card">
+              <div class="sub-card-head">
+                <div class="sub-card-title">
+                  <span class="sub-name">${esc(s.name)}</span>
                   <span class="sub-badge ${src.cls}">${src.text}</span>
-                  ${remark ? `<span class="sub-remark cell-clamp-1" title="${esc(remark)}">${esc(remark)}</span>` : ''}
-                </td>
-                <td class="sub-time cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
-                <td class="cell-actions cell-actions-sticky">
-                  <div class="sub-actions">
-                    ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-xs">查看</a>` : ''}
-                    <button class="btn btn-ghost btn-xs" data-edit-sub="${esc(s.id)}">编辑</button>
-                    <button class="btn btn-primary btn-xs" data-approve="${esc(s.id)}">收录</button>
-                    <button class="btn btn-danger btn-xs" data-reject="${esc(s.id)}">丢弃</button>
-                  </div>
-                </td>
-              </tr>`;
+                </div>
+                <time class="sub-time cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</time>
+              </div>
+              ${s.url ? `<a class="sub-url" href="${esc(s.url)}" target="_blank" rel="noreferrer">${esc(subUrlDisplay(s.url))}</a>` : ''}
+              <p class="sub-summary">${esc(s.summary)}</p>
+              ${remark ? `<p class="sub-remark">${esc(remark)}</p>` : ''}
+              <div class="sub-actions">
+                ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-xs">查看</a>` : ''}
+                <button class="btn btn-ghost btn-xs" data-edit-sub="${esc(s.id)}">编辑</button>
+                <button class="btn btn-primary btn-xs" data-approve="${esc(s.id)}">收录</button>
+                <button class="btn btn-danger btn-xs" data-reject="${esc(s.id)}">丢弃</button>
+              </div>
+            </article>`;
             }).join('')}
-          </tbody>
-        </table>
       </div>`}
       ${subs.length ? '<p class="hint" style="margin-top:12px">「收录」会打开站点表单预填信息，保存后自动从队列移除。「丢弃」直接删除该投稿。</p>' : ''}
     </main>`;
