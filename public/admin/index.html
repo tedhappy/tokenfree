@@ -120,16 +120,25 @@ function showLogin(msg = '') {
 // ---------- 顶栏 ----------
 function topbar(active) {
   const btn = (id, label, key) => `<button id="nav-${id}" class="${active === key ? 'active' : ''}">${label}</button>`;
-  const grp = (label, inner) => `<span class="nav-group">${label ? `<span class="nav-group-label">${label}</span>` : ''}${inner}</span>`;
+  const sep = () => `<span class="nav-sep" aria-hidden="true"></span>`;
   return `
     <header class="topbar">
       <div class="topbar-inner">
         <span class="brand">TokenFree 管理</span>
         <div class="topbar-actions">
           <a href="/" target="_blank">前台</a>
-          ${grp('内容', `${btn('dash', '站点', 'dash')}${btn('subs', '投稿', 'subs')}${btn('content', '内容', 'content')}${btn('ann', '公告', 'ann')}`)}
-          ${grp('运营', `${btn('uptime', '监测', 'uptime')}${btn('models', '模型', 'models')}`)}
-          ${grp('', `${btn('settings', '设置', 'settings')}${btn('audit', '日志', 'audit')}`)}
+          ${sep()}
+          ${btn('dash', '站点', 'dash')}
+          ${btn('subs', '投稿', 'subs')}
+          ${btn('content', '内容', 'content')}
+          ${btn('ann', '公告', 'ann')}
+          ${sep()}
+          ${btn('uptime', '监测', 'uptime')}
+          ${btn('models', '模型', 'models')}
+          ${sep()}
+          ${btn('settings', '设置', 'settings')}
+          ${btn('audit', '日志', 'audit')}
+          ${sep()}
           <button id="logout">退出</button>
         </div>
       </div>

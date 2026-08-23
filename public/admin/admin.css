@@ -212,16 +212,15 @@ textarea.inp { resize: vertical; }
 .hint { font-size: 12px; color: var(--t3); margin-top: 8px; }
 .success-msg { color: #22c55e; }
 
-/* ---- 导航分组 ---- */
-.nav-group {
-  display: inline-flex; align-items: center; gap: 2px;
-  padding: 2px 6px; border-left: 1px solid var(--border);
-  margin-left: 4px;
-}
-.nav-group:first-of-type { border-left: none; margin-left: 0; }
-.nav-group-label {
-  font-size: 10px; color: var(--t3); margin-right: 2px;
-  text-transform: uppercase; letter-spacing: 0.04em;
+/* ---- 导航分组（用细竖线分隔，避免文字标签挤占空间）---- */
+.topbar-actions { overflow-x: auto; scrollbar-width: thin; }
+.nav-sep {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: var(--border);
+  align-self: center;
 }
 
 /* ---- Toast 通知 ---- */
