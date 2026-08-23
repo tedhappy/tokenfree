@@ -1,9 +1,35 @@
 #!/usr/bin/env bash
 # TokenFree 一键部署/更新脚本 —— 在服务器项目根目录运行
 # 首次: ADMIN_PASSWORD=你的强密码 ./deploy.sh
-# 之后更新: git pull && ./deploy.sh
+# 之后更新: ./deploy.sh（脚本内会自动 git pull 并保留服务器业务数据）
 set -e
 cd "$(dirname "$0")"
+
+# ---- [1/4] 拉取代码（保留服务器 src/data 业务数据，避免 pull 冲突）----
+if [ -d .git ]; then
+  echo "[1/4] 拉取最新代码..."
+  DATA_BAK=$(mktemp -d)
+  cp -a src/data/. "$DATA_BAK/"
+
+  # 构建输入文件会被后台/采集改写，先还原工作区再 pull，避免 merge 冲突
+  git checkout -- src/data/sites.json src/data/config.json src/data/models.json 2>/dev/null || true
+
+  if ! git pull --ff-only 2>/dev/null; then
+    echo "  fast-forward 不可用，尝试普通 pull..."
+    if ! git pull; then
+      echo "  pull 仍失败，放弃本地代码改动、以远程分支为准..."
+      git merge --abort 2>/dev/null || true
+      BR=$(git rev-parse --abbrev-ref HEAD)
+      git fetch origin
+      git reset --hard "origin/${BR}"
+    fi
+  fi
+
+  # 恢复服务器上的业务数据（生产环境以服务器为准，不用 Git 里的旧快照覆盖）
+  cp -a "$DATA_BAK/." src/data/
+  rm -rf "$DATA_BAK"
+  echo "✓ 代码已更新，业务数据已保留"
+fi
 
 # 1. 检查环境
 if ! command -v node >/dev/null; then
@@ -25,14 +51,14 @@ elif [ ! -f .env ] || ! grep -q '^ADMIN_PASSWORD=' .env; then
   exit 1
 fi
 
-# 3. 安装依赖 + 构建
-echo "[1/3] 安装依赖..."
+# 安装依赖 + 构建
+echo "[2/4] 安装依赖..."
 npm install --no-fund --no-audit
-echo "[2/3] 构建前台..."
+echo "[3/4] 构建前台..."
 npm run build
 
-# 4. 启动（pm2 优先）
-echo "[3/3] 启动服务..."
+# 启动（pm2 优先；每次 reload 会重新读取 .env）
+echo "[4/4] 启动服务..."
 if command -v pm2 >/dev/null; then
   pm2 startOrReload ecosystem.config.cjs --update-env
   pm2 save >/dev/null
@@ -52,4 +78,5 @@ echo " 部署完成！"
 echo " 前台: http://${IP:-服务器IP}:4321"
 echo " 后台: http://${IP:-服务器IP}:4321/admin/"
 echo " 健康检查: http://${IP:-服务器IP}:4321/api/uptime"
+echo " 修改 .env 后重新运行 ./deploy.sh 即可生效"
 echo "=========================================="

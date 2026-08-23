@@ -21,12 +21,21 @@ const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'audit.json');
 
-// ---- 加载 .env（简单实现，已有环境变量优先；便于服务器免敲 export）----
+// ---- 加载 .env（.env 优先，覆盖 pm2/Shell 缓存的旧值）----
+function parseEnvValue(raw) {
+  let val = String(raw ?? '').trim();
+  if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+    return val.slice(1, -1);
+  }
+  return val;
+}
 try {
   const envText = fs.readFileSync(path.join(ROOT, '.env'), 'utf-8');
   for (const line of envText.split('\n')) {
-    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const m = trimmed.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
+    if (m) process.env[m[1]] = parseEnvValue(m[2]);
   }
 } catch {}
 
@@ -450,16 +459,52 @@ app.get('/api/submissions', (c) => {
   return c.json(readJson(SUBMISSIONS_FILE, []));
 });
 
+/** 校验投稿字段，返回错误文案或 null */
+function validateSubmissionFields(body, subs, excludeId = null) {
+  const name = String(body.name || '').trim();
+  const url = String(body.url || '').trim();
+  const summary = String(body.summary || '').trim();
+  const contact = String(body.contact || '').trim().slice(0, 100);
+  if (!name || name.length > 50) return '请填写站点名称（50字内）';
+  if (!/^https?:\/\/.{4,}/i.test(url)) return '请填写正确的站点 URL';
+  if (!summary || summary.length > 200) return '请填写简介（200字内）';
+  if (subs.some((s) => s.url === url && s.id !== excludeId)) return '该 URL 已在投稿队列中';
+  return null;
+}
+
+app.put('/api/submissions/:id', async (c) => {
+  if (!authed(c)) return c.json({ error: '未授权' }, 401);
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  const subs = readJson(SUBMISSIONS_FILE, []);
+  const idx = subs.findIndex((s) => s.id === id);
+  if (idx < 0) return c.json({ error: '不存在' }, 404);
+  const err = validateSubmissionFields(body, subs, id);
+  if (err) return c.json({ error: err }, 400);
+  const prev = subs[idx];
+  subs[idx] = {
+    ...prev,
+    name: String(body.name || '').trim(),
+    url: String(body.url || '').trim(),
+    summary: String(body.summary || '').trim(),
+    contact: String(body.contact || '').trim().slice(0, 100),
+  };
+  writeJson(SUBMISSIONS_FILE, subs);
+  logAudit('编辑投稿', prev.name, `id=${id}`);
+  return c.json({ ok: true, submission: subs[idx] });
+});
+
 app.delete('/api/submissions/:id', (c) => {
   if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
+  const reason = c.req.query('reason');
   let subs = readJson(SUBMISSIONS_FILE, []);
   const target = subs.find((s) => s.id === id);
   const before = subs.length;
   subs = subs.filter((s) => s.id !== id);
   if (subs.length === before) return c.json({ error: '不存在' }, 404);
   writeJson(SUBMISSIONS_FILE, subs);
-  logAudit('审核投稿（丢弃/收录）', target?.name || id, `id=${id}`);
+  logAudit(reason === 'approved' ? '收录投稿' : '丢弃投稿', target?.name || id, `id=${id}`);
   return c.json({ ok: true });
 });
 

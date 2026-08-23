@@ -332,7 +332,11 @@ export default function SiteList({ initialSites, models }: Props) {
       list = [...list].sort((a, b) => (hot[b.id] || 0) - (hot[a.id] || 0));
     }
     if (sortBy === 'new') {
-      list = [...list].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
+      list = [...list].sort((a, b) => {
+        const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
+        const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
+        return tb - ta;
+      });
     }
     return list;
   }, [initialSites, query, activeModel, activeTag, favOnly, favs, freeOnly, maxMult, sortBy, hot]);

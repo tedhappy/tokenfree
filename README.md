@@ -29,7 +29,7 @@ npm run build
 node server/index.js
 ```
 
-密码等配置的优先级：**命令行环境变量 > .env 文件**。生产环境必须设置 `ADMIN_PASSWORD`（.env 或环境变量均可），否则服务拒绝启动。全部可用配置见 `.env.example`。
+密码等配置写在项目根 `.env`。**修改 `.env` 后需重启服务**（运行 `./deploy.sh` 或 `pm2 reload tokenfree --update-env`）才会生效。生产环境必须设置 `ADMIN_PASSWORD`，否则服务拒绝启动。全部可用配置见 `.env.example`。
 
 ## 前台功能
 
@@ -75,14 +75,19 @@ node server/collect.js
 
 `sites.json`、`config.json`、`models.json` 既是构建输入（进 Git），又会被后台编辑/自动核验改写，因此服务器上它们可能和 Git 版本不同，导致 `git pull` 冲突。
 
-**处理方式**：更新时若遇冲突，直接放弃本地改动、以 Git 为准（或先备份再覆盖）：
+**推荐做法**：在服务器上直接运行 `./deploy.sh` 更新（脚本会自动备份 → pull → 恢复服务器业务数据 → 构建 → 重启），无需手动 `git pull`。
+
+若仍手动 pull 且遇冲突，可先备份再处理：
 
 ```bash
+cp -a src/data src/data.bak
 git checkout -- src/data/sites.json src/data/config.json src/data/models.json
 git pull
+cp -a src/data.bak/. src/data/
+npm run build && pm2 reload ecosystem.config.cjs
 ```
 
-> 注意：这会丢弃你在后台编辑但未提交的改动。如需保留，请先用后台「导出备份」或 `cp` 手动备份。
+> 生产环境应以**服务器上的 data 目录**为准（后台收录、采集、核验的结果都在这里）。Git 里的 `sites.json` 只是初始种子，不应覆盖线上数据。
 
 ### 备份
 

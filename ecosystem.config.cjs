@@ -1,5 +1,6 @@
 // pm2 部署配置：pm2 start ecosystem.config.cjs
-// 首次部署：npm install && npm run build && ADMIN_PASSWORD=xxx pm2 start ecosystem.config.cjs
+// 密码等写在项目根 .env，由 server/index.js 启动时读取（覆盖 pm2 缓存的旧值）
+// 修改 .env 后：./deploy.sh 或 pm2 reload tokenfree --update-env
 module.exports = {
   apps: [
     {
@@ -13,7 +14,6 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 4321,
         MONITOR_INTERVAL_MIN: 30,
-        // ADMIN_PASSWORD 必须设置：pm2 start ecosystem.config.cjs --env production 前 export，或直接改这里
       },
     },
   ],
