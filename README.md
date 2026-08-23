@@ -62,36 +62,40 @@ node server/index.js
 node server/collect.js
 ```
 
-## 数据说明（重要：运行时数据不入 Git）
+## 数据说明
 
-**所有 `src/data/*.json` 数据文件都不纳入 Git 版本控制**，原因如下：
+`src/data/` 下的数据文件分两类：
 
-这些文件会被**服务器运行时自动改写**，如果放进 Git 会导致每次 `git pull` 都冲突：
+| 类型 | 文件 | 是否进 Git | 说明 |
+|------|------|-----------|------|
+| **构建输入** | `sites.json`、`config.json`、`models.json` | ✅ 进 Git | 被 Astro 构建时 `import`，必须存在；同时也会被后台编辑/自动核验改写 |
+| **纯运行时数据** | `clicks.json`、`uptime.json`、`submissions.json`、`collect-seen.json`、`audit.json` | ❌ gitignore | 仅后台服务运行时写入，构建不依赖 |
 
-| 文件 | 被谁改写 | 改写内容 |
-|------|---------|---------|
-| `sites.json` | 后台「站点」编辑 + `enrich` 自动核验 | 简介/倍率/赠送等手工字段 + `autoInfo`/`domainRegisteredAt` 等自动字段 |
-| `config.json` | 后台「公告/设置/内容」页 | 公告、QQ 群、Hero 文案、FAQ、关于页 |
-| `models.json` | 后台「模型」页 | 模型标签 |
-| `clicks.json` / `uptime.json` / `submissions.json` / `audit.json` | 后台服务 | 点击统计 / 监测历史 / 投稿队列 / 审计日志 |
+### 关于「构建输入」文件的冲突
 
-**这意味着：**
+`sites.json`、`config.json`、`models.json` 既是构建输入（进 Git），又会被后台编辑/自动核验改写，因此服务器上它们可能和 Git 版本不同，导致 `git pull` 冲突。
 
-1. ✅ 在线编辑内容（站点简介、公告、设置等）后，`git pull` **不会再冲突**，直接拉取更新即可
-2. ⚠️ **代价**：这些数据**没有 Git 版本历史**，无法回滚、换服务器也不会自动带过去
-3. ⚠️ **换服务器 / 重装 / 恢复备份时，必须手动拷贝整个 `src/data/` 目录**：
+**处理方式**：更新时若遇冲突，直接放弃本地改动、以 Git 为准（或先备份再覆盖）：
 
 ```bash
-# 迁移服务器时，先在旧服务器打包
-tar czf tokenfree-data.tar.gz src/data/
+git checkout -- src/data/sites.json src/data/config.json src/data/models.json
+git pull
+```
 
+> 注意：这会丢弃你在后台编辑但未提交的改动。如需保留，请先用后台「导出备份」或 `cp` 手动备份。
+
+### 备份
+
+纯运行时数据（点击/监测/投稿/审计）不在 Git 里，**换服务器/重装时必须手动备份 `src/data/` 目录**：
+
+```bash
+# 旧服务器打包
+tar czf tokenfree-data.tar.gz src/data/
 # 新服务器解压
 tar xzf tokenfree-data.tar.gz
 ```
 
-4. 📦 **日常备份建议**：定期备份 `src/data/` 目录（后台「设置」页的「导出备份」按钮可一键导出全量 JSON）
-
-> 首次部署时，`src/data/` 目录需要从「初始数据」初始化。仓库中保留了 `scripts/import-nav.mjs` 数据生成脚本，可从公开渠道重新生成初始站点数据。
+后台「设置」页的「导出备份」按钮也可一键导出全量 JSON。
 
 ## 目录结构
 

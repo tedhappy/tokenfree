@@ -1,0 +1,552 @@
+[
+  {
+    "id": "apxrelay",
+    "name": "ApxRelay",
+    "url": "https://apxrelay.com/register",
+    "multiplier": null,
+    "bonus": "无注册赠送，进群等 0.001x 活动",
+    "models": [
+      "gpt"
+    ],
+    "tags": [
+      "邀请",
+      "稳定"
+    ],
+    "summary": "新站，基本上每天都有 0.001x 的倍率，可进群等消息",
+    "description": "新站，基本上每天都有0.001x的倍率，可进群等消息。速度很快，经常搞活动，模型全部是GPT。充值是10元起。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 1,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "活动价天花板",
+    "summaryEn": "New relay with frequent 0.001x events; join their group for alerts",
+    "apiBase": "https://apxrelay.com/v1",
+    "tools": [
+      "claude-code",
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay with 0.001x rate events almost every day — join their group for alerts. Fast responses, frequent promos, GPT-only models. Top-up starts at ¥10.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 1354ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:16.120Z",
+      "up": true,
+      "latencyMs": 2999,
+      "title": "ApxRelay",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Best Event Pricing",
+    "bonusEn": "No signup bonus; join group for 0.001x events",
+    "domainRegisteredAt": "2026-07-02"
+  },
+  {
+    "id": "hubway",
+    "name": "HUBWAY",
+    "url": "https://hubway.cc/register",
+    "multiplier": 0.04,
+    "bonus": "注册送5刀，进群再领10刀",
+    "models": [
+      "gpt",
+      "claude"
+    ],
+    "tags": [
+      "生图",
+      "邀请",
+      "稳定"
+    ],
+    "summary": "新站，注册即送5刀，进群可再领10刀，限时 0.01 分组",
+    "description": "新站，注册即送5刀，进群可再领取10刀。【限时0.01分组】模型有Claude、GPT，GPT限时0.4倍率。因为充值是1:10，相当于0.04倍。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 2,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "topupRate": 10,
+    "award": "新人礼最厚",
+    "summaryEn": "New-user friendly: $5 on signup + $10 via group; limited 0.01 tier",
+    "apiBase": "https://hubway.cc/v1",
+    "descriptionEn": "New relay: $5 on signup, $10 more via group. Limited 0.01 tier. Claude & GPT available; GPT at 0.4x nominal — effective ~0.04x with the 1:10 top-up rate.",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "复测：/v1/messages 已不可达，移除 Claude Code 兼容标注；OpenAI 兼容端点正常"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 1017ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:14.983Z",
+      "up": true,
+      "latencyMs": 1496,
+      "title": "HUBWAY - AI API Gateway",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "affUrl": "",
+    "awardEn": "Best Signup Bonus",
+    "bonusEn": "$5 on signup + $10 via group"
+  },
+  {
+    "id": "uni-token",
+    "name": "Uni Token",
+    "url": "https://uni-token.com/register",
+    "multiplier": 0.01,
+    "bonus": "注册送 ChatGPT 限时免费日卡",
+    "models": [
+      "gpt",
+      "claude",
+      "gemini",
+      "grok"
+    ],
+    "tags": [
+      "稳定"
+    ],
+    "summary": "注册送 ChatGPT 限时免费日卡，倍率 0.01",
+    "description": "新站，注册送ChatGPT「限时免费日卡」，倍率0.01。模型丰富，涵盖Claude、ChatGPT、Gemini、Grok。免费日卡不限量。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 4,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "免费尝鲜",
+    "summaryEn": "Free ChatGPT day card on signup; 0.01x multiplier",
+    "apiBase": "https://uni-token.com/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay: sign-up grants a limited-time free ChatGPT day card, multiplier 0.01. Rich model lineup covering Claude, ChatGPT, Gemini and Grok. Day cards currently unlimited.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 776ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:14.722Z",
+      "up": true,
+      "latencyMs": 768,
+      "title": "Uni Token",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Best Free Trial",
+    "bonusEn": "Free ChatGPT day card on signup (limited time)",
+    "domainRegisteredAt": "2026-07-10"
+  },
+  {
+    "id": "ctai",
+    "name": "CTAI",
+    "url": "https://ai.chengtingkj.com/register",
+    "multiplier": 0.01,
+    "bonus": "进群领5刀",
+    "models": [
+      "gpt"
+    ],
+    "tags": [],
+    "summary": "进群领5刀，GPT 0.01x 倍率，每天不定时开放",
+    "description": "新站，注册不送，进群领5刀。GPT现在是0.01x倍率。经过一个月测试，每天都不定时开放0.01x，值得冲。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 5,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "GPT 低价",
+    "summaryEn": "Claim $5 in group; GPT at 0.01x, opens daily at random hours",
+    "apiBase": "https://ai.chengtingkj.com/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay: no sign-up credit, claim $5 in their group. GPT currently at 0.01x. After a month of testing, the 0.01x tier opens daily at random hours.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 2809ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:22.737Z",
+      "up": true,
+      "latencyMs": 8015,
+      "title": "",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Best GPT Price",
+    "bonusEn": "$5 via their group",
+    "domainRegisteredAt": "2026-04-29"
+  },
+  {
+    "id": "guyscode",
+    "name": "GuysCode",
+    "url": "https://www.guyscode.com/register",
+    "multiplier": null,
+    "bonus": "进群领3刀，每日签到",
+    "models": [
+      "claude"
+    ],
+    "tags": [
+      "签到"
+    ],
+    "summary": "非常稳定的老站，注册进群找群主领3刀，每天可签到",
+    "description": "非常稳定的老站了，注册进群找群主领3刀。限时可蹬满血Fable5。每天还可以签到。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 6,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "最稳老站",
+    "summaryEn": "Long-running stable relay; $3 from owner in group, daily check-in",
+    "apiBase": "https://www.guyscode.com/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "A long-running, very stable relay: join the group and ask the owner for $3. Limited-time free access to full Fable5. Daily check-in rewards.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 1408ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:17.713Z",
+      "up": true,
+      "latencyMs": 1645,
+      "title": "Guyscode - AI API Gateway",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Most Established",
+    "bonusEn": "$3 from owner + daily check-in",
+    "domainRegisteredAt": "2026-05-12"
+  },
+  {
+    "id": "facai-api",
+    "name": "发财API",
+    "url": "https://api.dali2897.com/register",
+    "multiplier": 0.07,
+    "bonus": "注册不直接赠送；首充满10元后自动送2元（限QQ邮箱注册）",
+    "models": [
+      "gpt",
+      "deepseek",
+      "gemini",
+      "claude",
+      "grok",
+      "mistral",
+      "qwen",
+      "llama"
+    ],
+    "tags": [
+      "签到",
+      "生图",
+      "邀请"
+    ],
+    "summary": "签到随机送，plus 0.07x，可生图，首充10元送2元",
+    "description": "注册有2余额、签到随机送，签到天数越多送的越多。plus 0.07x、pro 0.18x，非常耐用，可生图。邀请累计奖励制度。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 7,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "签到福利",
+    "summaryEn": "Random check-in rewards, plus 0.07x tier, image gen; ¥2 after first ¥10 top-up",
+    "apiBase": "https://api.dali2897.com/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "¥2 balance on signup; check-in gives random rewards that grow with streak days. Plus tier 0.07x, Pro 0.18x, durable quotas, image generation supported. Cumulative referral rewards.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 972ms"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "倍率核验：站点最低分组为 0.01x，与记录 0.07x 不一致，待复核"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "模型核验：新增 deepseek、gemini、claude、grok、mistral、qwen、llama 标签（站点共 146 个模型）"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "站点公告已收录"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "依据站点官方公告更新注册赠送规则：注册不再直接赠送，改为首充满10元后自动赠送2元"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:18.112Z",
+      "up": true,
+      "latencyMs": 1991,
+      "title": "发财API",
+      "modelsDetected": 146,
+      "minRatio": 0.01,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "notice": {
+      "text": "# 注册与首充赠送规则调整\n\n为防止批量注册藅羊毛，注册赠送规则已调整：\n\n- 新用户注册不再立即赠送 2 元体验额度。\n- 账号首次成功充值满 10 元后，系统会自动额外赠送 2 元体验额度。\n- 每个账号仅赠送一次首充体验额度。\n- 历史从未成功充值账号的免费赠送余额已清零。\n- 已成功充值用户不受影响。\n- 当前注册仅允许 QQ 邮箱，并需要邮箱验证码。\n\n---\n\n## 历史公告（留档，最新规则以上方公告为准）\n\n# 邀请奖励活动\n\n新用户注册即可免费获得 **2 元体验额度**，大约可使用 200 次左右（具体次数以模型消耗为准）。\n\n通过你的邀请链接注册的新用户，每注册成功 1 人，邀请人立即到账 **0.5 元** 可用余额。\n\n被邀请的新用户完成首笔真实充值后，邀请人再到账 **3 元** 可用余额奖励。邀请人数不设上限，拉得越多奖励越多。\n\n## 活动规则\n\n- 首充奖励每个被邀请用户只发放一次。\n- 仅真实充值触发首充奖励，后台人工充值不触发。\n- 禁止利用 bug、多账号自己刷、同 IP/同设备批量注册、虚假支付、异常套利等作弊行为。\n- 发现违规将取消奖励、清零",
+      "fetchedAt": "2026-08-23"
+    },
+    "awardEn": "Best Check-in Rewards",
+    "bonusEn": "No instant signup bonus; ¥2 after first ¥10 top-up (QQ-mail registration only)",
+    "domainRegisteredAt": "2026-01-19"
+  },
+  {
+    "id": "dengxian-api",
+    "name": "登仙API",
+    "url": "https://api.denxio.top/register",
+    "multiplier": null,
+    "bonus": "注册得10仙缘，签到0.5-1仙缘/天",
+    "models": [
+      "gpt",
+      "claude",
+      "gemini"
+    ],
+    "tags": [
+      "签到",
+      "生图",
+      "邀请"
+    ],
+    "summary": "纯公益站，经常搞活动，注册得10仙缘，签到0.5-1仙缘/天",
+    "description": "纯公益站，经常搞活动，近期恢复稳定。新用户注册可得10仙缘，邀请新用户可得5仙缘，每日签到随机获得0.5-1仙缘。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 8,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "纯公益",
+    "summaryEn": "Pure free relay with frequent events; daily check-in bonuses",
+    "apiBase": "https://api.denxio.top/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "A non-profit relay with frequent events, recently back to stable. New users get 10 Xianyuan credits on signup, 5 per referral, and 0.5-1 random credits daily from check-in.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 964ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:25.724Z",
+      "up": true,
+      "latencyMs": 1068,
+      "title": "登仙公益站 - AI API Gateway",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Purely Free (Community)",
+    "bonusEn": "10 Xianyuan credits + 0.5-1/day check-in",
+    "domainRegisteredAt": "2026-05-09"
+  },
+  {
+    "id": "super-nb",
+    "name": "Super NB",
+    "url": "https://super-nb.me/register",
+    "multiplier": null,
+    "bonus": "注册送50刀，加群再送10刀（社区反馈或已暂停，以站内为准）",
+    "models": [
+      "gpt",
+      "claude"
+    ],
+    "tags": [
+      "邀请",
+      "稳定"
+    ],
+    "summary": "注册即送50刀，加群再送10刀（长期有效）",
+    "description": "新站，注册即送50刀！加群再送10刀（长期有效），要进群at群主才送。模型有GPT（pro+plus）和Claude（max+pro）。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 9,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "最佳白嫖",
+    "summaryEn": "Best free credits: $50 on signup + $10 more in group",
+    "apiBase": "https://super-nb.me/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay: $50 on signup! Plus $10 more in the group (long-term) — join and @ the owner to claim. Models: GPT (pro+plus) and Claude (max+pro). Note: community feedback suggests the sign-up bonus may have paused; verify on site.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 781ms"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:19.041Z",
+      "up": true,
+      "latencyMs": 925,
+      "title": "SUPER NB - AI API Gateway",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Best Free Credits",
+    "bonusEn": "$50 on signup + $10 in group (may have paused; verify on site)"
+  },
+  {
+    "id": "mydamoxing",
+    "name": "MyDamoxing",
+    "url": "https://mydamoxing.cn/register",
+    "multiplier": 0.001,
+    "bonus": "注册送1刀（限时0.001x）",
+    "models": [
+      "claude",
+      "gpt",
+      "gemini",
+      "grok",
+      "deepseek",
+      "qwen"
+    ],
+    "tags": [
+      "邀请",
+      "稳定"
+    ],
+    "summary": "注册送1刀，限时0.001倍，模型丰富含很多国模",
+    "description": "新站，注册就送1刀，限时0.001倍，也相当于100刀了。模型丰富，有Claude、GPT、Gemini、Grok等，还有很多国模。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 11,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "当前最低价",
+    "summaryEn": "$1 on signup; limited 0.001x tier with many CN models",
+    "apiBase": "https://mydamoxing.cn/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay: $1 on signup with a limited-time 0.001x rate — effectively ~$100 of quota. Rich models: Claude, GPT, Gemini, Grok plus many Chinese models.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 602ms"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "模型核验：新增 deepseek、qwen 标签（站点共 97 个模型）"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:24.530Z",
+      "up": true,
+      "latencyMs": 871,
+      "title": "New API",
+      "modelsDetected": 97,
+      "minRatio": 0.001,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "awardEn": "Lowest Price Now",
+    "bonusEn": "$1 on signup (limited 0.001x)"
+  },
+  {
+    "id": "ourchat-api",
+    "name": "OurChat API",
+    "url": "https://ourchat.shop/register",
+    "multiplier": 0.01,
+    "bonus": "注册送2刀",
+    "models": [],
+    "tags": [
+      "签到"
+    ],
+    "summary": "注册送2刀，倍率0.01x，实测首字速度1s内",
+    "description": "新站，注册送2刀，倍率0.01x。注册使用用户名验证邮箱即可，实测首字速度1s内。活动不清楚什么时间结束，还有签到。",
+    "status": "stable",
+    "isFeatured": true,
+    "sortOrder": 10,
+    "verifiedAt": "2026-08-23",
+    "createdAt": "2026-08-22",
+    "updatedAt": "2026-08-23",
+    "award": "响应最快",
+    "summaryEn": "$2 on signup at 0.01x; first token in under 1s in our tests",
+    "apiBase": "https://ourchat.shop/v1",
+    "tools": [
+      "cursor",
+      "codex-cli",
+      "cline"
+    ],
+    "descriptionEn": "New relay: $2 on signup at 0.01x. Register with just a username and email verification; first token measured under 1s. Promo end date unknown; check-in available.",
+    "events": [
+      {
+        "date": "2026-08-23",
+        "text": "编辑核验：API 端点可用（/v1/models 鉴权正常），首页延迟 1744ms"
+      },
+      {
+        "date": "2026-08-23",
+        "text": "站点公告已收录"
+      }
+    ],
+    "autoInfo": {
+      "checkedAt": "2026-08-23T02:57:24.589Z",
+      "up": true,
+      "latencyMs": 751,
+      "title": "OurChat",
+      "modelsDetected": 0,
+      "minRatio": null,
+      "freeGroup": false,
+      "noticeUpdated": false
+    },
+    "notice": {
+      "text": "# 📢 近期奖励、风控及服务调整说明\n\n## 🎁 注册与邀请奖励\n\n- 新用户注册可获得 **$2 站内额度**\n- 每成功邀请一位好友，邀请人可获得 **$2 站内额度**\n- 上述注册及邀请奖励，请加入交流群后联系我领取\n- 好友完成首次充值后，系统将自动向邀请人发放 **$10 奖励**\n- 点击站内 **签到**，还可领取测试额度\n\n## ⚠️ 账号使用规则\n\n近期发现存在注册机、脚本及批量注册行为，请大家不要使用任何自动化工具批量注册账号。\n\n**严禁绕过额度、并发、频率或其他风控限制。**  \n违规账号可能被直接封禁，且不提供补偿。\n\n如果是正常使用被误封，请加入交流群联系我。核实无误后，将协助解封并补偿 **$10 额度**。\n\n## ⏸️ 限时免费通道\n\n限时免费通道目前暂时关闭，待下一批账号补充完成后再恢复，具体恢复时间另行通知。\n\n## 💰 额度与价格调整预告\n\n由于 OpenAI 近期下调账号可用额度，同时账号采购及维护成本上涨：\n\n- 后续 **¥1000 套餐预计调整为 $4000 站内额度**\n- 具体生效时间及最终方案将另行通知\n\n关于 **Luna",
+      "fetchedAt": "2026-08-23"
+    },
+    "awardEn": "Fastest Response",
+    "bonusEn": "$2 on signup",
+    "domainRegisteredAt": "2026-06-10"
+  }
+]
