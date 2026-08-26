@@ -33,6 +33,14 @@ const STATUS = { stable:'稳定', unstable:'不稳定', offline:'已失效' };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+function showLoading(msg = '加载中…') {
+  document.getElementById('app').innerHTML = `
+    ${topbar('')}
+    <main class="container">
+      <div class="loading-wrap"><div class="spinner"></div>${esc(msg)}</div>
+    </main>`;
+}
+
 // ---------- 未保存离开提醒（beforeunload 通用守卫）----------
 function enableDirtyGuard(containerSel) {
   let dirty = false;
@@ -125,7 +133,8 @@ function topbar(active) {
     <header class="topbar">
       <div class="topbar-inner">
         <span class="brand">TokenFree 管理</span>
-        <div class="topbar-actions">
+        <button class="menu-toggle" id="menu-toggle" aria-label="菜单">☰</button>
+        <nav class="topbar-actions" id="topbar-nav">
           <a href="/" target="_blank">前台</a>
           ${sep()}
           ${btn('dash', '站点', 'dash')}
@@ -140,7 +149,7 @@ function topbar(active) {
           ${btn('audit', '日志', 'audit')}
           ${sep()}
           <button id="logout">退出</button>
-        </div>
+        </nav>
       </div>
     </header>`;
 }
@@ -150,8 +159,24 @@ function bindTopbar() {
   const map = { 'nav-dash': showDashboard, 'nav-subs': showSubmissions, 'nav-uptime': showUptime, 'nav-models': showModels, 'nav-content': showContent, 'nav-ann': showAnnouncements, 'nav-settings': showSettings, 'nav-audit': showAudit };
   for (const [id, fn] of Object.entries(map)) {
     const el = document.getElementById(id);
-    if (el) el.onclick = fn;
+    if (el) el.onclick = () => { closeMenu(); fn(); };
   }
+  // 汉堡菜单
+  const toggle = document.getElementById('menu-toggle');
+  const nav = document.getElementById('topbar-nav');
+  if (toggle && nav) {
+    toggle.onclick = () => nav.classList.toggle('open');
+  }
+  // 点击导航项或外部关闭菜单
+  document.addEventListener('click', (e) => {
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && e.target !== toggle) {
+      nav.classList.remove('open');
+    }
+  });
+}
+function closeMenu() {
+  const nav = document.getElementById('topbar-nav');
+  if (nav) nav.classList.remove('open');
 }
 
 // ---------- 公告管理 ----------
@@ -200,7 +225,7 @@ async function showAnnouncements(editingId = null) {
               <tr>
                 <td class="cell-dim" style="white-space:nowrap">${esc(a.date)}</td>
                 <td style="white-space:normal;min-width:240px">${esc(a.text)}</td>
-                <td style="color:#22c555">已发布</td>
+                <td class="text-success">已发布</td>
                 <td class="cell-actions">
                   <button class="btn btn-ghost" data-edit-ann="${esc(a.id)}">编辑</button>
                   <button class="btn btn-danger" data-del-ann="${esc(a.id)}">删除</button>
@@ -575,10 +600,10 @@ async function showDashboard() {
       </div>
       ${(() => {
         const todos = [];
-        if (stats.submissionsCount) todos.push({ color: '#8b6dff', label: `${stats.submissionsCount} 个投稿待审核`, action: 'nav-subs', hint: '去审核收录' });
-        if (stats.affPending && stats.affPending.length) todos.push({ color: '#f59e0b', label: `${stats.affPending.length} 个推广链接待补`, action: 'aff', hint: '去注册拿推广码' });
-        if (stats.suspect && stats.suspect.length) todos.push({ color: '#ef4444', label: `${stats.suspect.length} 个疑似失效站点`, action: 'suspect', hint: '连续不可达，去处理' });
-        if (!todos.length) return `<div class="card todo-all-done" style="border-color:rgba(34,197,94,.25);margin-bottom:20px"><p style="font-size:13px;color:#22c55e">✓ 暂无待办事项，一切正常</p></div>`;
+        if (stats.submissionsCount) todos.push({ color: 'var(--accent)', label: `${stats.submissionsCount} 个投稿待审核`, action: 'nav-subs', hint: '去审核收录' });
+        if (stats.affPending && stats.affPending.length) todos.push({ color: 'var(--warning)', label: `${stats.affPending.length} 个推广链接待补`, action: 'aff', hint: '去注册拿推广码' });
+        if (stats.suspect && stats.suspect.length) todos.push({ color: 'var(--danger)', label: `${stats.suspect.length} 个疑似失效站点`, action: 'suspect', hint: '连续不可达，去处理' });
+        if (!todos.length) return `<div class="card" style="border-color:rgba(22,163,74,.25);margin-bottom:20px"><p style="font-size:13px;color:var(--success)">✓ 暂无待办事项，一切正常</p></div>`;
         return `
         <div class="card" style="margin-bottom:20px">
           <p class="card-title" style="border:none;padding:0;margin-bottom:12px">待办事项</p>
@@ -593,22 +618,22 @@ async function showDashboard() {
         </div>`;
       })()}
       ${stats.affPending && stats.affPending.length ? `
-        <div id="aff-panel" class="card" style="border-color:rgba(139,109,255,.35);margin-bottom:20px">
-          <p style="font-size:13px;font-weight:500;color:#8b6dff;margin-bottom:8px">🔗 推广链接待补（${stats.affPending.length} 个）——唯一需要人工操作的字段，其余信息均自动采集</p>
-          <div style="display:flex;flex-direction:column;gap:6px">
+        <div id="aff-panel" class="card aff-panel">
+          <p class="aff-panel-title">🔗 推广链接待补（${stats.affPending.length} 个）——唯一需要人工操作的字段，其余信息均自动采集</p>
+          <div class="todo-list">
             ${stats.affPending.map(s => `
-              <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+              <div class="aff-item">
                 <span class="cell-strong">${esc(s.name)}</span>
-                <a href="${esc(s.url)}" target="_blank" rel="noreferrer" style="color:#5555cc;font-size:12px;text-decoration:none">去注册拿推广码 ↗</a>
-                <button class="btn btn-ghost" data-aff="${esc(s.id)}" data-name="${esc(s.name)}" style="margin-left:auto">粘贴推广链接</button>
+                <a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="aff-link">去注册拿推广码 ↗</a>
+                <button class="btn btn-ghost btn-sm" data-aff="${esc(s.id)}" data-name="${esc(s.name)}" style="margin-left:auto">粘贴推广链接</button>
               </div>`).join('')}
           </div>
         </div>` : ''}
       ${stats.suspect && stats.suspect.length ? `
-        <div class="card" style="border-color:rgba(239,68,68,.3);margin-bottom:20px">
-          <p style="font-size:13px;font-weight:500;color:#f87171;margin-bottom:8px">⚠ 监测发现 ${stats.suspect.length} 个疑似失效站点（连续不可达）</p>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${stats.suspect.map(s => `<span class="model-chip"><span class="model-dot" style="background:#ef4444"></span>${esc(s.name)}<button data-mark-off="${esc(s.id)}" title="标记为已失效" style="color:#8888a0">标记失效</button></span>`).join('')}
+        <div class="card suspect-panel">
+          <p class="suspect-title">⚠ 监测发现 ${stats.suspect.length} 个疑似失效站点（连续不可达）</p>
+          <div class="chips-wrap">
+            ${stats.suspect.map(s => `<span class="model-chip"><span class="model-dot" style="background:var(--danger)"></span>${esc(s.name)}<button data-mark-off="${esc(s.id)}" title="标记为已失效" style="color:var(--t3)">标记失效</button></span>`).join('')}
           </div>
         </div>` : ''}
       <div class="section-head">
@@ -652,10 +677,10 @@ async function showDashboard() {
               return `
               <tr data-site-row data-name="${esc(s.name)}" data-summary="${esc(s.summary)}" data-tags="${esc((s.tags||[]).join(','))}" data-status="${s.status}">
                 <td><input type="checkbox" class="site-check" data-id="${esc(s.id)}" /></td>
-                <td class="cell-strong">${esc(s.name)} <span style="color:${liveColor}" title="${u && u.up ? '在线 ' + (u.latencyMs ?? '?') + 'ms' : '不可达/无数据'}">${live}</span> <span style="font-size:11px;color:${s.affUrl ? '#22c55e' : '#f59e0b'}" title="${s.affUrl ? '推广链接已设置' : '推广链接待补'}">${s.affUrl ? 'AFF✓' : 'AFF待补'}</span></td>
+                <td class="cell-strong">${esc(s.name)} <span style="color:${liveColor}" title="${u && u.up ? '在线 ' + (u.latencyMs ?? '?') + 'ms' : '不可达/无数据'}">${live}</span> <span class="${s.affUrl ? 'text-success' : 'text-warning'}" style="font-size:11px" title="${s.affUrl ? '推广链接已设置' : '推广链接待补'}">${s.affUrl ? 'AFF✓' : 'AFF待补'}</span></td>
                 <td class="cell-dim">${s.multiplier ?? '—'}</td>
                 <td>${STATUS[s.status] || s.status}</td>
-                <td class="cell-dim">${s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '—'}</td>
+                <td class="cell-dim">${s.network === 'direct' ? '<span class="net-direct">直连</span>' : s.network === 'proxy' ? '<span class="net-proxy">代理</span>' : '<span class="net-unknown">—</span>'}</td>
                 <td>${s.isFeatured ? '⭐' : ''}</td>
                 <td>${(stats.clicks && stats.clicks[s.id]) || 0}</td>
                 <td class="cell-dim">${esc(s.verifiedAt || '')}</td>
@@ -784,22 +809,58 @@ async function showSubmissions() {
           <button id="goto-collect" class="btn btn-ghost">前往监测页采集 →</button>
         </div>` : `
       <div class="table-wrap">
-        <table>
-          <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>联系方式</th><th>时间</th><th></th></tr></thead>
+        <div class="sub-cards">
+          ${subs.map(s => {
+            const autoTags = (s.models || []).join(', ');
+            const autoInfo = [
+              s.multiplier != null ? `${s.multiplier}x` : '',
+              autoTags ? `模型:${autoTags}` : '',
+              (s.tools || []).length ? `工具:${s.tools.join(',')}` : '',
+              s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '',
+            ].filter(Boolean).join(' · ');
+            return `
+            <div class="sub-card">
+              <div class="sub-card-name">${esc(s.name)}</div>
+              <div class="sub-card-url">${esc(s.url)}</div>
+              <div class="sub-card-summary">${esc(s.summary)}</div>
+              ${autoInfo ? `<div class="sub-card-auto">${esc(autoInfo)}</div>` : ''}
+              ${s.contact ? `<div class="sub-card-contact">${esc(s.contact)}</div>` : ''}
+              <div class="sub-card-actions">
+                ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">查看</a>` : ''}
+                <button class="btn btn-primary btn-sm" data-approve="${esc(s.id)}">收录</button>
+                <button class="btn btn-danger btn-sm" data-reject="${esc(s.id)}">丢弃</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <table class="sub-table-mobile">
+          <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>自动探测</th><th>时间</th><th></th></tr></thead>
           <tbody>
-            ${subs.map(s => `
+            ${subs.map(s => {
+              const autoTags = (s.models || []).join(', ');
+              const autoInfo = [
+                s.multiplier != null ? `${s.multiplier}x` : '',
+                autoTags ? `模型:${autoTags}` : '',
+                (s.tools || []).length ? `工具:${s.tools.join(',')}` : '',
+                s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '',
+              ].filter(Boolean).join(' · ');
+              return `
               <tr>
                 <td class="cell-strong">${esc(s.name)}</td>
                 <td class="cell-dim" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(s.url)}</td>
                 <td style="max-width:260px;white-space:normal">${esc(s.summary)}</td>
-                <td class="cell-dim">${esc(s.contact || '—')}</td>
+                <td class="cell-dim" style="font-size:12px;max-width:220px;white-space:normal">
+                  ${autoInfo ? `<span class="text-accent">${esc(autoInfo)}</span>` : '—'}
+                  ${s.contact ? `<br><span class="text-muted">${esc(s.contact)}</span>` : ''}
+                </td>
                 <td class="cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
                 <td class="cell-actions">
                   ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost">查看</a>` : ''}
                   <button class="btn btn-ghost" data-approve="${esc(s.id)}">收录</button>
                   <button class="btn btn-danger" data-reject="${esc(s.id)}">丢弃</button>
                 </td>
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`}
@@ -810,7 +871,19 @@ async function showSubmissions() {
   if (gotoCollect) gotoCollect.onclick = showUptime;
   document.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => {
     const sub = subs.find(x => x.id === b.dataset.approve);
-    showSiteForm(null, { name: sub.name, url: sub.url, summary: sub.summary }, sub.id);
+    // 传递所有采集到的字段，审核时自动填充，管理员只需填推广URL
+    showSiteForm(null, {
+      name: sub.name,
+      url: sub.url,
+      summary: sub.summary,
+      multiplier: sub.multiplier ?? null,
+      models: sub.models || [],
+      tags: sub.tags || [],
+      tools: sub.tools || [],
+      network: sub.network || 'unknown',
+      bonus: sub.bonus || '',
+      apiBase: sub.apiBase || '',
+    }, sub.id);
   });
   document.querySelectorAll('[data-reject]').forEach(b => b.onclick = async () => {
     await api('/api/submissions/' + b.dataset.reject, { method: 'DELETE' });
@@ -845,7 +918,7 @@ async function showUptime() {
             ${entries.map(e => `
               <tr>
                 <td class="cell-strong">${esc(e.name)}</td>
-                <td style="color:${e.up ? '#22c55e' : '#ef4444'}">${e.up ? '● 在线' : '✕ 不可达'}</td>
+                <td class="${e.up ? 'text-success' : 'text-danger'}">${e.up ? '● 在线' : '✕ 不可达'}</td>
                 <td class="cell-dim">${e.latencyMs != null ? e.latencyMs + 'ms' : '—'}</td>
                 <td>${e.uptime24h != null ? Math.round(e.uptime24h * 100) + '%' : '—'}</td>
                 <td class="cell-dim">${e.checks}</td>
@@ -985,12 +1058,16 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
           </div>
         </fieldset>
 
-        <fieldset class="form-section">
-          <legend class="form-section-title">推广与运营</legend>
+        <div class="aff-section">
+          <div class="aff-section-title">🔗 推广链接（唯一需要人工填写的字段）</div>
           <div class="form-row">
-            <label class="field-label">推广链接 affUrl（可选：设置后跳转用它，用于返佣）</label>
+            <label class="field-label">推广链接 affUrl — 设置后跳转用此链接，用于返佣</label>
             <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
           </div>
+        </div>
+
+        <fieldset class="form-section">
+          <legend class="form-section-title">推广与运营</legend>
           <div class="form-row">
             <label class="field-label">获奖理由（榜单缎带，如：最佳白嫖 / 最低价 / 最稳老站）</label>
             <input id="f-award" class="inp" value="${esc(site.award || '')}" />

@@ -6,7 +6,6 @@ import { getAllSites, goUrl, ageParts, AGE_UNIT_ZH, AGE_UNIT_EN, TOOLS } from '.
 import modelsJson from '../../data/models.json';
 
 export async function getStaticPaths() {
-  // 失效站也生成详情页（展示失效记录），sitemap 只收录活跃站
   const sites = await getAllSites();
   return sites.map((site) => ({ params: { slug: site.id }, props: { site } }));
 }
@@ -17,7 +16,7 @@ const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], 
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
 const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
 
-// 相关站点推荐：按共享模型数量降序，其次共享标签，排除自身与失效站
+// 相关站点推荐
 const allSites = await getAllSites();
 const related = allSites
   .filter((s) => s.id !== site.id && s.status !== 'offline')
@@ -93,7 +92,6 @@ const related = allSites
         </a>
       </div>
 
-      <!-- 实时状态（客户端拉取监测 API）+ 7 天趋势 -->
       <div id="live-status" class="mt-6 p-4 rounded-xl bg-bg-secondary border border-border text-sm text-text-secondary">
         <span class="text-text-muted" data-i18n="detail.live">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
         <div id="trend-wrap" class="hidden mt-3 pt-3 border-t border-border">
@@ -104,7 +102,7 @@ const related = allSites
         </div>
       </div>
 
-      <div class="mt-8 space-y-6">
+      <div class="mt-8 space-y-5">
         <div>
           <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.intro">简介</h2>
           {site.summaryEn ? (
@@ -114,51 +112,30 @@ const related = allSites
           ) : (
             <p class="text-base text-text-secondary leading-relaxed">{site.summary}</p>
           )}
+          {site.description && (
+            <p class="text-sm text-text-muted mt-2 leading-relaxed whitespace-pre-line">{site.description}</p>
+          )}
         </div>
-        {site.description && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.more">详细信息</h2>
-            {site.descriptionEn ? (
-              <p class="text-base text-text-secondary leading-relaxed whitespace-pre-line">
-                <span data-lang="zh">{site.description}</span><span data-lang="en">{site.descriptionEn}</span>
-              </p>
-            ) : (
-              <p class="text-base text-text-secondary leading-relaxed whitespace-pre-line">{site.description}</p>
-            )}
-          </div>
-        )}
-        {site.notice?.text && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2">
-              <span data-lang="zh">站点公告</span><span data-lang="en">Site notice</span>
-              <span class="ml-2 text-xs font-normal text-text-muted">📅 <span data-lang="zh">收录于 {site.notice.fetchedAt}</span><span data-lang="en">updated {site.notice.fetchedAt}</span></span>
-            </h2>
-            <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line p-3 rounded-xl bg-bg-secondary border border-border">{site.notice.text}</p>
-          </div>
-        )}
+
         {site.bonus && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.bonus">注册赠送</h2>
             <p class="text-base text-status-stable font-medium">🎁 {site.bonusEn ? <><span data-lang="zh">{site.bonus}</span><span data-lang="en">{site.bonusEn}</span></> : site.bonus}</p>
           </div>
         )}
-        {site.inviteCode && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.invite">邀请码 / 口令</h2>
-            <button id="invite-btn" class="inline-flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors">
-              🎫 {site.inviteCode} · <span data-i18n="detail.copy">复制</span>
-            </button>
-          </div>
+
+        {site.notice?.text && (
+          <details class="group">
+            <summary class="text-sm font-medium text-text-muted cursor-pointer hover:text-text-secondary transition-colors">
+              <span data-lang="zh">站点公告</span><span data-lang="en">Site notice</span>
+              <span class="text-xs font-normal text-text-muted ml-1">📅 {site.notice.fetchedAt}</span>
+              <span class="text-xs text-text-muted ml-1 group-open:hidden">▸</span>
+              <span class="text-xs text-text-muted ml-1 hidden group-open:inline">▾</span>
+            </summary>
+            <p class="mt-2 text-sm text-text-secondary leading-relaxed whitespace-pre-line p-3 rounded-xl bg-bg-secondary border border-border">{site.notice.text}</p>
+          </details>
         )}
-        {site.topupRate && site.multiplier !== null && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.real">实际倍率</h2>
-            <p class="text-sm text-text-secondary">
-              <span class="font-mono font-semibold">{(site.multiplier * site.topupRate / 7.2).toFixed(2)}x</span>
-              <span class="text-xs text-text-muted">（{site.multiplier}x × {site.topupRate} ÷ 7.2）</span>
-            </p>
-          </div>
-        )}
+
         {site.models.length > 0 && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.models">支持模型</h2>
@@ -171,6 +148,7 @@ const related = allSites
             </div>
           </div>
         )}
+
         {(site.tools?.length ?? 0) > 0 && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tools">工具兼容</h2>
@@ -181,6 +159,7 @@ const related = allSites
             </div>
           </div>
         )}
+
         {site.tags.length > 0 && (
           <div>
             <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tags">标签</h2>
@@ -189,24 +168,6 @@ const related = allSites
             </div>
           </div>
         )}
-        {(site.events?.length ?? 0) > 0 && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-3" data-i18n="detail.events">体验日志</h2>
-            <div class="border-l border-border ml-1 space-y-4">
-              {[...site.events!].reverse().map((ev) => (
-                <div class="relative pl-4">
-                  <span class="absolute -left-[3.5px] top-1.5 w-1.5 h-1.5 rounded-full bg-accent/60"></span>
-                  <p class="text-xs text-text-muted font-mono mb-0.5">{ev.date}</p>
-                  <p class="text-base text-text-secondary leading-relaxed">{ev.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        <div class="grid grid-cols-2 gap-3 text-xs text-text-muted border-t border-border pt-4">
-          <p><span data-i18n="detail.verified">核验日期</span>：{site.verifiedAt}</p>
-          <p><span data-i18n="detail.updated">更新时间</span>：{site.updatedAt}</p>
-        </div>
       </div>
 
       {related.length > 0 && (
@@ -239,7 +200,6 @@ const related = allSites
   </main>
   <Footer />
   <script>
-    // 实时状态 + 收藏 + AFF 感知
     const siteId = location.pathname.split('/').pop();
     const en = localStorage.getItem('tf-lang') === 'en';
     fetch('/api/uptime')
@@ -270,7 +230,6 @@ const related = allSites
         if (el) el.textContent = '暂无监测数据';
       });
 
-    // 7 天趋势条（数据量大时按相邻聚合，保证不超过 ~120 格不溢出容器）
     fetch('/api/uptime/history/' + encodeURIComponent(siteId || ''))
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -307,20 +266,6 @@ const related = allSites
       })
       .catch(() => {});
 
-    const inviteBtn = document.getElementById('invite-btn');
-    if (inviteBtn) {
-      inviteBtn.onclick = () => {
-        navigator.clipboard?.writeText(inviteBtn.textContent?.replace(/^🎫\s*/, '').split('·')[0].trim() || '').then(() => {
-          const label = inviteBtn.querySelector('[data-i18n]');
-          if (label) {
-            const orig = label.textContent;
-            label.textContent = localStorage.getItem('tf-lang') === 'en' ? 'Copied ✓' : '已复制 ✓';
-            setTimeout(() => (label.textContent = orig), 1500);
-          }
-        }).catch(() => {});
-      };
-    }
-
     const favBtn = document.getElementById('fav-btn') as HTMLButtonElement | null;
     if (favBtn) {
       const renderFav = () => {
@@ -340,8 +285,6 @@ const related = allSites
       };
       renderFav();
     }
-
-
   </script>
 
   <script type="application/ld+json" set:html={JSON.stringify({

@@ -37,9 +37,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:16.120Z",
+      "checkedAt": "2026-08-26T15:03:22.470Z",
       "up": true,
-      "latencyMs": 2999,
+      "latencyMs": 947,
       "title": "ApxRelay",
       "modelsDetected": 0,
       "minRatio": null,
@@ -94,9 +94,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:14.983Z",
+      "checkedAt": "2026-08-26T15:03:22.300Z",
       "up": true,
-      "latencyMs": 1496,
+      "latencyMs": 1762,
       "title": "HUBWAY - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -146,9 +146,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:14.722Z",
+      "checkedAt": "2026-08-26T15:03:21.702Z",
       "up": true,
-      "latencyMs": 768,
+      "latencyMs": 1149,
       "title": "Uni Token",
       "modelsDetected": 0,
       "minRatio": null,
@@ -193,10 +193,10 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:22.737Z",
+      "checkedAt": "2026-08-26T15:03:23.416Z",
       "up": true,
-      "latencyMs": 8015,
-      "title": "",
+      "latencyMs": 1714,
+      "title": "CTAI - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
       "freeGroup": false,
@@ -242,9 +242,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:17.713Z",
+      "checkedAt": "2026-08-26T15:03:27.363Z",
       "up": true,
-      "latencyMs": 1645,
+      "latencyMs": 4893,
       "title": "Guyscode - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -316,11 +316,11 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:18.112Z",
+      "checkedAt": "2026-08-26T15:03:24.834Z",
       "up": true,
-      "latencyMs": 1991,
+      "latencyMs": 1206,
       "title": "发财API",
-      "modelsDetected": 146,
+      "modelsDetected": 121,
       "minRatio": 0.01,
       "freeGroup": false,
       "noticeUpdated": false
@@ -373,9 +373,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:25.724Z",
+      "checkedAt": "2026-08-26T15:03:24.763Z",
       "up": true,
-      "latencyMs": 1068,
+      "latencyMs": 1346,
       "title": "登仙公益站 - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -424,9 +424,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:19.041Z",
+      "checkedAt": "2026-08-26T15:03:27.269Z",
       "up": true,
-      "latencyMs": 925,
+      "latencyMs": 2506,
       "title": "SUPER NB - AI API Gateway",
       "modelsDetected": 0,
       "minRatio": null,
@@ -461,7 +461,7 @@
     "sortOrder": 11,
     "verifiedAt": "2026-08-23",
     "createdAt": "2026-08-22",
-    "updatedAt": "2026-08-23",
+    "updatedAt": "2026-08-26",
     "award": "当前最低价",
     "summaryEn": "$1 on signup; limited 0.001x tier with many CN models",
     "apiBase": "https://mydamoxing.cn/v1",
@@ -479,15 +479,19 @@
       {
         "date": "2026-08-23",
         "text": "模型核验：新增 deepseek、qwen 标签（站点共 97 个模型）"
+      },
+      {
+        "date": "2026-08-26",
+        "text": "核验不可达（超时/网络错误）"
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:24.530Z",
+      "checkedAt": "2026-08-26T15:03:32.848Z",
       "up": true,
-      "latencyMs": 871,
-      "title": "New API",
-      "modelsDetected": 97,
-      "minRatio": 0.001,
+      "latencyMs": 3227,
+      "title": "403 Forbidden",
+      "modelsDetected": 0,
+      "minRatio": null,
       "freeGroup": false,
       "noticeUpdated": false
     },
@@ -532,9 +536,9 @@
       }
     ],
     "autoInfo": {
-      "checkedAt": "2026-08-23T02:57:24.589Z",
+      "checkedAt": "2026-08-26T15:03:28.121Z",
       "up": true,
-      "latencyMs": 751,
+      "latencyMs": 758,
       "title": "OurChat",
       "modelsDetected": 0,
       "minRatio": null,
@@ -542,8 +546,8 @@
       "noticeUpdated": false
     },
     "notice": {
-      "text": "# 📢 近期奖励、风控及服务调整说明\n\n## 🎁 注册与邀请奖励\n\n- 新用户注册可获得 **$2 站内额度**\n- 每成功邀请一位好友，邀请人可获得 **$2 站内额度**\n- 上述注册及邀请奖励，请加入交流群后联系我领取\n- 好友完成首次充值后，系统将自动向邀请人发放 **$10 奖励**\n- 点击站内 **签到**，还可领取测试额度\n\n## ⚠️ 账号使用规则\n\n近期发现存在注册机、脚本及批量注册行为，请大家不要使用任何自动化工具批量注册账号。\n\n**严禁绕过额度、并发、频率或其他风控限制。**  \n违规账号可能被直接封禁，且不提供补偿。\n\n如果是正常使用被误封，请加入交流群联系我。核实无误后，将协助解封并补偿 **$10 额度**。\n\n## ⏸️ 限时免费通道\n\n限时免费通道目前暂时关闭，待下一批账号补充完成后再恢复，具体恢复时间另行通知。\n\n## 💰 额度与价格调整预告\n\n由于 OpenAI 近期下调账号可用额度，同时账号采购及维护成本上涨：\n\n- 后续 **¥1000 套餐预计调整为 $4000 站内额度**\n- 具体生效时间及最终方案将另行通知\n\n关于 **Luna",
-      "fetchedAt": "2026-08-23"
+      "text": "# 📢 近期奖励、风控及服务调整说明\n\n## 🎁 注册与邀请奖励\n- 福利组3折，充值是0.25r一刀，也就是说福利组0.075r一刀，正常plus一个月300刀左右，仅需22.5r\n- 每人一次首次优惠，**首次即送30刀**，系统会自动发放\n- 用 **子gmail** 的直接封号封ip\n- 新用户注册可获得 **$2 站内额度**\n- 每成功邀请一位好友，邀请人可获得 **$2 站内额度**\n- **上述注册及邀请奖励**，**请加入交流群后联系我领取**\n- 好友完成首次充值后，系统将自动向邀请人发放 **$10 奖励**，若未到账**联系我**\n- 点击站内 **签到**，还可领取测试额度\n\n## ⚠️ 账号使用规则\n\n近期发现存在注册机、脚本及批量注册行为，请大家不要使用任何自动化工具批量注册账号。\n\n**严禁破限或其他风控限制。**  \n违规账号可能被直接封禁，且不提供补偿。\n\n如果是正常使用被误封，请加入交流群联系我。核实无误后，将协助解封并补偿 **$10 额度**。\n\n## ⏸️ 限时免费通道\n\n限时免费通道目前暂时关闭，待下一批账号补充完成后再恢复，具体恢复时",
+      "fetchedAt": "2026-08-26"
     },
     "awardEn": "Fastest Response",
     "bonusEn": "$2 on signup",
