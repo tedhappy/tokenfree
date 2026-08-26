@@ -793,14 +793,59 @@ async function showDashboard() {
 }
 
 // ---------- 投稿审核 ----------
-async function showSubmissions() {
+function subSourceLabel(s) {
+  if (s.ip === 'collector') return { text: '自动采集', cls: 'sub-badge-collector' };
+  return { text: '用户投稿', cls: 'sub-badge-user' };
+}
+
+function subUrlDisplay(url) {
+  try {
+    const u = new URL(url);
+    const path = u.pathname === '/' ? '' : u.pathname;
+    return u.host + path;
+  } catch {
+    return url || '';
+  }
+}
+
+async function showSubmissions(editingId = null) {
   const subs = await api('/api/submissions');
+  const editing = editingId ? subs.find((s) => s.id === editingId) : null;
   document.getElementById('app').innerHTML = `
     ${topbar('subs')}
-    <main class="container">
+    <main class="container container-wide">
       <div class="section-head">
         <h2 class="section-title">投稿审核（${subs.length}）</h2>
       </div>
+      ${editing ? `
+      <div class="card" style="margin-bottom:20px">
+        <p style="font-size:13px;font-weight:500;margin-bottom:12px">✏️ 编辑投稿</p>
+        <form id="sub-edit-form">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field-label">名称 *</label>
+              <input id="sub-name" class="inp" required maxlength="50" value="${esc(editing.name)}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">URL *</label>
+              <input id="sub-url" class="inp" required value="${esc(editing.url)}" />
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:14px">
+            <label class="field-label">简介 *</label>
+            <textarea id="sub-summary" class="inp" rows="2" required maxlength="200">${esc(editing.summary)}</textarea>
+          </div>
+          <div class="form-row" style="margin-top:14px">
+            <label class="field-label">联系方式 / 备注</label>
+            <input id="sub-contact" class="inp" maxlength="100" value="${esc(editing.contact || '')}" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存修改</button>
+            <button type="button" id="sub-cancel" class="btn btn-ghost">取消</button>
+            <button type="button" id="sub-approve" class="btn btn-ghost">保存并收录 →</button>
+          </div>
+        </form>
+      </div>` : ''}
       ${subs.length === 0 ? `
         <div class="card empty-state">
           <p class="empty-icon">📭</p>
@@ -808,35 +853,10 @@ async function showSubmissions() {
           <p class="empty-desc">用户提交的站点会出现在这里。也可以在「监测」页点「立即采集」自动发现新站候选。</p>
           <button id="goto-collect" class="btn btn-ghost">前往监测页采集 →</button>
         </div>` : `
-      <div class="table-wrap">
-        <div class="sub-cards">
-          ${subs.map(s => {
-            const autoTags = (s.models || []).join(', ');
-            const autoInfo = [
-              s.multiplier != null ? `${s.multiplier}x` : '',
-              autoTags ? `模型:${autoTags}` : '',
-              (s.tools || []).length ? `工具:${s.tools.join(',')}` : '',
-              s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '',
-            ].filter(Boolean).join(' · ');
-            return `
-            <div class="sub-card">
-              <div class="sub-card-name">${esc(s.name)}</div>
-              <div class="sub-card-url">${esc(s.url)}</div>
-              <div class="sub-card-summary">${esc(s.summary)}</div>
-              ${autoInfo ? `<div class="sub-card-auto">${esc(autoInfo)}</div>` : ''}
-              ${s.contact ? `<div class="sub-card-contact">${esc(s.contact)}</div>` : ''}
-              <div class="sub-card-actions">
-                ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">查看</a>` : ''}
-                <button class="btn btn-primary btn-sm" data-approve="${esc(s.id)}">收录</button>
-                <button class="btn btn-danger btn-sm" data-reject="${esc(s.id)}">丢弃</button>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-        <table class="sub-table-mobile">
-          <thead><tr><th>名称</th><th>URL</th><th>简介</th><th>自动探测</th><th>时间</th><th></th></tr></thead>
-          <tbody>
+      <div class="subs-list">
             ${subs.map(s => {
+              const src = subSourceLabel(s);
+              const remark = s.contact || '';
               const autoTags = (s.models || []).join(', ');
               const autoInfo = [
                 s.multiplier != null ? `${s.multiplier}x` : '',
@@ -845,30 +865,67 @@ async function showSubmissions() {
                 s.network === 'direct' ? '直连' : s.network === 'proxy' ? '代理' : '',
               ].filter(Boolean).join(' · ');
               return `
-              <tr>
-                <td class="cell-strong">${esc(s.name)}</td>
-                <td class="cell-dim" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(s.url)}</td>
-                <td style="max-width:260px;white-space:normal">${esc(s.summary)}</td>
-                <td class="cell-dim" style="font-size:12px;max-width:220px;white-space:normal">
-                  ${autoInfo ? `<span class="text-accent">${esc(autoInfo)}</span>` : '—'}
-                  ${s.contact ? `<br><span class="text-muted">${esc(s.contact)}</span>` : ''}
-                </td>
-                <td class="cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</td>
-                <td class="cell-actions">
-                  ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost">查看</a>` : ''}
-                  <button class="btn btn-ghost" data-approve="${esc(s.id)}">收录</button>
-                  <button class="btn btn-danger" data-reject="${esc(s.id)}">丢弃</button>
-                </td>
-              </tr>`;
+            <article class="sub-card">
+              <div class="sub-card-head">
+                <div class="sub-card-title">
+                  <span class="sub-name">${esc(s.name)}</span>
+                  <span class="sub-badge ${src.cls}">${src.text}</span>
+                </div>
+                <time class="sub-time cell-dim">${esc((s.submittedAt || '').slice(0, 16).replace('T', ' '))}</time>
+              </div>
+              ${s.url ? `<a class="sub-url" href="${esc(s.url)}" target="_blank" rel="noreferrer">${esc(subUrlDisplay(s.url))}</a>` : ''}
+              <p class="sub-summary">${esc(s.summary)}</p>
+              ${autoInfo ? `<p class="sub-auto text-accent" style="font-size:12px;margin-top:4px">🔍 ${esc(autoInfo)}</p>` : ''}
+              ${remark ? `<p class="sub-remark">${esc(remark)}</p>` : ''}
+              <div class="sub-actions">
+                ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-xs">查看</a>` : ''}
+                <button class="btn btn-ghost btn-xs" data-edit-sub="${esc(s.id)}">编辑</button>
+                <button class="btn btn-primary btn-xs" data-approve="${esc(s.id)}">收录</button>
+                <button class="btn btn-danger btn-xs" data-reject="${esc(s.id)}">丢弃</button>
+              </div>
+            </article>`;
             }).join('')}
-          </tbody>
-        </table>
       </div>`}
+      ${subs.length ? '<p class="hint" style="margin-top:12px">「收录」会打开站点表单预填信息，保存后自动从队列移除。「丢弃」直接删除该投稿。</p>' : ''}
     </main>`;
 
   bindTopbar();
   const gotoCollect = document.getElementById('goto-collect');
   if (gotoCollect) gotoCollect.onclick = showUptime;
+
+  const saveSubEdit = async (id, thenApprove = false) => {
+    const body = {
+      name: document.getElementById('sub-name').value.trim(),
+      url: document.getElementById('sub-url').value.trim(),
+      summary: document.getElementById('sub-summary').value.trim(),
+      contact: document.getElementById('sub-contact').value.trim(),
+    };
+    try {
+      await api('/api/submissions/' + id, { method: 'PUT', body: JSON.stringify(body) });
+      if (thenApprove) {
+        showSiteForm(null, body, id, showSubmissions);
+      } else {
+        toast('投稿已更新');
+        showSubmissions();
+      }
+    } catch (e) {
+      toast(e.message || '保存失败', 'error');
+    }
+  };
+
+  const editForm = document.getElementById('sub-edit-form');
+  if (editForm) {
+    document.getElementById('sub-cancel').onclick = () => showSubmissions();
+    editForm.onsubmit = async (e) => {
+      e.preventDefault();
+      await saveSubEdit(editing.id, false);
+    };
+    document.getElementById('sub-approve').onclick = async () => {
+      await saveSubEdit(editing.id, true);
+    };
+  }
+
+  document.querySelectorAll('[data-edit-sub]').forEach(b => b.onclick = () => showSubmissions(b.dataset.editSub));
   document.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => {
     const sub = subs.find(x => x.id === b.dataset.approve);
     // 传递所有采集到的字段，审核时自动填充，管理员只需填推广URL
@@ -883,11 +940,19 @@ async function showSubmissions() {
       network: sub.network || 'unknown',
       bonus: sub.bonus || '',
       apiBase: sub.apiBase || '',
-    }, sub.id);
+    }, sub.id, showSubmissions);
   });
   document.querySelectorAll('[data-reject]').forEach(b => b.onclick = async () => {
-    await api('/api/submissions/' + b.dataset.reject, { method: 'DELETE' });
-    showSubmissions();
+    const sub = subs.find(x => x.id === b.dataset.reject);
+    const ok = await confirmDialog(`确定丢弃投稿「${sub?.name || b.dataset.reject}」？此操作不可恢复。`, { danger: true, okText: '丢弃' });
+    if (!ok) return;
+    try {
+      await api('/api/submissions/' + b.dataset.reject, { method: 'DELETE' });
+      toast('已丢弃');
+      showSubmissions();
+    } catch (e) {
+      toast(e.message || '丢弃失败', 'error');
+    }
   });
 }
 
@@ -993,7 +1058,7 @@ const TOOL_OPTS = [
 ];
 const NET_OPTS = { unknown: '未验证', direct: '国内直连', proxy: '需代理' };
 
-async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
+async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null, returnTo = showDashboard) {
   const isNew = !site;
   const models = await api('/api/models');
   site = site || { name:'', url:'', affUrl:'', multiplier:'', bonus:'', models:[], tags:[], summary:'', description:'', status:'stable', network:'unknown', tools:[], isFeatured:false, sortOrder:99 };
@@ -1153,8 +1218,8 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
   const beforeUnload = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
   window.addEventListener('beforeunload', beforeUnload);
   const leaveClean = () => { dirty = false; window.removeEventListener('beforeunload', beforeUnload); };
-  document.getElementById('back').onclick = () => { leaveClean(); showDashboard(); };
-  document.getElementById('cancel').onclick = () => { leaveClean(); showDashboard(); };
+  document.getElementById('back').onclick = () => { leaveClean(); returnTo(); };
+  document.getElementById('cancel').onclick = () => { leaveClean(); returnTo(); };
   document.getElementById('site-form').onsubmit = async (e) => {
     e.preventDefault();
     const body = {
@@ -1187,10 +1252,10 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null) {
     if (isNew) await api('/api/sites', { method: 'POST', body: JSON.stringify(body) });
     else await api('/api/sites/' + site.id, { method: 'PUT', body: JSON.stringify(body) });
     // 从投稿收录时，保存后自动删除该投稿
-    if (afterSaveDeleteSub) await api('/api/submissions/' + afterSaveDeleteSub, { method: 'DELETE' }).catch(() => {});
+    if (afterSaveDeleteSub) await api('/api/submissions/' + afterSaveDeleteSub + '?reason=approved', { method: 'DELETE' }).catch(() => {});
     leaveClean();
-    toast('已保存。记得点击「重建前台」让前台生效', 'success', 3500);
-    showDashboard();
+    toast(afterSaveDeleteSub ? '站点已收录，投稿已从队列移除。记得点击「重建前台」' : '已保存。记得点击「重建前台」让前台生效', 'success', 3500);
+    returnTo();
   };
 }
 
