@@ -1,0 +1,54 @@
+public/admin/index.html
+  s_a02f0578bdb8c2::t_2f4993d95b423e 1132-1135
+server/index.js
+  s_a02f0578bdb8c2::t_c810bf46b09d08 372-388
+  s_a02f0578bdb8c2::t_a251a67c8ee1aa 552-567,569
+  s_a02f0578bdb8c2::t_b8258c27daf664 396-411,419-434
+  s_a02f0578bdb8c2::t_58308bc3e8d6b8 487-491
+  s_a02f0578bdb8c2::t_4fad5f3b735a59 395,412-413,416,418,435
+  s_a02f0578bdb8c2::t_bf61139a286ec3 451,453-461,466-471
+  s_a02f0578bdb8c2::t_769b8624fe6a8a 23
+  s_a02f0578bdb8c2::t_a61a870e17f3f9 551
+  s_a02f0578bdb8c2::t_10d5e0096d9464 593-620,623,626-637
+  s_a02f0578bdb8c2::t_542ca31fac73b7 674,676-683
+  s_a02f0578bdb8c2::t_ca09fc5997866b 747-748
+  s_a02f0578bdb8c2::t_357aa3f48c5b0d 84,88,104-135
+src/components/Hero.astro
+  s_a02f0578bdb8c2::t_ca4c80322553ba 42-43,45-46,48-49
+server/collect.js
+  s_a02f0578bdb8c2::t_0f922eccc05fa2 90-91,124-125,134-136,138,145-148,151-155,157-168,171-182,188-190,192-193,198-199,201-204,206-208,210-211,213-226
+  s_a02f0578bdb8c2::t_47ca7b164ad1dc 441,445
+  s_a02f0578bdb8c2::t_5cfb8dc1ee972d 205,209
+  s_a02f0578bdb8c2::t_5b109e175d8e6e 169-170
+src/components/SiteList.tsx
+  s_a02f0578bdb8c2::t_dc572befeffa32 567
+  s_a02f0578bdb8c2::t_ff80f2ad0f8542 585,599,605-615,635-644
+  s_a02f0578bdb8c2::t_3b9575e669cb6d 595-597
+  s_a02f0578bdb8c2::t_073ff2d93f1301 619
+  s_a02f0578bdb8c2::t_300e924fc88843 81
+  s_a02f0578bdb8c2::t_d7ff9549328b61 542
+  s_a02f0578bdb8c2::t_43fc884b9b3274 565,571,574,586-592,620-634,645-657,659-661,663,665-668,672,674,676-679,683,689-703,705-710,713
+server/enrich.js
+  s_a02f0578bdb8c2::t_ffaf3f4641917b 183-185
+  s_a02f0578bdb8c2::t_7656f9f9980053 104
+  s_a02f0578bdb8c2::t_b9800416abfc1d 170-172
+public/admin/admin.css
+  s_a02f0578bdb8c2::t_ce6c0b1353e3d6 160
+  s_a02f0578bdb8c2::t_017c0afdc6afb3 132-133,135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3eec6fe94cf6270d14a3ebfdd8c7a92a22467fc0",
+  "prompts": {},
+  "sessions": {
+    "s_a02f0578bdb8c2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbf03c517ffeqQHthhIWXtPSD7",
+        "model": "unknown"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
