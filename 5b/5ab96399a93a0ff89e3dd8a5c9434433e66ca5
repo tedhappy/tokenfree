@@ -1,0 +1,22 @@
+deploy.sh
+  s_a02f0578bdb8c2::t_e9c56dfe5e3aaf 77-78
+  s_a02f0578bdb8c2::t_5ea6ecf9d99d6f 8,12,15-22,25
+  s_a02f0578bdb8c2::t_a29002631c4742 38-42
+  s_a02f0578bdb8c2::t_cdad681934806e 87-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5b5ab96399a93a0ff89e3dd8a5c9434433e66ca5",
+  "prompts": {},
+  "sessions": {
+    "s_a02f0578bdb8c2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbf03c517ffeqQHthhIWXtPSD7",
+        "model": "unknown"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
