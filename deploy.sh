@@ -74,18 +74,20 @@ else
 fi
 
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-# 健康检查用本机回环地址 + 默认端口 4321（端口常量与 ecosystem.config.cjs 一致，不依赖未定义的环境变量）
-HEALTH_URL="http://127.0.0.1:4321/api/uptime"
+# 端口：优先读 .env 的 PORT，缺失回退 4321（与 ecosystem.config.cjs / README 默认一致）
+PORT=$(grep -E '^PORT=' .env 2>/dev/null | head -n1 | sed 's/^PORT=//' | tr -d '"' | tr -d "'")
+PORT=${PORT:-4321}
 echo ""
 echo "=========================================="
 echo " 部署完成！"
-echo " 前台: http://${IP:-服务器IP}:4321"
-echo " 后台: http://${IP:-服务器IP}:4321/admin/"
-echo " 健康检查: http://${IP:-服务器IP}:4321/api/uptime"
+echo " 前台: http://${IP:-服务器IP}:$PORT"
+echo " 后台: http://${IP:-服务器IP}:$PORT/admin/"
+echo " 健康检查: http://${IP:-服务器IP}:$PORT/api/uptime"
 echo " 修改 .env 后重新运行 ./deploy.sh 即可生效"
 echo "=========================================="
 
 # 部署后健康检查：确认服务已就绪，未就绪则醒目告警
+HEALTH_URL="http://127.0.0.1:$PORT/api/uptime"
 sleep 2
 if command -v curl >/dev/null; then
   if curl -sf --max-time 5 "$HEALTH_URL" >/dev/null 2>&1; then
