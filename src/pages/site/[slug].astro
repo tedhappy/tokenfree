@@ -200,14 +200,14 @@ const related = allSites
   </main>
   <Footer />
   <script>
+    import { fetchUptime } from '../../utils/clientData';
     const siteId = location.pathname.split('/').pop();
     const en = localStorage.getItem('tf-lang') === 'en';
-    fetch('/api/uptime')
-      .then((r) => (r.ok ? r.json() : null))
+    fetchUptime()
       .then((d) => {
         const el = document.getElementById('live-value');
         if (!d || !el) return;
-        const u = d[siteId];
+        const u = (d as any)[siteId];
         if (!u || !u.checks) {
           el.textContent = en ? 'No monitor data yet' : '暂无监测数据';
           return;

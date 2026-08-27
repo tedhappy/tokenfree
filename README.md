@@ -64,34 +64,34 @@ node server/collect.js
 
 ## 数据说明
 
-`src/data/` 下的数据文件分两类：
+`src/data/` 下的数据分三类：
 
 | 类型 | 文件 | 是否进 Git | 说明 |
 |------|------|-----------|------|
-| **构建输入** | `sites.json`、`config.json`、`models.json` | ✅ 进 Git | 被 Astro 构建时 `import`，必须存在；同时也会被后台编辑/自动核验改写 |
+| **业务数据（运行时）** | `sites.json`、`config.json`、`models.json` | ❌ gitignore | 后台编辑/自动核验/采集会改写，属服务器/本地业务数据 |
+| **基线种子** | `sites.seed.json`、`config.seed.json`、`models.seed.json` | ✅ 进 Git | 构建兜底基线，全新环境由此生成运行时文件 |
 | **纯运行时数据** | `clicks.json`、`uptime.json`、`submissions.json`、`collect-seen.json`、`audit.json` | ❌ gitignore | 仅后台服务运行时写入，构建不依赖 |
 
-### 关于「构建输入」文件的冲突
+### 数据与代码分离（解决 `git pull` 冲突）
 
-`sites.json`、`config.json`、`models.json` 既是构建输入（进 Git），又会被后台编辑/自动核验改写，因此服务器上它们可能和 Git 版本不同，导致 `git pull` 冲突。
+`src/data/sites/config/models.json` 既是前台构建的 `import` 输入，又会被后台/自动任务改写。**为避免服务器与 Git 冲突，这三个运行时文件已不进 Git**，Git 里只保留对应 `.seed.json` 基线。
 
-**推荐做法**：在服务器上直接运行 `./deploy.sh` 更新（脚本会自动备份 → pull → 恢复服务器业务数据 → 构建 → 重启），无需手动 `git pull`。
+- 构建前 `scripts/prepare-data.js` 自动执行：若运行时文件缺失，用种子生成；**已存在则绝不覆盖**，保证服务器/本地业务数据安全。
+- `npm run build` 与 `./deploy.sh` 都会触发该同步；因此 **`git pull` 不再与业务数据产生冲突**，可放心手动/脚本更新。
+- 服务器业务数据以服务器上的 `src/data/` 目录为准（后台收录、采集、核验的结果都在这里），Git 里的 `.seed.json` 仅作全新环境的构建基线。
 
-若仍手动 pull 且遇冲突，可先备份再处理：
+### 首次部署（全新服务器）说明
 
 ```bash
-cp -a src/data src/data.bak
-git checkout -- src/data/sites.json src/data/config.json src/data/models.json
-git pull
-cp -a src/data.bak/. src/data/
-npm run build && pm2 reload ecosystem.config.cjs
+git clone <repo> && cd tokenfree
+npm install
+npm run build   # prepare-data.js 会从 .seed.json 生成缺失的 sites/config/models.json
 ```
-
-> 生产环境应以**服务器上的 data 目录**为准（后台收录、采集、核验的结果都在这里）。Git 里的 `sites.json` 只是初始种子，不应覆盖线上数据。
+若仓库里的 `.seed.json` 尚未随代码更新为最新站点/模型，全新服务器会以种子为基线，之后由后台/自动任务继续演进。
 
 ### 备份
 
-纯运行时数据（点击/监测/投稿/审计）不在 Git 里，**换服务器/重装时必须手动备份 `src/data/` 目录**：
+所有运行时数据（点击/监测/投稿/审计 + 业务三件套）不在 Git 里，**换服务器/重装时必须手动备份 `src/data/` 目录**：
 
 ```bash
 # 旧服务器打包
@@ -102,6 +102,7 @@ tar xzf tokenfree-data.tar.gz
 
 后台「设置」页的「导出备份」按钮也可一键导出全量 JSON。
 
+
 ## 目录结构
 
 ```
@@ -109,7 +110,7 @@ tar xzf tokenfree-data.tar.gz
 │   ├── pages/           # 前台页面（/、/about、/go 跳转页）
 │   ├── components/      # Astro 组件 + React SiteList
 │   ├── layouts/         # 基础布局（暗色主题）
-│   ├── data/            # sites.json / models.json / clicks.json
+│   ├── data/            # 运行时 sites/config/models.json + 对应 .seed.json 基线 + clicks.json
 │   └── utils/           # 数据读取工具
 ├── public/admin/        # 管理后台（纯 HTML+JS，无构建）
 ├── server/index.js      # Hono API + 静态托管

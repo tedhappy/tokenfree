@@ -98,8 +98,8 @@ export function goUrl(site: Site): string {
 
 /** 判断站点是否有"免费额度/赠送"（用于"免费额度"筛选）。
  *  依据：注册赠送字段非空，或简介/标签里出现赠送相关关键词。 */
-export function hasFreeCredit(site: Site): boolean {
-  return Boolean(site.bonus) || /送|签到|免费|公益/.test(site.summary + site.tags.join(''));
+export function hasFreeCredit(site: { bonus?: string; summary?: string; tags?: string[] }): boolean {
+  return Boolean(site.bonus) || /送|签到|免费|公益/.test((site.summary || '') + (site.tags || []).join(''));
 }
 
 export type AgeUnit = 'day' | 'month' | 'year';

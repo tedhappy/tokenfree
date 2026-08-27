@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/prepare-data.js && astro build",
     "preview": "astro preview",
     "admin:dev": "node server/index.js",
     "admin:start": "cross-env NODE_ENV=production node server/index.js"

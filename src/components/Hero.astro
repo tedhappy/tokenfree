@@ -1,5 +1,6 @@
 ---
 import config from '../data/config.json';
+import { fetchUptime } from '../utils/clientData';
 interface Props {
   siteCount: number;
   stableCount: number;
@@ -53,8 +54,7 @@ const sub2En = hero.sub2En || 'Editor-tested AI API relays: free credits · low 
 
 <script>
   // 全站健康度：24h 可用率均值（比瞬时探测更稳，避免单站抖动导致数字跳动）
-  fetch('/api/uptime')
-    .then((r) => (r.ok ? r.json() : null))
+  fetchUptime()
     .then((d) => {
       const el = document.getElementById('hero-health');
       if (!el) return;

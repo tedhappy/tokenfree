@@ -1,9 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-
-/** 判断站点是否有"免费额度/赠送"（与 utils/sites.hasFreeCredit 保持一致的轻量本地实现） */
-function hasFreeCredit(s: any): boolean {
-  return Boolean(s.bonus) || /送|签到|免费|公益/.test(s.summary + (s.tags || []).join(''));
-}
+import { hasFreeCredit, ageParts } from '../utils/sites';
+import { fetchUptime } from '../utils/clientData';
 
 export interface ModelDef {
   id: string;
@@ -154,19 +151,6 @@ function saveText(m: number | null, lang: 0 | 1): string {
   return lang ? 'par' : '原价';
 }
 
-/** 收录时长：不足 1 天返回 null，杜绝未满月虚标为"1 个月" */
-function ageParts(dateStr?: string): { n: number; unit: 'day' | 'month' | 'year' } | null {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
-  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-  if (days < 1) return null;
-  if (days < 30) return { n: days, unit: 'day' };
-  const months = Math.floor(days / 30);
-  if (months < 12) return { n: months, unit: 'month' };
-  return { n: Math.floor(months / 12), unit: 'year' };
-}
-
 /** 站龄文案：zh "3 天 / 2 个月 / 1 年"，en "3 d / 2 mo / 1 yr" */
 function ageText(p: { n: number; unit: string } | null, lang: 0 | 1): string {
   if (!p) return '';
@@ -221,9 +205,8 @@ export default function SiteList({ initialSites, models }: Props) {
     // 支持 /?q=关键词 直达搜索（搜索引擎站内搜索入口 / 外链分享）
     const q = new URLSearchParams(location.search).get('q');
     if (q) setQuery(q.slice(0, 60));
-    fetch('/api/uptime')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setUptime(d))
+    fetchUptime()
+      .then((d) => d && setUptime(d as Record<string, UptimeEntry>))
       .catch(() => {});
     fetch('/api/hot')
       .then((r) => (r.ok ? r.json() : null))

@@ -29,4 +29,10 @@ src/data/submissions.json
 src/data/collect-seen.json
 src/data/audit.json
 
+# 业务数据三件套：服务器/本地运行时由后台与自动任务改写，不进 Git（避免 pull 冲突）。
+# 进 Git 的是对应 .seed.json 基线，用于全新环境的构建兜底，由 scripts/prepare-data.js 同步。
+src/data/sites.json
+src/data/config.json
+src/data/models.json
+
 .zcode/

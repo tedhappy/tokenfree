@@ -5,14 +5,12 @@
 set -e
 cd "$(dirname "$0")"
 
-# ---- [1/4] 拉取代码（保留服务器 src/data 业务数据，避免 pull 冲突）----
+# ---- [1/4] 拉取代码（业务数据三件套已 gitignore，不再与 Git 冲突）----
 if [ -d .git ]; then
   echo "[1/4] 拉取最新代码..."
   DATA_BAK=$(mktemp -d)
-  cp -a src/data/. "$DATA_BAK/"
-
-  # 构建输入文件会被后台/采集改写，先还原工作区再 pull，避免 merge 冲突
-  git checkout -- src/data/sites.json src/data/config.json src/data/models.json 2>/dev/null || true
+  # 备份全部运行时数据（含点击/监测/投稿/审计及业务三件套），pull 失败 reset 时兜底
+  cp -a src/data/. "$DATA_BAK/" 2>/dev/null || true
 
   if ! git pull --ff-only 2>/dev/null; then
     echo "  fast-forward 不可用，尝试普通 pull..."
@@ -25,8 +23,8 @@ if [ -d .git ]; then
     fi
   fi
 
-  # 恢复服务器上的业务数据（生产环境以服务器为准，不用 Git 里的旧快照覆盖）
-  cp -a "$DATA_BAK/." src/data/
+  # 恢复服务器上的业务数据（以服务器为准；gitignore 的运行时三件套不会被 pull 覆盖，仅 reset 兜底用）
+  cp -a "$DATA_BAK/." src/data/ 2>/dev/null || true
   rm -rf "$DATA_BAK"
   echo "✓ 代码已更新，业务数据已保留"
 fi

@@ -21,6 +21,23 @@ const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'audit.json');
 
+// ---- 业务数据兜底：运行时三件套缺失时用 .seed.json 生成，避免全新环境报错 ----
+// 服务器/本地已有运行时文件则保持不变，绝不覆盖业务数据
+const DATA_SEED_PAIRS = [
+  [SITES_FILE, path.join(DATA_DIR, 'sites.seed.json')],
+  [CONFIG_FILE, path.join(DATA_DIR, 'config.seed.json')],
+  [MODELS_FILE, path.join(DATA_DIR, 'models.seed.json')],
+];
+for (const [runtime, seed] of DATA_SEED_PAIRS) {
+  if (fs.existsSync(runtime)) continue;
+  if (fs.existsSync(seed)) {
+    fs.copyFileSync(seed, runtime);
+    console.log(`[data] 生成空缺数据文件 ${path.basename(runtime)}（来自 seed）`);
+  } else {
+    console.error(`[data] 缺少 ${path.basename(runtime)} 且无 ${path.basename(seed)} 可兜底`);
+  }
+}
+
 // ---- 加载 .env（.env 优先，覆盖 pm2/Shell 缓存的旧值）----
 function parseEnvValue(raw) {
   let val = String(raw ?? '').trim();
@@ -247,6 +264,29 @@ function uptimeSummary() {
 const app = new Hono();
 app.use('/api/*', cors());
 
+// 统一鉴权中间件：除公开接口（登录/登出/点击/投稿/只读监测/公开配置）外，其余 /api 均需 Bearer token。
+// 集中收敛既有的逐条 authed 校验，新增管理路由默认鉴权，规避遗漏。
+const PUBLIC_API = [
+  { m: 'POST', p: '/api/login' },
+  { m: 'POST', p: '/api/logout' },
+  { m: 'POST', p: '/api/click' },
+  { m: 'POST', p: '/api/submit' },
+  { m: 'GET', p: '/api/hot' },
+  { m: 'GET', p: '/api/uptime' },
+  { m: 'GET', p: '/api/uptime/history/' },
+  { m: 'GET', p: '/api/config' },
+];
+app.use('/api/*', async (c, next) => {
+  const method = c.req.method;
+  const path = c.req.path;
+  const isPublic = PUBLIC_API.some((r) => {
+    if (r.m !== method) return false;
+    return r.p.endsWith('/') ? path.startsWith(r.p) : path === r.p;
+  });
+  if (!isPublic && !authed(c)) return c.json({ error: '未授权' }, 401);
+  await next();
+});
+
 // ---- 认证 ----
 app.post('/api/login', async (c) => {
   const ip = clientIp(c);
@@ -286,12 +326,10 @@ app.post('/api/logout', (c) => {
 app.get('/blacklist', (c) => c.redirect('/', 301));
 
 app.get('/api/sites', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json(readJson(SITES_FILE, []));
 });
 
 app.post('/api/sites', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const site = await c.req.json();
   if (!site.name || typeof site.name !== 'string') {
     return c.json({ error: 'name 必填' }, 400);
@@ -307,7 +345,6 @@ app.post('/api/sites', async (c) => {
 });
 
 app.put('/api/sites/:id', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   const updated = await c.req.json();
   const sites = readJson(SITES_FILE, []);
@@ -322,7 +359,6 @@ app.put('/api/sites/:id', async (c) => {
 });
 
 app.delete('/api/sites/:id', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   let sites = readJson(SITES_FILE, []);
   const target = sites.find((s) => s.id === id);
@@ -336,12 +372,10 @@ app.delete('/api/sites/:id', (c) => {
 
 // ---- 模型标签 ----
 app.get('/api/models', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json(readJson(MODELS_FILE, []));
 });
 
 app.put('/api/models', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const models = await c.req.json();
   if (!Array.isArray(models)) return c.json({ error: '格式错误' }, 400);
   writeJson(MODELS_FILE, models);
@@ -392,14 +426,12 @@ app.get('/api/uptime/history/:id', (c) => {
 });
 
 app.post('/api/monitor/run', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const result = runMonitor();
   return result.then((r) => c.json(r));
 });
 
 // ---- 自动采集（鉴权触发；结果进投稿队列）----
 app.post('/api/collect/run', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return runCollect()
     .then((r) => c.json(r))
     .catch((e) => c.json({ error: e.message }, 500));
@@ -407,7 +439,6 @@ app.post('/api/collect/run', (c) => {
 
 // ---- 站点信息自动核验/回填（鉴权触发；有变化时自动重建前台）----
 app.post('/api/enrich/run', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return runEnrich({ rebuild: tryRebuild })
     .then((r) => c.json(r))
     .catch((e) => c.json({ error: e.message }, 500));
@@ -455,7 +486,6 @@ app.post('/api/submit', async (c) => {
 });
 
 app.get('/api/submissions', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json(readJson(SUBMISSIONS_FILE, []));
 });
 
@@ -473,7 +503,6 @@ function validateSubmissionFields(body, subs, excludeId = null) {
 }
 
 app.put('/api/submissions/:id', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   const subs = readJson(SUBMISSIONS_FILE, []);
@@ -495,7 +524,6 @@ app.put('/api/submissions/:id', async (c) => {
 });
 
 app.delete('/api/submissions/:id', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const id = c.req.param('id');
   const reason = c.req.query('reason');
   let subs = readJson(SUBMISSIONS_FILE, []);
@@ -510,7 +538,6 @@ app.delete('/api/submissions/:id', (c) => {
 
 // ---- 统计（含监测合并视图）----
 app.get('/api/stats', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const sites = readJson(SITES_FILE, []);
   const clicks = readJson(CLICKS_FILE, {});
   const up = uptimeSummary();
@@ -557,7 +584,6 @@ function runBuild() {
 }
 
 app.post('/api/rebuild', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   if (building) return c.json({ error: '已有构建在进行中' }, 409);
   building = true;
   try {
@@ -586,7 +612,6 @@ async function tryRebuild() {
 app.get('/api/config', (c) => c.json(readJson(CONFIG_FILE, {})));
 
 app.put('/api/config', async (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   const cfg = await c.req.json();
   if (typeof cfg !== 'object' || !cfg) return c.json({ error: '格式错误' }, 400);
   writeJson(CONFIG_FILE, cfg);
@@ -596,13 +621,11 @@ app.put('/api/config', async (c) => {
 
 // ---- 操作审计日志（鉴权）----
 app.get('/api/audit', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json(readJson(AUDIT_FILE, []));
 });
 
 // ---- 数据导出备份（鉴权）----
 app.get('/api/export', (c) => {
-  if (!authed(c)) return c.json({ error: '未授权' }, 401);
   return c.json({
     exportedAt: new Date().toISOString(),
     sites: readJson(SITES_FILE, []),
