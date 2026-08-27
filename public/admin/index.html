@@ -1085,61 +1085,19 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null, ret
             <label class="field-label">一句话简介 *</label>
             <input id="f-summary" class="inp" required value="${esc(site.summary)}" />
           </div>
-          <div class="form-row">
-            <label class="field-label">详细描述</label>
-            <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
-          </div>
         </fieldset>
 
         <fieldset class="form-section">
           <legend class="form-section-title">价格与状态</legend>
           <div class="form-grid">
             <div class="form-row">
-              <label class="field-label">倍率（如 0.4，留空为未知）</label>
+              <label class="field-label">倍率（如 0.4，留空自动核验）</label>
               <input id="f-mult" class="inp" type="number" step="0.01" min="0" value="${site.multiplier ?? ''}" />
             </div>
             <div class="form-row">
               <label class="field-label">状态</label>
               <select id="f-status" class="inp">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}" ${site.status===v?'selected':''}>${l}</option>`).join('')}</select>
             </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-row">
-              <label class="field-label">网络可达性</label>
-              <select id="f-network" class="inp">${Object.entries(NET_OPTS).map(([v,l]) => `<option value="${v}" ${(site.network||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select>
-            </div>
-            <div class="form-row">
-              <label class="field-label">充值汇率（每 1 刀额度所需人民币，如 7.5；用于折算实际倍率）</label>
-              <input id="f-toprate" class="inp" type="number" step="0.01" min="0" value="${site.topupRate ?? ''}" />
-            </div>
-          </div>
-          <div class="form-row">
-            <label class="field-label">注册赠送</label>
-            <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
-          </div>
-          <div class="form-row">
-            <label class="field-label">邀请码 / 兑换口令（前台一键复制，可留空）</label>
-            <input id="f-invite" class="inp" value="${esc(site.inviteCode || '')}" />
-          </div>
-        </fieldset>
-
-        <div class="aff-section">
-          <div class="aff-section-title">🔗 推广链接（唯一需要人工填写的字段）</div>
-          <div class="form-row">
-            <label class="field-label">推广链接 affUrl — 设置后跳转用此链接，用于返佣</label>
-            <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
-          </div>
-        </div>
-
-        <fieldset class="form-section">
-          <legend class="form-section-title">推广与运营</legend>
-          <div class="form-row">
-            <label class="field-label">获奖理由（榜单缎带，如：最佳白嫖 / 最低价 / 最稳老站）</label>
-            <input id="f-award" class="inp" value="${esc(site.award || '')}" />
-          </div>
-          <div class="form-row">
-            <label class="field-label">API Base URL（如 https://api.example.com/v1）</label>
-            <input id="f-apibase" class="inp" value="${esc(site.apiBase || '')}" placeholder="https://…/v1" />
           </div>
         </fieldset>
 
@@ -1167,38 +1125,86 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null, ret
           </div>
         </fieldset>
 
-        <fieldset class="form-section">
-          <legend class="form-section-title">英文内容（可选）</legend>
+        <div class="aff-section">
+          <div class="aff-section-title">🔗 推广链接（唯一需要人工填写的字段）</div>
           <div class="form-row">
-            <label class="field-label">英文简介（EN 模式下替换中文摘要）</label>
-            <input id="f-summary-en" class="inp" value="${esc(site.summaryEn || '')}" />
+            <label class="field-label">推广链接 affUrl — 设置后跳转用此链接，用于返佣</label>
+            <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
           </div>
-          <div class="form-row">
-            <label class="field-label">英文详细描述（EN 模式下替换中文描述）</label>
-            <textarea id="f-desc-en" class="inp" rows="3">${esc(site.descriptionEn || '')}</textarea>
-          </div>
-        </fieldset>
+        </div>
 
-        <fieldset class="form-section">
-          <legend class="form-section-title">记录与排序</legend>
-          <div class="form-row">
-            <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x）</label>
-            <textarea id="f-events" class="inp" rows="3" placeholder="2026-08-22 | 降价活动，Claude 0.01x">${(site.events || []).map(e => `${e.date} | ${e.text}`).join('\n')}</textarea>
-          </div>
-          <div class="form-grid">
+        <details class="card" ${isNew ? '' : 'open'}>
+          <summary class="card-title">推广与运营（倍率赠送、网络、获奖理由）</summary>
+          <div class="form-section" style="border-top:none">
             <div class="form-row">
-              <label class="field-label">核验日期</label>
-              <input id="f-verified" class="inp" type="date" value="${esc(site.verifiedAt || new Date().toISOString().slice(0,10))}" />
+              <label class="field-label">注册赠送</label>
+              <input id="f-bonus" class="inp" value="${esc(site.bonus)}" />
+            </div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="field-label">网络可达性</label>
+                <select id="f-network" class="inp">${Object.entries(NET_OPTS).map(([v,l]) => `<option value="${v}" ${(site.network||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select>
+              </div>
+              <div class="form-row">
+                <label class="field-label">充值汇率（每 1 刀额度所需人民币，如 7.5）</label>
+                <input id="f-toprate" class="inp" type="number" step="0.01" min="0" value="${site.topupRate ?? ''}" />
+              </div>
             </div>
             <div class="form-row">
-              <label class="field-label">排序（小在前）</label>
-              <input id="f-sort" class="inp" type="number" value="${site.sortOrder ?? 99}" />
+              <label class="field-label">获奖理由（榜单缎带，如：最佳白嫖 / 最低价 / 最稳老站）</label>
+              <input id="f-award" class="inp" value="${esc(site.award || '')}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">邀请码 / 兑换口令（前台一键复制，可留空）</label>
+              <input id="f-invite" class="inp" value="${esc(site.inviteCode || '')}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">API Base URL（如 https://api.example.com/v1）</label>
+              <input id="f-apibase" class="inp" value="${esc(site.apiBase || '')}" placeholder="https://…/v1" />
             </div>
           </div>
-          <div class="form-row">
-            <label class="checkbox-item"><input id="f-featured" type="checkbox" ${site.isFeatured?'checked':''} /> 编辑精选 ⭐</label>
+        </details>
+
+        <details class="card" ${isNew ? '' : 'open'}>
+          <summary class="card-title">详细描述与英文内容</summary>
+          <div class="form-section" style="border-top:none">
+            <div class="form-row">
+              <label class="field-label">详细描述</label>
+              <textarea id="f-desc" class="inp" rows="4">${esc(site.description)}</textarea>
+            </div>
+            <div class="form-row">
+              <label class="field-label">英文简介（EN 模式下替换中文摘要）</label>
+              <input id="f-summary-en" class="inp" value="${esc(site.summaryEn || '')}" />
+            </div>
+            <div class="form-row">
+              <label class="field-label">英文详细描述（EN 模式下替换中文描述）</label>
+              <textarea id="f-desc-en" class="inp" rows="3">${esc(site.descriptionEn || '')}</textarea>
+            </div>
           </div>
-        </fieldset>
+        </details>
+
+        <details class="card" ${isNew ? '' : 'open'}>
+          <summary class="card-title">记录与排序（自动/默认值，一般无需改动）</summary>
+          <div class="form-section" style="border-top:none">
+            <div class="form-row">
+              <label class="field-label">体验日志（每行一条：日期 | 事件，如 2026-08-22 | GPT分组调价到0.02x）</label>
+              <textarea id="f-events" class="inp" rows="3" placeholder="2026-08-22 | 降价活动，Claude 0.01x">${(site.events || []).map(e => `${e.date} | ${e.text}`).join('\n')}</textarea>
+            </div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="field-label">核验日期</label>
+                <input id="f-verified" class="inp" type="date" value="${esc(site.verifiedAt || new Date().toISOString().slice(0,10))}" />
+              </div>
+              <div class="form-row">
+                <label class="field-label">排序（小在前）</label>
+                <input id="f-sort" class="inp" type="number" value="${site.sortOrder ?? 99}" />
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="checkbox-item"><input id="f-featured" type="checkbox" ${site.isFeatured?'checked':''} /> 编辑精选 ⭐</label>
+            </div>
+          </div>
+        </details>
 
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">保存</button>

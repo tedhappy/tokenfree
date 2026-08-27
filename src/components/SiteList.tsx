@@ -572,7 +572,7 @@ export default function SiteList({ initialSites, models }: Props) {
           </table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((site) => {
             const st = statusMap[site.status];
             const live = uptime[site.id];
@@ -584,7 +584,6 @@ export default function SiteList({ initialSites, models }: Props) {
                   : ls.label)
               : st.label[lang];
             const href = goHref(site);
-            const real = realMultiplier(site);
             const inCompare = compare.has(site.id);
             const rank = rankMap.get(site.id);
             const hotCount = hot[site.id] || 0;
@@ -628,8 +627,8 @@ export default function SiteList({ initialSites, models }: Props) {
                 )}
 
                 <div className="flex items-start gap-3 pr-6 mb-2.5">
-                  {isDefaultOrder && rank !== undefined && (
-                    <span className={`shrink-0 self-center w-7 text-center text-xl font-bold font-mono select-none ${rank <= 3 ? 'text-accent' : 'text-text-muted/50'}`}>
+                  {isDefaultOrder && rank !== undefined && rank <= 3 && (
+                    <span className="shrink-0 self-center w-7 text-center text-xl font-bold font-mono select-none text-accent">
                       {rank}
                     </span>
                   )}
@@ -640,7 +639,7 @@ export default function SiteList({ initialSites, models }: Props) {
                         {site.name}
                       </a>
                     </div>
-                    {/* 信任/状态 meta 行：状态 · 延迟 · 网络（API 异常升级为黄色告警块） */}
+                    {/* 状态 meta 行：状态点（延迟/异常入 title 悬浮提示）· 运营时长 */}
                     <div className="flex items-center gap-2 flex-wrap mt-1">
                       <span
                         className={`flex items-center gap-1 text-xs ${live?.up && live.apiUp === false ? 'px-1.5 py-0.5 rounded-md' : ''}`}
@@ -654,19 +653,16 @@ export default function SiteList({ initialSites, models }: Props) {
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
                         {ls ? ls.label : st.label[lang]}
                       </span>
-                      {live?.up && live.latencyMs != null && (
-                        <span className="text-xs font-mono text-text-muted">⚡{live.latencyMs}ms</span>
-                      )}
                       {site.network === 'direct' && <span className="text-xs text-status-stable">{t('direct')}</span>}
                       {site.network === 'proxy' && <span className="text-xs text-status-unstable">{t('proxy')}</span>}
                       {(() => {
                         const op = ageParts(site.domainRegisteredAt);
                         return op ? (
                           <span
-                            className="text-xs text-status-stable/90"
+                            className="text-xs text-text-muted/80"
                             title={lang ? `Domain registered ${site.domainRegisteredAt} (registry record)` : `域名注册于 ${site.domainRegisteredAt}（注册局记录）`}
                           >
-                            🚀 {t('operating')} {ageText(op, lang)}
+                            {t('operating')} {ageText(op, lang)}
                           </span>
                         ) : null;
                       })()}
@@ -680,7 +676,7 @@ export default function SiteList({ initialSites, models }: Props) {
                   {site.multiplier !== null && (
                     <div className="shrink-0 text-right">
                       <span
-                        className="block text-lg font-mono font-bold px-2.5 py-1 rounded-lg"
+                        className="block text-2xl font-mono font-bold leading-none px-2.5 py-1.5 rounded-lg"
                         style={{
                           color: multiplierColor(site.multiplier),
                           backgroundColor: `${multiplierColor(site.multiplier)}1a`,
@@ -689,27 +685,19 @@ export default function SiteList({ initialSites, models }: Props) {
                         {site.multiplier}x
                       </span>
                       <span
-                        className="block text-[11px] font-medium mt-1 px-1 rounded"
-                        style={{
-                          color: multiplierColor(site.multiplier),
-                          backgroundColor: `${multiplierColor(site.multiplier)}14`,
-                        }}
+                        className="block text-[11px] font-medium mt-1"
+                        style={{ color: multiplierColor(site.multiplier) }}
                       >
                         {saveText(site.multiplier, lang)}
                       </span>
-                      {real !== null && (
-                        <span className="block text-xs font-mono mt-1 text-text-muted" title={t('realNote')}>
-                          {lang ? 'real' : '实际'} ≈{real.toFixed(2)}x
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
 
                 {site.bonus ? (
-                  <p className="text-sm text-status-stable/90 mb-1.5">🎁 {lang && site.bonusEn ? site.bonusEn : site.bonus}</p>
+                  <p className="text-sm text-status-stable/90 mb-1.5 truncate">🎁 {lang && site.bonusEn ? site.bonusEn : site.bonus}</p>
                 ) : null}
-                <p className="text-[15px] text-text-secondary leading-relaxed line-clamp-2 mb-3 min-h-[2.5rem]">{summaryOf(site)}</p>
+                <p className="text-sm text-text-secondary leading-relaxed line-clamp-1 mb-3" title={summaryOf(site)}>{summaryOf(site)}</p>
 
                 {site.inviteCode ? (
                   <button
@@ -722,7 +710,7 @@ export default function SiteList({ initialSites, models }: Props) {
 
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1.5 min-w-0">
-                    {site.models.slice(0, 4).map((mid) => {
+                    {site.models.slice(0, 3).map((mid) => {
                       const model = models.find((mm) => mm.id === mid);
                       if (!model) return null;
                       return (
@@ -731,8 +719,8 @@ export default function SiteList({ initialSites, models }: Props) {
                         </span>
                       );
                     })}
-                    {site.models.length > 4 && (
-                      <span className="text-xs px-2 py-0.5 rounded-md bg-bg-tertiary text-text-muted">+{site.models.length - 4}</span>
+                    {site.models.length > 3 && (
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-bg-tertiary text-text-muted">+{site.models.length - 3}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">

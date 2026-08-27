@@ -83,14 +83,6 @@ export async function getAllSites(): Promise<Site[]> {
   return sites;
 }
 
-export function getSiteBySlug(slug: string): Site | undefined {
-  return sites.find((s) => s.id === slug);
-}
-
-export async function getSiteCount(): Promise<number> {
-  return sites.filter((s) => s.status !== 'offline').length;
-}
-
 export function goUrl(site: Site): string {
   const target = site.affUrl || site.url;
   return `/go?url=${encodeURIComponent(target)}&id=${encodeURIComponent(site.id)}`;
@@ -127,9 +119,3 @@ export const TOOLS: Array<{ id: string; name: string }> = [
   { id: 'codex-cli', name: 'Codex CLI' },
   { id: 'cline', name: 'Cline' },
 ];
-
-export const NETWORK_LABEL: Record<Network, string> = {
-  direct: '国内直连',
-  proxy: '需代理',
-  unknown: '',
-};
