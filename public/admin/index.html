@@ -1129,7 +1129,10 @@ async function showSiteForm(site, prefill = null, afterSaveDeleteSub = null, ret
           <div class="aff-section-title">🔗 推广链接（唯一需要人工填写的字段）</div>
           <div class="form-row">
             <label class="field-label">推广链接 affUrl — 设置后跳转用此链接，用于返佣</label>
-            <input id="f-affurl" class="inp" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="f-affurl" class="inp" style="flex:1" placeholder="https://…?aff=你的码" value="${esc(site.affUrl || '')}" />
+              ${site.url ? `<a href="${esc(site.url)}" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm" style="white-space:nowrap" title="打开该站注册页，注册后把带 aff 码的推广链接粘贴到左侧">去注册 ↗</a>` : ''}
+            </div>
           </div>
         </div>
 

@@ -20,6 +20,7 @@ const UPTIME_FILE = path.join(DATA_DIR, 'uptime.json');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'audit.json');
+const SEEN_FILE = path.join(DATA_DIR, 'collect-seen.json');
 
 // ---- 业务数据兜底：运行时三件套缺失时用 .seed.json 生成，避免全新环境报错 ----
 // 服务器/本地已有运行时文件则保持不变，绝不覆盖业务数据
@@ -80,9 +81,11 @@ if (!ADMIN_PASSWORD && process.env.NODE_ENV === 'production') {
 const sessions = new Map();
 const loginAttempts = new Map();
 const submitAttempts = new Map(); // ip -> timestamps[]
+const clickAttempts = new Map(); // ip -> timestamps[]（点击统计防刷）
 const MAX_LOGIN_FAILS = 5;
 const LOCK_MS = 15 * 60 * 1000;
 const SUBMIT_LIMIT_PER_HOUR = 5;
+const CLICK_LIMIT_PER_HOUR = 120; // 单 IP 每小时点击上报上限（正常浏览远低于此值）
 
 function readJson(file, fallback) {
   try {
@@ -97,6 +100,38 @@ function writeJson(file, data) {
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
   fs.renameSync(tmp, file);
 }
+
+// ---- 文件级写锁：同一 JSON 文件的「读-改-写」串行化，防止并发互相覆盖 ----
+// （monitor/collect/enrich/后台 CRUD 并发写同一批文件时，read-modify-write 期间其他请求插入会丢更新）
+const fileLocks = new Map(); // file -> Promise 链尾
+async function withFileLock(file, fn) {
+  const prev = fileLocks.get(file) || Promise.resolve();
+  const task = prev.catch(() => {}).then(fn);
+  fileLocks.set(file, task);
+  try {
+    return await task;
+  } finally {
+    if (fileLocks.get(file) === task) fileLocks.delete(file);
+  }
+}
+
+// ---- 过期 Map 定时清理：防止长期运行内存缓慢增长 ----
+function sweepExpiredMaps() {
+  const now = Date.now();
+  for (const [token, exp] of sessions) if (exp <= now) sessions.delete(token);
+  for (const [ip, r] of loginAttempts) if (r.lockedUntil <= now && r.count === 0) loginAttempts.delete(ip);
+  for (const [ip, list] of submitAttempts) {
+    const recent = list.filter((t) => now - t < 3600_000);
+    if (recent.length) submitAttempts.set(ip, recent);
+    else submitAttempts.delete(ip);
+  }
+  for (const [ip, list] of clickAttempts) {
+    const recent = list.filter((t) => now - t < 3600_000);
+    if (recent.length) clickAttempts.set(ip, recent);
+    else clickAttempts.delete(ip);
+  }
+}
+setInterval(() => sweepExpiredMaps(), 60 * 60 * 1000).unref();
 
 // ---- 操作审计日志（记录管理员关键操作，支持追溯）----
 function logAudit(action, target, detail = '') {
@@ -334,39 +369,70 @@ app.post('/api/sites', async (c) => {
   if (!site.name || typeof site.name !== 'string') {
     return c.json({ error: 'name 必填' }, 400);
   }
-  const sites = readJson(SITES_FILE, []);
-  site.id = site.id || crypto.randomUUID().slice(0, 8);
-  site.createdAt = site.createdAt || new Date().toISOString().slice(0, 10);
-  site.updatedAt = new Date().toISOString().slice(0, 10);
-  sites.push(site);
-  writeJson(SITES_FILE, sites);
-  logAudit('新增站点', site.name, `id=${site.id}`);
+  let saved = false;
+  try {
+    await withFileLock(SITES_FILE, () => {
+      const sites = readJson(SITES_FILE, []);
+      site.id = site.id || crypto.randomUUID().slice(0, 8);
+      site.createdAt = site.createdAt || new Date().toISOString().slice(0, 10);
+      site.updatedAt = new Date().toISOString().slice(0, 10);
+      sites.push(site);
+      writeJson(SITES_FILE, sites);
+      logAudit('新增站点', site.name, `id=${site.id}`);
+      saved = true;
+    });
+  } catch (e) {
+    console.error('[api] 新增站点写盘失败 name=' + site.name + ':', String(e.message || e));
+    return c.json({ error: '保存失败，请稍后重试' }, 500);
+  }
+  if (!saved) return c.json({ error: '保存失败' }, 500);
   return c.json(site, 201);
 });
 
 app.put('/api/sites/:id', async (c) => {
   const id = c.req.param('id');
   const updated = await c.req.json();
-  const sites = readJson(SITES_FILE, []);
-  const idx = sites.findIndex((s) => s.id === id);
-  if (idx === -1) return c.json({ error: '站点不存在' }, 404);
-  updated.id = id;
-  updated.updatedAt = new Date().toISOString().slice(0, 10);
-  sites[idx] = { ...sites[idx], ...updated };
-  writeJson(SITES_FILE, sites);
-  logAudit('更新站点', sites[idx].name, `id=${id}`);
-  return c.json(sites[idx]);
+  let saved = null;
+  try {
+    await withFileLock(SITES_FILE, () => {
+      const sites = readJson(SITES_FILE, []);
+      const idx = sites.findIndex((s) => s.id === id);
+      if (idx === -1) return;
+      updated.id = id;
+      updated.updatedAt = new Date().toISOString().slice(0, 10);
+      sites[idx] = { ...sites[idx], ...updated };
+      writeJson(SITES_FILE, sites);
+      logAudit('更新站点', sites[idx].name, `id=${id}`);
+      saved = sites[idx];
+    });
+  } catch (e) {
+    console.error('[api] 更新站点写盘失败 id=' + id + ':', String(e.message || e));
+    return c.json({ error: '保存失败，请稍后重试' }, 500);
+  }
+  if (!saved) return c.json({ error: '站点不存在' }, 404);
+  return c.json(saved);
 });
 
-app.delete('/api/sites/:id', (c) => {
+app.delete('/api/sites/:id', async (c) => {
   const id = c.req.param('id');
-  let sites = readJson(SITES_FILE, []);
-  const target = sites.find((s) => s.id === id);
-  const before = sites.length;
-  sites = sites.filter((s) => s.id !== id);
-  if (sites.length === before) return c.json({ error: '站点不存在' }, 404);
-  writeJson(SITES_FILE, sites);
-  logAudit('删除站点', target?.name || id, `id=${id}`);
+  let target = null;
+  let ok = false;
+  try {
+    ok = await withFileLock(SITES_FILE, () => {
+      let sites = readJson(SITES_FILE, []);
+      target = sites.find((s) => s.id === id);
+      const before = sites.length;
+      sites = sites.filter((s) => s.id !== id);
+      if (sites.length === before) return false;
+      writeJson(SITES_FILE, sites);
+      logAudit('删除站点', target?.name || id, `id=${id}`);
+      return true;
+    });
+  } catch (e) {
+    console.error('[api] 删除站点写盘失败 id=' + id + ':', String(e.message || e));
+    return c.json({ error: '删除失败，请稍后重试' }, 500);
+  }
+  if (!ok) return c.json({ error: '站点不存在' }, 404);
   return c.json({ ok: true });
 });
 
@@ -382,15 +448,27 @@ app.put('/api/models', async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- 点击统计（公开）----
+// ---- 点击统计（公开，带 IP 限频防刷）----
 app.post('/api/click', async (c) => {
+  const ip = clientIp(c);
+  const now = Date.now();
+  const list = (clickAttempts.get(ip) || []).filter((t) => now - t < 3600_000);
+  if (list.length >= CLICK_LIMIT_PER_HOUR) {
+    return c.json({ error: 'too many' }, 429);
+  }
+  list.push(now);
+  clickAttempts.set(ip, list);
+
   const { siteId } = await c.req.json().catch(() => ({}));
   if (typeof siteId !== 'string' || siteId.length > 64) {
     return c.json({ error: 'invalid' }, 400);
   }
-  const clicks = readJson(CLICKS_FILE, {});
-  clicks[siteId] = (clicks[siteId] || 0) + 1;
-  writeJson(CLICKS_FILE, clicks);
+  // 读-改-写走文件锁，避免并发点击互相覆盖丢计数
+  await withFileLock(CLICKS_FILE, () => {
+    const clicks = readJson(CLICKS_FILE, {});
+    clicks[siteId] = (clicks[siteId] || 0) + 1;
+    writeJson(CLICKS_FILE, clicks);
+  });
   return c.json({ ok: true });
 });
 
@@ -406,9 +484,11 @@ app.get('/go', async (c) => {
   if (!/^https?:\/\//i.test(target)) return c.redirect('/', 302);
   if (siteId && siteId.length <= 64) {
     try {
-      const clicks = readJson(CLICKS_FILE, {});
-      clicks[siteId] = (clicks[siteId] || 0) + 1;
-      writeJson(CLICKS_FILE, clicks);
+      await withFileLock(CLICKS_FILE, () => {
+        const clicks = readJson(CLICKS_FILE, {});
+        clicks[siteId] = (clicks[siteId] || 0) + 1;
+        writeJson(CLICKS_FILE, clicks);
+      });
     } catch {}
   }
   return c.redirect(target, 302);
@@ -468,20 +548,25 @@ app.post('/api/submit', async (c) => {
   if (!/^https?:\/\/.{4,}/i.test(url)) return c.json({ error: '请填写正确的站点 URL' }, 400);
   if (!summary || summary.length > 200) return c.json({ error: '请填写简介（200字内）' }, 400);
 
-  const submissions = readJson(SUBMISSIONS_FILE, []);
-  if (submissions.some((s) => s.url === url)) {
-    return c.json({ error: '该 URL 已在投稿队列中' }, 409);
-  }
-  submissions.unshift({
-    id: crypto.randomUUID().slice(0, 8),
-    name,
-    url,
-    summary,
-    contact,
-    ip,
-    submittedAt: new Date().toISOString(),
+  let duplicate = false;
+  await withFileLock(SUBMISSIONS_FILE, () => {
+    const submissions = readJson(SUBMISSIONS_FILE, []);
+    if (submissions.some((s) => s.url === url)) {
+      duplicate = true;
+      return;
+    }
+    submissions.unshift({
+      id: crypto.randomUUID().slice(0, 8),
+      name,
+      url,
+      summary,
+      contact,
+      ip,
+      submittedAt: new Date().toISOString(),
+    });
+    writeJson(SUBMISSIONS_FILE, submissions.slice(0, 200));
   });
-  writeJson(SUBMISSIONS_FILE, submissions.slice(0, 200));
+  if (duplicate) return c.json({ error: '该 URL 已在投稿队列中' }, 409);
   return c.json({ ok: true });
 });
 
@@ -505,34 +590,51 @@ function validateSubmissionFields(body, subs, excludeId = null) {
 app.put('/api/submissions/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
-  const subs = readJson(SUBMISSIONS_FILE, []);
-  const idx = subs.findIndex((s) => s.id === id);
-  if (idx < 0) return c.json({ error: '不存在' }, 404);
-  const err = validateSubmissionFields(body, subs, id);
-  if (err) return c.json({ error: err }, 400);
-  const prev = subs[idx];
-  subs[idx] = {
-    ...prev,
-    name: String(body.name || '').trim(),
-    url: String(body.url || '').trim(),
-    summary: String(body.summary || '').trim(),
-    contact: String(body.contact || '').trim().slice(0, 100),
-  };
-  writeJson(SUBMISSIONS_FILE, subs);
-  logAudit('编辑投稿', prev.name, `id=${id}`);
-  return c.json({ ok: true, submission: subs[idx] });
+  let saved = null;
+  let err = null;
+  await withFileLock(SUBMISSIONS_FILE, () => {
+    const subs = readJson(SUBMISSIONS_FILE, []);
+    const idx = subs.findIndex((s) => s.id === id);
+    if (idx < 0) {
+      err = '不存在';
+      return;
+    }
+    const fieldErr = validateSubmissionFields(body, subs, id);
+    if (fieldErr) {
+      err = fieldErr;
+      return;
+    }
+    const prev = subs[idx];
+    subs[idx] = {
+      ...prev,
+      name: String(body.name || '').trim(),
+      url: String(body.url || '').trim(),
+      summary: String(body.summary || '').trim(),
+      contact: String(body.contact || '').trim().slice(0, 100),
+    };
+    writeJson(SUBMISSIONS_FILE, subs);
+    logAudit('编辑投稿', prev.name, `id=${id}`);
+    saved = subs[idx];
+  });
+  if (err) return c.json({ error: err }, err === '不存在' ? 404 : 400);
+  return c.json({ ok: true, submission: saved });
 });
 
-app.delete('/api/submissions/:id', (c) => {
+app.delete('/api/submissions/:id', async (c) => {
   const id = c.req.param('id');
   const reason = c.req.query('reason');
-  let subs = readJson(SUBMISSIONS_FILE, []);
-  const target = subs.find((s) => s.id === id);
-  const before = subs.length;
-  subs = subs.filter((s) => s.id !== id);
-  if (subs.length === before) return c.json({ error: '不存在' }, 404);
-  writeJson(SUBMISSIONS_FILE, subs);
-  logAudit(reason === 'approved' ? '收录投稿' : '丢弃投稿', target?.name || id, `id=${id}`);
+  let ok = false;
+  await withFileLock(SUBMISSIONS_FILE, () => {
+    let subs = readJson(SUBMISSIONS_FILE, []);
+    const target = subs.find((s) => s.id === id);
+    const before = subs.length;
+    subs = subs.filter((s) => s.id !== id);
+    if (subs.length === before) return;
+    writeJson(SUBMISSIONS_FILE, subs);
+    logAudit(reason === 'approved' ? '收录投稿' : '丢弃投稿', target?.name || id, `id=${id}`);
+    ok = true;
+  });
+  if (!ok) return c.json({ error: '不存在' }, 404);
   return c.json({ ok: true });
 });
 
@@ -569,8 +671,16 @@ let building = false;
 
 function runBuild() {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm run build', { cwd: ROOT, stdio: 'ignore', shell: true });
+    const child = spawn('npm run build', { cwd: ROOT, stdio: 'ignore', shell: true, detached: process.platform !== 'win32' });
     const timer = setTimeout(() => {
+      // 超时强杀：shell 包裹下 npm 会派生孙进程，需杀整个进程组，避免构建僵尸进程残留
+      try {
+        if (process.platform === 'win32') {
+          spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+        } else {
+          process.kill(-child.pid, 'SIGKILL');
+        }
+      } catch {}
       child.kill();
       reject(new Error('构建超时（120s）'));
     }, 120_000);
@@ -634,6 +744,8 @@ app.get('/api/export', (c) => {
     clicks: readJson(CLICKS_FILE, {}),
     uptime: readJson(UPTIME_FILE, {}),
     submissions: readJson(SUBMISSIONS_FILE, []),
+    // 采集去重记录：缺失会导致换服务器后采集器把已拒绝的站重新投稿
+    collectSeen: readJson(SEEN_FILE, {}),
   });
 });
 

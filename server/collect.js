@@ -87,7 +87,8 @@ function tagsFromModelNames(names) {
 }
 
 // ---------- 数据源适配器 ----------
-// 每个适配器返回统一结构：{ name, url, tags[], lines[], disabled, sourceId }
+// 每个适配器返回统一结构：{ name, url, tags[], lines[], offer, pricing, disabled, sourceId }
+// 仅保留经过真实可用性验证的数据源（2026-08 验证：其余候选源不可达/内容无关，已移除）
 const SOURCES = [
   {
     id: 'freetokennav',
@@ -120,6 +121,8 @@ const SOURCES = [
           url: clean,
           tags: [...body.matchAll(/<span class="tag[^"]*">([^<]+)<\/span>/g)].map((t) => decodeEntities(t[1].trim())),
           lines: [...body.matchAll(/<p>([^<]+)<\/p>/g)].map((p) => decodeEntities(p[1].trim())),
+          offer: '',
+          pricing: '',
           disabled: cls.includes('disabled-card'),
           sourceId: 'freetokennav',
         });
@@ -128,124 +131,99 @@ const SOURCES = [
     },
   },
   {
-    id: 'openrouter-nav',
-    label: 'OpenRouter类导航',
-    url: 'https://api.openrouter.ai/api/v1/models',
+    id: 'zjp-ai',
+    label: 'AI路标(freetoken.zjp-ai.online)',
+    url: 'https://freetoken.zjp-ai.online/',
     async fetch() {
-      // 从 OpenRouter 公开 API 获取模型列表，提取关联的中转站
+      // Vue SPA：站点数据内嵌在 JS bundle 的站点数组中（name/offer/pricing/affiliateUrl 等）
       const res = await fetch(this.url, {
         signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'TokenFree-Collector/1.0' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const bundle = (html.match(/<script[^>]*src="(\/assets\/[^"]+\.js)"/) || [])[1];
+      if (!bundle) throw new Error('未找到 bundle 路径');
+      const bRes = await fetch(this.url.replace(/\/$/, '') + bundle, {
+        signal: AbortSignal.timeout(20000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
+      });
+      if (!bRes.ok) throw new Error(`bundle HTTP ${bRes.status}`);
+      const js = await bRes.text();
+      // 站点数组特征：[{id:`xx`,name:`xx`,...,affiliateUrl:`https://...`},...]
+      const arrStart = js.indexOf('affiliateUrl');
+      if (arrStart < 0) throw new Error('bundle 中未找到站点数据');
+      const items = [];
+      // 逐个站点对象解析：从 {id:` 开始到 affiliateUrl:`...`,...} 结束的块
+      for (const m of js.matchAll(/\{id:`([^`]+)`,name:`([^`]+)`[\s\S]{0,600}?affiliateUrl:`(https?:\/\/[^`]+)`/g)) {
+        const blockStart = m.index;
+        const blockEnd = m.index + m[0].length;
+        const block = js.slice(blockStart, blockEnd);
+        const name = decodeEntities(m[2].trim());
+        // 剥离 aff 返佣参数，仅保留来源地址
+        let url = '';
+        try { url = new URL(m[3]).origin; } catch { continue; }
+        if (!/^https?:\/\//i.test(url)) continue;
+        const offer = (block.match(/offer:`([^`]*)`/) || [])[1] || '';
+        const pricing = (block.match(/pricing:`([^`]*)`/) || [])[1] || '';
+        const models = [...block.matchAll(/models:\[([^\]]*)\]/g)].flatMap((x) => [...x[1].matchAll(/`([^`]+)`/g)].map((y) => y[1]));
+        const tags = [...block.matchAll(/tags:\[([^\]]*)\]/g)].flatMap((x) => [...x[1].matchAll(/`([^`]+)`/g)].map((y) => y[1]));
+        const description = (block.match(/description:`([^`]*)`/) || [])[1] || '';
+        items.push({
+          name,
+          url,
+          tags: tags.map((t) => decodeEntities(t)),
+          lines: [description, offer, pricing].filter(Boolean).map((s) => decodeEntities(s)),
+          offer: decodeEntities(offer),
+          pricing: decodeEntities(pricing),
+          modelsHint: models,
+          disabled: false,
+          sourceId: 'zjp-ai',
+        });
+      }
+      return items;
+    },
+  },
+  {
+    id: 'zhaisir',
+    label: '小王中转导航(freetoken.zhaisir.com)',
+    url: 'https://freetoken.zhaisir.com/',
+    async fetch() {
+      // 站点数据来自公开 JSON 接口 /api/stations（含倍率组/签到/推广链接）
+      const res = await fetch('https://freetoken.zhaisir.com/api/stations', {
+        signal: AbortSignal.timeout(15000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const j = await res.json().catch(() => null);
-      if (!j?.data) return [];
-      // OpenRouter 本身不是导航站，但可以作为模型名参考源
-      return [];
-    },
-  },
-  {
-    id: 'ai-api-nav',
-    label: 'AI-API导航站',
-    url: 'https://api.v1relay.com/',
-    async fetch() {
-      const res = await fetch(this.url, {
-        signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
+      if (!j || !Array.isArray(j.stations)) throw new Error('stations 数据结构异常');
       const items = [];
-      // 通用卡片提取：匹配常见导航站结构
-      // 模式1：<a href="https://xxx">站名</a> + 简介
-      for (const m of html.matchAll(/<a[^>]*href="(https?:\/\/[^"]+)"[^>]*>([^<]{2,40})<\/a>/gi)) {
-        const url = m[1];
-        const name = decodeEntities(m[2].trim());
-        const host = hostOf(url);
-        if (!host || host.includes('github.com') || host.includes('google.com')) continue;
-        items.push({ name, url: url.split('?')[0], tags: [], lines: [], disabled: false, sourceId: 'ai-api-nav' });
-      }
-      return items;
-    },
-  },
-  {
-    id: 'chat-api-hub',
-    label: 'ChatAPI聚合站',
-    url: 'https://chatapihub.com/',
-    async fetch() {
-      const res = await fetch(this.url, {
-        signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const items = [];
-      // 匹配常见导航站的站点卡片
-      const cardRegex = /<(?:div|section|article)[^>]*class="[^"]*(?:card|site|item)[^"]*"[\s\S]*?<\/(?:div|section|article)>/gi;
-      for (const card of html.matchAll(cardRegex)) {
-        const body = card[0];
-        const nameM = body.match(/<(?:h[2-6]|strong|b)[^>]*>([^<]{2,40})<\//);
-        const linkM = body.match(/href="(https?:\/\/[^"]+)"/);
-        if (!nameM || !linkM) continue;
-        const name = decodeEntities(nameM[1].trim());
-        const url = linkM[1].split('?')[0];
-        const tags = [...body.matchAll(/<(?:span|tag)[^>]*>([^<]{1,20})<\//g)].map(t => decodeEntities(t[1].trim()));
-        items.push({ name, url, tags, lines: [], disabled: false, sourceId: 'chat-api-hub' });
-      }
-      return items;
-    },
-  },
-  {
-    id: 'relay-list',
-    label: 'RelayList导航',
-    url: 'https://relaylist.com/',
-    async fetch() {
-      const res = await fetch(this.url, {
-        signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const items = [];
-      // JSON-LD 或内嵌数据
-      for (const m of html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
-        try {
-          const j = JSON.parse(m[1]);
-          const list = Array.isArray(j) ? j : j.itemListElement || [];
-          for (const item of list) {
-            const url = item.url || item.item?.url;
-            const name = item.name || item.item?.name;
-            if (url && name) items.push({ name, url: url.split('?')[0], tags: [], lines: [], disabled: false, sourceId: 'relay-list' });
-          }
-        } catch {}
-      }
-      // 备选：通用链接提取
-      if (items.length === 0) {
-        for (const m of html.matchAll(/href="(https?:\/\/(?!.*(?:github|google|twitter|telegram)\.com)[^"]+)"[^>]*>\s*([^<]{2,30})\s*<\//gi)) {
-          items.push({ name: decodeEntities(m[2].trim()), url: m[1].split('?')[0], tags: [], lines: [], disabled: false, sourceId: 'relay-list' });
+      for (const st of j.stations) {
+        if (!st.name || !st.affiliateUrl) continue;
+        let url = '';
+        try { url = new URL(st.affiliateUrl).origin; } catch { continue; }
+        // rateGroups: [{models:[...], multiplierLabel:'0.4'}] → 展示为行（倍率放模型组后面，避免 "0.4GPTx" 错位）
+        const lines = [];
+        const pricingParts = [];
+        for (const g of st.rateGroups || []) {
+          const label = `${(g.models || []).join('/')}: ${g.multiplierLabel}x`;
+          lines.push(label);
+          pricingParts.push(label);
         }
-      }
-      return items;
-    },
-  },
-  {
-    id: 'free-api-nav',
-    label: 'FreeAPI导航',
-    url: 'https://freeapi.dev/',
-    async fetch() {
-      const res = await fetch(this.url, {
-        signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) TokenFree-Collector/1.0' },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const items = [];
-      // 提取所有外链到 API 中转站
-      for (const m of html.matchAll(/href="(https?:\/\/(?!.*(?:github|google|twitter|telegram|discord|npmjs)\.com)[^"]*\/(?:register|signup|login)?)"[^>]*>\s*([^<]{2,40})\s*<\//gi)) {
-        const url = m[1].split('?')[0];
-        const name = decodeEntities(m[2].trim());
-        if (!name || name.length < 2) continue;
-        items.push({ name, url, tags: [], lines: [], disabled: false, sourceId: 'free-api-nav' });
+        if (st.checkInStatus === 'supported' && st.checkInNote) {
+          lines.push(`支持签到：${st.checkInNote}`);
+        }
+        if (st.description) lines.unshift(decodeEntities(st.description));
+        items.push({
+          name: decodeEntities(st.name.trim()),
+          url,
+          tags: (st.tags || []).map((t) => decodeEntities(String(t))),
+          lines,
+          offer: st.checkInStatus === 'supported' ? decodeEntities(st.checkInNote || '') : '',
+          pricing: pricingParts.join('；'),
+          disabled: st.published === false,
+          sourceId: 'zhaisir',
+        });
       }
       return items;
     },
@@ -460,11 +438,11 @@ async function doRunCollect({ maxNew }) {
         summary,
         // 自动探测的字段（审核时自动填充）
         multiplier: deep.minRatio ?? null,
-        models: deep.tags || [],
+        models: deep.tags?.length ? deep.tags : (it.modelsHint || []),
         tags: it.tags || [],
         tools: deep.tools || [],
         network: deep.network || 'unknown',
-        bonus: deep.bonus || '',
+        bonus: it.offer || deep.bonus || '',
         apiBase: `${new URL(it.url).origin}/v1`,
         // 探测元信息
         contact: `来源: ${it.sourceId || 'unknown'} · 延迟${it.latencyMs}ms · 模型${deep.modelsDetected || 0}个${deep.freeGroup ? ' · 含免费分组' : ''}`,

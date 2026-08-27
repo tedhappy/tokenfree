@@ -101,6 +101,7 @@ async function lookupDomainRegistration(host) {
       if (reg?.eventDate) return reg.eventDate.slice(0, 10);
     } catch {}
   }
+  console.warn(`[enrich] RDAP 域名注册日查询失败 domain=${domain}`);
   return null;
 }
 
@@ -166,7 +167,9 @@ async function enrichSite(site) {
         if (positives.length) info.minRatio = Math.min(...positives);
         info.freeGroup = vals.some((v) => v === 0);
       }
-    } catch {}
+    } catch (e) {
+      console.warn(`[enrich] pricing JSON 解析失败 site=${site.id} url=${origin}/api/pricing:`, String(e.message || e));
+    }
   }
   info.modelsDetected = modelNames.length;
 
@@ -177,7 +180,9 @@ async function enrichSite(site) {
       try {
         const j = JSON.parse(notice.text);
         noticeText = String(j.content ?? j.data ?? j.notice ?? '').trim();
-      } catch {}
+      } catch (e) {
+        console.warn(`[enrich] notice JSON 解析失败 site=${site.id} url=${origin}/api/notice:`, String(e.message || e));
+      }
     } else if (!/^\s*</.test(notice.text)) {
       noticeText = notice.text.trim();
     }

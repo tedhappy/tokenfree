@@ -78,7 +78,7 @@ const UI = {
   empty: ['没有找到匹配的站点', 'No matching sites'],
   emptyCta: ['清空筛选条件', 'Clear filters'],
   pending: ['链接待补充', 'URL pending'],
-  visit: ['访问 →', 'Visit →'],
+  visit: ['前往注册', 'Sign up →'],
   direct: ['直连', 'Direct'],
   proxy: ['代理', 'Proxy'],
   online: ['在线', 'up'],
@@ -121,14 +121,6 @@ const UI = {
 // 快捷标签预设：优先展示高频筛选维度
 const PRESET_TAGS = ['签到', '邀请', '生图', '稳定'];
 
-// 站点头像：按名称哈希取色，首字母做徽章
-const AVATAR_COLORS = ['#7c5cfc', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ec4899', '#8b5cf6'];
-function avatarColor(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-
 function multiplierColor(m: number | null): string {
   if (m === null) return 'var(--c-t2)';
   if (m <= 0.1) return '#22c55e';
@@ -166,20 +158,6 @@ function liveState(live: UptimeEntry | undefined, lang: 0 | 1): { color: string;
   if (!live.up) return { color: '#ef4444', label: UI.unreachable[lang] };
   if (live.apiUp === false) return { color: '#f59e0b', label: UI.apiDown[lang] };
   return { color: '#22c55e', label: UI.online[lang] };
-}
-
-function Avatar({ name }: { name: string }) {
-  const c = avatarColor(name);
-  const initial = name.trim().charAt(0).toUpperCase();
-  return (
-    <span
-      className="w-10 h-10 text-base rounded-xl shrink-0 flex items-center justify-center font-semibold select-none"
-      style={{ backgroundColor: `${c}24`, color: c }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
-  );
 }
 
 export default function SiteList({ initialSites, models }: Props) {
@@ -371,17 +349,6 @@ export default function SiteList({ initialSites, models }: Props) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => setFavOnly(!favOnly)}
-              className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                favOnly
-                  ? 'bg-accent-muted border-accent/40 text-accent'
-                  : 'border-border text-text-secondary hover:text-text-primary'
-              }`}
-              title={t('fav')}
-            >
-              ★ {t('fav')}{favs.size > 0 ? ` (${favs.size})` : ''}
-            </button>
-            <button
               onClick={() => setShowFilters(!showFilters)}
               className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
                 showFilters || activeFilterCount > 0
@@ -572,7 +539,7 @@ export default function SiteList({ initialSites, models }: Props) {
           </table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-16">
           {filtered.map((site) => {
             const st = statusMap[site.status];
             const live = uptime[site.id];
@@ -595,15 +562,16 @@ export default function SiteList({ initialSites, models }: Props) {
                   if ((e.target as HTMLElement).closest('a, button')) return;
                   location.href = `/site/${site.id}`;
                 }}
-                className={`group relative p-5 pt-6 rounded-2xl bg-bg-secondary border cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 ${
+                className={`group relative flex flex-col p-5 rounded-2xl bg-bg-secondary border cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 ${
                   site.isFeatured
-                    ? 'border-accent/30 hover:border-accent/50 bg-gradient-to-br from-accent/[0.06] to-transparent'
+                    ? 'border-accent/40 hover:border-accent/60 bg-gradient-to-br from-accent/[0.1] to-transparent'
                     : 'border-border hover:border-accent/30'
                 }`}
               >
+                {/* 收藏：右上悬浮，不占布局 */}
                 <button
                   onClick={() => toggleFav(site.id)}
-                  className={`absolute top-3.5 right-3.5 p-1.5 -m-1.5 text-lg leading-none transition-all ${
+                  className={`absolute top-3 right-3 z-10 p-1.5 -m-1.5 text-lg leading-none transition-all ${
                     favs.has(site.id)
                       ? 'text-accent opacity-100'
                       // 移动端无 hover：常显半透明；桌面端保持悬停浮现
@@ -614,119 +582,135 @@ export default function SiteList({ initialSites, models }: Props) {
                   {favs.has(site.id) ? '★' : '☆'}
                 </button>
 
-                {/* 获奖理由缎带 / 精选标记 */}
-                {site.award && (
-                  <span className="absolute top-0 left-5 -translate-y-1/2 text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-white shadow-sm">
-                    🏆 {lang && site.awardEn ? site.awardEn : site.award}
-                  </span>
-                )}
-                {!site.award && site.isFeatured && (
-                  <span className="absolute top-0 left-5 -translate-y-1/2 text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-white shadow-sm">
-                    ⭐ {lang ? 'Featured' : '精选'}
-                  </span>
-                )}
-
-                <div className="flex items-start gap-3 pr-6 mb-2.5">
-                  {isDefaultOrder && rank !== undefined && rank <= 3 && (
-                    <span className="shrink-0 self-center w-7 text-center text-xl font-bold font-mono select-none text-accent">
-                      {rank}
-                    </span>
-                  )}
-                  <Avatar name={site.name} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <a href={`/site/${site.id}`} className="font-semibold text-text-primary truncate hover:text-accent transition-colors">
+                {/* 头部：⭐徽章 + 名称 + 状态点（悬浮看延迟/异常详情），状态点紧凑并入名称行 */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      {site.isFeatured && (
+                        <span className="shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-400/20 flex items-center justify-center text-[11px]" title={lang ? 'Featured' : '编辑精选'}>⭐</span>
+                      )}
+                      <a href={`/site/${site.id}`} className="font-semibold text-lg text-text-primary truncate hover:text-accent transition-colors">
                         {site.name}
                       </a>
-                    </div>
-                    {/* 状态 meta 行：状态点（延迟/异常入 title 悬浮提示）· 运营时长 */}
-                    <div className="flex items-center gap-2 flex-wrap mt-1">
+                      {site.award && (
+                        <span className="shrink-0 text-sm" title={lang && site.awardEn ? site.awardEn : site.award}>🏆</span>
+                      )}
                       <span
-                        className={`flex items-center gap-1 text-xs ${live?.up && live.apiUp === false ? 'px-1.5 py-0.5 rounded-md' : ''}`}
+                        className={`shrink-0 flex items-center text-xs ${live?.up && live.apiUp === false ? 'px-1.5 py-0.5 rounded-md' : ''}`}
                         style={
                           live?.up && live.apiUp === false
                             ? { color: dotColor, backgroundColor: `${dotColor}1f` }
                             : { color: dotColor }
                         }
-                        title={dotTitle}
+                        title={[
+                          dotTitle,
+                          live?.up && live.latencyMs != null ? `${lang ? 'latency' : '延迟'} ${live.latencyMs}ms` : '',
+                          (() => {
+                            const op = ageParts(site.domainRegisteredAt);
+                            return op ? `${t('operating')} ${ageText(op, lang)}` : '';
+                          })(),
+                          isDefaultOrder && rank !== undefined && rank <= 3 ? `${lang ? 'Rank' : '榜单'} #${rank}` : '',
+                          sortBy === 'hot' && hotCount > 0 ? `${hotCount} ${t('hot')}` : '',
+                          site.network === 'direct' ? t('direct') : site.network === 'proxy' ? t('proxy') : '',
+                        ].filter(Boolean).join(' · ')}
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
-                        {ls ? ls.label : st.label[lang]}
                       </span>
-                      {site.network === 'direct' && <span className="text-xs text-status-stable">{t('direct')}</span>}
-                      {site.network === 'proxy' && <span className="text-xs text-status-unstable">{t('proxy')}</span>}
-                      {(() => {
-                        const op = ageParts(site.domainRegisteredAt);
-                        return op ? (
-                          <span
-                            className="text-xs text-text-muted/80"
-                            title={lang ? `Domain registered ${site.domainRegisteredAt} (registry record)` : `域名注册于 ${site.domainRegisteredAt}（注册局记录）`}
-                          >
-                            {t('operating')} {ageText(op, lang)}
-                          </span>
-                        ) : null;
-                      })()}
-                      {sortBy === 'hot' && hotCount > 0 && (
-                        <span className="text-xs text-text-muted" title={lang ? 'total visits' : '累计访问'}>
-                          🔥 {hotCount}
-                        </span>
-                      )}
                     </div>
                   </div>
                   {site.multiplier !== null && (
-                    <div className="shrink-0 text-right">
-                      <span
-                        className="block text-2xl font-mono font-bold leading-none px-2.5 py-1.5 rounded-lg"
-                        style={{
-                          color: multiplierColor(site.multiplier),
-                          backgroundColor: `${multiplierColor(site.multiplier)}1a`,
-                        }}
-                      >
-                        {site.multiplier}x
-                      </span>
-                      <span
-                        className="block text-[11px] font-medium mt-1"
-                        style={{ color: multiplierColor(site.multiplier) }}
-                      >
-                        {saveText(site.multiplier, lang)}
-                      </span>
-                    </div>
+                    <span
+                      className="shrink-0 text-3xl font-mono font-bold leading-none px-3 py-2 rounded-xl"
+                      style={{
+                        color: multiplierColor(site.multiplier),
+                        backgroundColor: `${multiplierColor(site.multiplier)}14`,
+                      }}
+                      title={saveText(site.multiplier, lang)}
+                    >
+                      {site.multiplier}x
+                    </span>
                   )}
                 </div>
 
-                {site.bonus ? (
-                  <p className="text-sm text-status-stable/90 mb-1.5 truncate">🎁 {lang && site.bonusEn ? site.bonusEn : site.bonus}</p>
-                ) : null}
-                <p className="text-sm text-text-secondary leading-relaxed line-clamp-1 mb-3" title={summaryOf(site)}>{summaryOf(site)}</p>
+                {/* 标签行（独立一行，参考图：名称下方彩色小标签） */}
+                {(site.tags || []).length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+                    {(site.tags || []).slice(0, 3).map((tag) => (
+                      <span key={tag} className="text-xs px-2 py-0.5 rounded-full border border-border text-text-secondary">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
+                {/* 简介：2 行 */}
+                <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mb-3" title={summaryOf(site)}>{summaryOf(site)}</p>
+
+                {/* 支持模型：左竖色条按钮式（参考图样式） */}
+                {site.models.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-text-muted mb-1.5">{lang ? 'Models' : '支持模型'}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {site.models.slice(0, 4).map((mid) => {
+                        const model = models.find((mm) => mm.id === mid);
+                        if (!model) return null;
+                        return (
+                          <span
+                            key={mid}
+                            className="inline-flex items-center text-xs pl-2 pr-2.5 py-1 rounded-md border border-border bg-bg-primary"
+                            style={{ boxShadow: `inset 2px 0 0 ${model.color}` }}
+                          >
+                            {model.name}
+                          </span>
+                        );
+                      })}
+                      {site.models.length > 4 && (
+                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-bg-tertiary text-text-muted">+{site.models.length - 4}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 注册赠送 / 邀请码 */}
+                {site.bonus ? (
+                  <p className="text-sm text-status-stable/90 mb-1 truncate" title={lang && site.bonusEn ? site.bonusEn : site.bonus}>🎁 {lang && site.bonusEn ? site.bonusEn : site.bonus}</p>
+                ) : (
+                  <p className="text-sm text-text-muted mb-1">— {lang ? 'No signup bonus' : '暂无注册赠送'}</p>
+                )}
                 {site.inviteCode ? (
                   <button
                     onClick={() => copyInvite(site)}
-                    className="mb-3 inline-flex items-center gap-1 text-xs font-mono px-2 py-1 rounded border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors"
+                    className="mb-1 self-start inline-flex items-center gap-1 text-xs font-mono px-2 py-1 rounded border border-accent/30 bg-accent-muted/50 text-accent hover:bg-accent-muted transition-colors"
                   >
                     🎫 {site.inviteCode} · {copiedId === site.id ? t('copied') : t('copy')}
                   </button>
                 ) : null}
 
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex flex-wrap gap-1.5 min-w-0">
-                    {site.models.slice(0, 3).map((mid) => {
-                      const model = models.find((mm) => mm.id === mid);
-                      if (!model) return null;
-                      return (
-                        <span key={mid} className="text-xs px-2 py-0.5 rounded-md" style={{ color: model.color, backgroundColor: `${model.color}12` }}>
-                          {model.name}
-                        </span>
-                      );
-                    })}
-                    {site.models.length > 3 && (
-                      <span className="text-xs px-2 py-0.5 rounded-md bg-bg-tertiary text-text-muted">+{site.models.length - 3}</span>
+                {/* 底部：分隔线 + 主次双按钮（参考图布局） */}
+                <div className="mt-auto pt-3 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        className="flex-1 flex items-center justify-between text-sm px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white transition-colors font-medium"
+                      >
+                        <span>{t('visit')}</span>
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <span className="flex-1 text-xs text-text-muted">{t('pending')}</span>
                     )}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                    <a
+                      href={`/site/${site.id}`}
+                      className="shrink-0 text-sm px-4 py-2.5 rounded-xl border border-border text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                    >
+                      {lang ? 'Details' : '详情'}
+                    </a>
                     <button
                       onClick={() => toggleCompare(site.id)}
-                      className={`text-xs px-2.5 py-2 m-[-4px] rounded-lg border transition-colors ${
+                      className={`shrink-0 text-xs px-2.5 py-2.5 rounded-xl border transition-colors ${
                         inCompare
                           ? 'bg-accent text-white border-accent'
                           // 移动端无 hover：常显半透明；桌面端保持悬停浮现
@@ -736,19 +720,8 @@ export default function SiteList({ initialSites, models }: Props) {
                     >
                       ⇄
                     </button>
-                    {href && (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="shrink-0 text-sm px-3.5 py-2 rounded-lg bg-accent-muted text-accent hover:bg-accent hover:text-white transition-colors font-medium"
-                      >
-                        {t('visit')}
-                      </a>
-                    )}
                   </div>
                 </div>
-                {!href && <p className="text-xs text-text-muted mt-2">{t('pending')}</p>}
               </div>
             );
           })}
