@@ -282,11 +282,11 @@ async function showSettings() {
         <summary class="card-title accordion-summary">社群</summary>
         <div class="form-grid">
           <div class="form-row">
-            <label class="field-label">QQ 群链接（粘贴完整链接，或只填 k= 参数 / q/ 短码）</label>
+            <label class="field-label">QQ 群链接</label>
             <input id="cfg-qq" class="inp" value="${esc(cfg.qq || '')}" placeholder="https://qm.qq.com/q/xxxx 或 h7ImuW5uve" />
           </div>
           <div class="form-row">
-            <label class="field-label">QQ 群号（选填，顶部加群弹窗里展示+一键复制）</label>
+            <label class="field-label">QQ 群号</label>
             <input id="cfg-qqnum" class="inp" value="${esc(cfg.qqNumber || '')}" placeholder="如 123456789" />
           </div>
         </div>
@@ -836,7 +836,7 @@ async function showSubmissions(editingId = null) {
             <textarea id="sub-summary" class="inp" rows="2" required maxlength="200">${esc(editing.summary)}</textarea>
           </div>
           <div class="form-row" style="margin-top:14px">
-            <label class="field-label">联系方式 / 备注</label>
+            <label class="field-label">备注</label>
             <input id="sub-contact" class="inp" maxlength="100" value="${esc(editing.contact || '')}" />
           </div>
           <div class="form-actions">
