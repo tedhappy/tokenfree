@@ -5,29 +5,24 @@
 set -e
 cd "$(dirname "$0")"
 
-# ---- [1/4] 拉取代码（业务数据三件套迁移为运行时文件，服务器与 Git 不再冲突）----
+# ---- [1/4] 拉取代码（业务数据三件套已迁移为运行时文件，服务器与 Git 不再冲突）----
 if [ -d .git ]; then
   echo "[1/4] 拉取最新代码..."
   DATA_BAK=$(mktemp -d)
-  # 备份全部运行时数据（含点击/监测/投稿/审计及业务三件套），checkout/pull/reset 前兜底
+  # 备份全部运行时数据（点击/监测/投稿/审计 + 业务三件套），供 pull/reset 前兜底
   cp -a src/data/. "$DATA_BAK/" 2>/dev/null || true
 
-  # 迁移当次：三个文件在服务器仍被追踪且可能被后台改写，需先还原使其与 HEAD 一致，pull 才能通过；
-  # 迁移后（已未追踪）：该 checkout 对未追踪文件无效，2>/dev/null 静默跳过，不影响数据。
-  git checkout -- src/data/sites.json src/data/config.json src/data/models.json 2>/dev/null || true
-
-  if ! git pull --ff-only 2>/dev/null; then
-    echo "  fast-forward 不可用，尝试普通 pull..."
-    if ! git pull; then
-      echo "  pull 仍失败，放弃本地代码改动、以远程分支为准..."
-      git merge --abort 2>/dev/null || true
-      BR=$(git rev-parse --abbrev-ref HEAD)
-      git fetch origin
-      git reset --hard "origin/${BR}"
-    fi
+  # 服务器不应有仓库内本地改动：先 reset --hard 丢弃本地代码差异，再 pull，杜绝"本地修改挡住合并"。
+  # （运行时数据三件套已 gitignore，reset 不会触碰它们；业务数据已备份，此时恢复）
+  git fetch origin --quiet
+  B=$(git rev-parse --abbrev-ref HEAD)
+  git reset --hard "origin/${B}" --quiet
+  if ! git pull --quiet; then
+    echo "  ⚠ pull 失败，请检查网络或远程仓库状态"
+    git pull
   fi
 
-  # 恢复服务器上的业务数据（以服务器为准；pull 后三个文件已未追踪，恢复即还原服务器数据）
+  # 恢复服务器上的业务数据（以服务器为准；pull 后三件套已未追踪，恢复即还原服务器数据）
   cp -a "$DATA_BAK/." src/data/ 2>/dev/null || true
   rm -rf "$DATA_BAK"
   echo "✓ 代码已更新，业务数据已保留"
@@ -40,6 +35,11 @@ if ! command -v node >/dev/null; then
   exit 1
 fi
 echo "✓ Node $(node -v)"
+# Node 版本提示（不阻断）：部分依赖要求 >=20.19.5，明显过旧时提醒升级
+NODE_MAJOR=$(node -v | sed -n 's/^v\([0-9]*\).*/\1/p')
+if [ "$NODE_MAJOR" -lt 20 ] 2>/dev/null; then
+  echo "  ⚠ Node 版本过旧（$(node -v)），部分依赖要求 >=20。建议升级到 Node 22 LTS 后重跑 ./deploy.sh"
+fi
 
 # 2. 密码：优先命令行传入，其次沿用已有 .env
 if [ -n "$ADMIN_PASSWORD" ]; then
@@ -74,6 +74,8 @@ else
 fi
 
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+# 健康检查用本机回环地址 + 默认端口 4321（端口常量与 ecosystem.config.cjs 一致，不依赖未定义的环境变量）
+HEALTH_URL="http://127.0.0.1:4321/api/uptime"
 echo ""
 echo "=========================================="
 echo " 部署完成！"
@@ -82,3 +84,16 @@ echo " 后台: http://${IP:-服务器IP}:4321/admin/"
 echo " 健康检查: http://${IP:-服务器IP}:4321/api/uptime"
 echo " 修改 .env 后重新运行 ./deploy.sh 即可生效"
 echo "=========================================="
+
+# 部署后健康检查：确认服务已就绪，未就绪则醒目告警
+sleep 2
+if command -v curl >/dev/null; then
+  if curl -sf --max-time 5 "$HEALTH_URL" >/dev/null 2>&1; then
+    echo "✓ 健康检查通过：$(curl -s --max-time 5 "$HEALTH_URL" | head -c 80)"
+  else
+    echo "✗ 健康检查失败！请检查服务：pm2 logs tokenfree 或 tail -f tokenfree.log"
+    exit 1
+  fi
+else
+  echo "  （未安装 curl，跳过健康检查）"
+fi
