@@ -1,0 +1,30 @@
+src/pages/site/[slug].astro
+  s_a02f0578bdb8c2::t_f5d1615a6299e4 119-128
+  s_a02f0578bdb8c2::t_4873d0a478796e 19-31
+  s_a02f0578bdb8c2::t_b2dbe670958abd 54,68-99,102-114
+  s_a02f0578bdb8c2::t_2a6b8987e1ab6c 280-291,299,301-302
+  s_a02f0578bdb8c2::t_f7c5f01f3060c9 243,255
+  s_a02f0578bdb8c2::t_15d7dbf96e1da9 364-380
+  s_a02f0578bdb8c2::t_03a312fb506869 183-184,201-233
+  s_a02f0578bdb8c2::t_888e3e272912d1 137-172
+src/components/SiteList.tsx
+  s_a02f0578bdb8c2::t_ad5ca51f58e038 175-176
+src/components/Header.astro
+  s_a02f0578bdb8c2::t_8e6bbe64574e69 91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e1eb2187f6de4e9c01081f58a96a7a9de1222f11",
+  "prompts": {},
+  "sessions": {
+    "s_a02f0578bdb8c2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbf03c517ffeqQHthhIWXtPSD7",
+        "model": "unknown"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
