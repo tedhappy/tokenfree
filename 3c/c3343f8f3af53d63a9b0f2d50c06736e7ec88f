@@ -1,0 +1,33 @@
+src/components/Footer.astro
+  s_a02f0578bdb8c2::t_68078cbc4f5833 21
+src/components/AnnouncementBar.astro
+  s_a02f0578bdb8c2::t_f9d4fa58661766 48
+src/components/Header.astro
+  s_a02f0578bdb8c2::t_0cf382d205f98c 15
+src/components/SiteList.tsx
+  s_a02f0578bdb8c2::t_8a0731487216de 713,722-723
+  s_a02f0578bdb8c2::t_3e64ebd206fb7c 575
+  s_a02f0578bdb8c2::t_a1e994d2c8b7c8 630-631,642,662,665,679,688-689,698,700
+src/pages/index.astro
+  s_a02f0578bdb8c2::t_cdbf5ba6eb5367 24
+src/components/Hero.astro
+  s_a02f0578bdb8c2::t_b1b1c80e59072c 20
+public/admin/index.html
+  s_a02f0578bdb8c2::t_c86ef76a94d181 1094,1128-1129,1131-1132,1134,1136-1164,1166-1174,1176-1177,1180-1181,1184-1205,1207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3cc3343f8f3af53d63a9b0f2d50c06736e7ec88f",
+  "prompts": {},
+  "sessions": {
+    "s_a02f0578bdb8c2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbf03c517ffeqQHthhIWXtPSD7",
+        "model": "unknown"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
