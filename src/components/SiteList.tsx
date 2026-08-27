@@ -86,32 +86,13 @@ const UI = {
   unreachable: ['监测不可达', 'Unreachable'],
   cardView: ['卡片视图', 'Card view'],
   tableView: ['表格视图', 'Table view'],
-  compare: ['对比', 'Compare'],
-  compareBar: ['已选', 'selected'],
-  compareGo: ['开始对比 →', 'Compare →'],
-  compareClear: ['清空', 'Clear'],
-  compareTitle: ['站点对比', 'Compare sites'],
   cName: ['站点', 'Site'],
   cMult: ['标称倍率', 'Multiplier'],
-  cReal: ['实际倍率*', 'Real*'],
-  cStatus: ['状态', 'Status'],
-  cLatency: ['延迟', 'Latency'],
-  cUptime: ['24h 可用率', '24h uptime'],
-  cBonus: ['注册赠送', 'Bonus'],
-  cInvite: ['邀请码', 'Invite code'],
-  cNet: ['网络', 'Network'],
   cModels: ['模型', 'Models'],
-  cAge: ['运营时长', 'Live'],
-  realNote: ['* 实际倍率 = 标称倍率 × 充值汇率 ÷ 7.2（美元参考汇率），折算后真实成本，仅供参考', '* Real = multiplier × top-up rate ÷ 7.2 (ref. USD rate)'],
   copy: ['复制', 'Copy'],
   copied: ['已复制 ✓', 'Copied ✓'],
-  close: ['关闭', 'Close'],
   filter: ['筛选', 'Filter'],
-  months: ['已收录', 'Listed'],
   operating: ['运营', 'live'],
-  monthsUnit: ['个月', 'mo'],
-  dayUnit: ['天', 'd'],
-  yearUnit: ['年', 'yr'],
   hot: ['次访问', 'visits'],
   cSummary: ['简介', 'Summary'],
   cRealShort: ['实际倍率', 'Real'],
@@ -173,8 +154,6 @@ export default function SiteList({ initialSites, models }: Props) {
   const [uptime, setUptime] = useState<Record<string, UptimeEntry>>({});
   const [hot, setHot] = useState<Record<string, number>>({});
   const [favs, setFavs] = useState<Set<string>>(new Set());
-  const [compare, setCompare] = useState<Set<string>>(new Set());
-  const [showCompare, setShowCompare] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [lang, setLang] = useState<0 | 1>(0); // 0=zh 1=en
 
@@ -193,9 +172,8 @@ export default function SiteList({ initialSites, models }: Props) {
     try {
       setFavs(new Set(JSON.parse(localStorage.getItem('tf-favs') || '[]')));
     } catch {}
-    try {
-      setCompare(new Set(JSON.parse(localStorage.getItem('tf-compare') || '[]')));
-    } catch {}
+    // 清理历史遗留的对比数据（对比功能已移除）
+    localStorage.removeItem('tf-compare');
   }, []);
 
   const t = (key: keyof typeof UI) => UI[key][lang];
@@ -206,16 +184,6 @@ export default function SiteList({ initialSites, models }: Props) {
       if (next.has(id)) next.delete(id);
       else next.add(id);
       localStorage.setItem('tf-favs', JSON.stringify([...next]));
-      return next;
-    });
-  };
-
-  const toggleCompare = (id: string) => {
-    setCompare((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else if (next.size < 4) next.add(id); // 最多对比 4 个
-      localStorage.setItem('tf-compare', JSON.stringify([...next]));
       return next;
     });
   };
@@ -302,7 +270,6 @@ export default function SiteList({ initialSites, models }: Props) {
     return list;
   }, [initialSites, query, activeModel, activeTag, favOnly, favs, freeOnly, maxMult, sortBy, hot]);
 
-  const compareSites = initialSites.filter((s) => compare.has(s.id));
   const activeFilterCount =
     (activeModel ? 1 : 0) + (activeTag ? 1 : 0) + (favOnly ? 1 : 0) + (freeOnly ? 1 : 0) + (maxMult !== null ? 1 : 0);
 
@@ -551,7 +518,6 @@ export default function SiteList({ initialSites, models }: Props) {
                   : ls.label)
               : st.label[lang];
             const href = goHref(site);
-            const inCompare = compare.has(site.id);
             const rank = rankMap.get(site.id);
             const hotCount = hot[site.id] || 0;
             return (
@@ -708,75 +674,11 @@ export default function SiteList({ initialSites, models }: Props) {
                     >
                       {lang ? 'Details' : '详情'}
                     </a>
-                    <button
-                      onClick={() => toggleCompare(site.id)}
-                      className={`shrink-0 text-xs px-2.5 py-2.5 rounded-xl border transition-colors ${
-                        inCompare
-                          ? 'bg-accent text-white border-accent'
-                          // 移动端无 hover：常显半透明；桌面端保持悬停浮现
-                          : 'border-border text-text-muted opacity-60 md:opacity-0 md:group-hover:opacity-100 hover:text-accent hover:border-accent/40'
-                      }`}
-                      title={t('compare')}
-                    >
-                      ⇄
-                    </button>
                   </div>
                 </div>
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* 对比浮条 + 对比弹层 */}
-      {compare.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-bg-secondary border border-accent/30 shadow-2xl shadow-black/40">
-          <span className="text-xs text-text-secondary">
-            {t('compareBar')} {compare.size}/4：{compareSites.map((s) => s.name).join('、')}
-          </span>
-          <button onClick={() => setShowCompare(true)} disabled={compare.size < 2} className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            {t('compareGo')}
-          </button>
-          <button onClick={() => { setCompare(new Set()); localStorage.removeItem('tf-compare'); }} className="text-xs text-text-muted hover:text-text-primary">
-            {t('compareClear')}
-          </button>
-        </div>
-      )}
-      {showCompare && compareSites.length >= 2 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowCompare(false)}>
-          <div className="w-full max-w-3xl max-h-[80vh] overflow-auto rounded-2xl bg-bg-secondary border border-border p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text-primary">{t('compareTitle')}</h3>
-              <button onClick={() => setShowCompare(false)} className="text-text-muted hover:text-text-primary text-xl leading-none">{t('close')} ✕</button>
-            </div>
-            <table className="w-full text-sm">
-              <tbody>
-                {(
-                  [
-                    ['cName', (s: SiteItem) => <a key="n" href={`/site/${s.id}`} className="font-semibold text-accent hover:underline">{s.name}</a>],
-                    ['cMult', (s: SiteItem) => <span key="m" className="font-mono font-bold text-base" style={{ color: multiplierColor(s.multiplier) }}>{s.multiplier !== null ? `${s.multiplier}x` : '—'}</span>],
-                    ['cReal', (s: SiteItem) => { const r = realMultiplier(s); return <span key="r" className="font-mono text-base">{r !== null ? `≈${r.toFixed(2)}x` : '—'}</span>; }],
-                    ['cStatus', (s: SiteItem) => { const ls = liveState(uptime[s.id], lang); const c = ls ? ls.color : statusMap[s.status].color; const label = ls ? ls.label : statusMap[s.status].label[lang]; return <span key="s" style={{ color: c }}>● {label}</span>; }],
-                    ['cLatency', (s: SiteItem) => <span key="l" className="font-mono text-base">{uptime[s.id]?.up ? (uptime[s.id].latencyMs != null ? `${uptime[s.id].latencyMs}ms` : '—') : '—'}</span>],
-                    ['cUptime', (s: SiteItem) => <span key="u" className="font-mono text-base">{uptime[s.id]?.uptime24h != null ? `${Math.round(uptime[s.id].uptime24h! * 100)}%` : '—'}</span>],
-                    ['cAge', (s: SiteItem) => { const op = ageParts(s.domainRegisteredAt); return <span key="a" className="font-mono">{op ? ageText(op, lang) : '—'}</span>; }],
-                    ['cBonus', (s: SiteItem) => <span key="b" className="text-status-stable text-xs">{s.bonus || '—'}</span>],
-                    ['cInvite', (s: SiteItem) => (s.inviteCode ? <button key="i" onClick={() => copyInvite(s)} className="font-mono text-xs px-2 py-0.5 rounded border border-accent/30 text-accent hover:bg-accent-muted">{copiedId === s.id ? t('copied') : s.inviteCode}</button> : <span key="i" className="text-text-muted">—</span>)],
-                    ['cNet', (s: SiteItem) => (s.network === 'direct' ? t('direct') : s.network === 'proxy' ? t('proxy') : '—')],
-                    ['cModels', (s: SiteItem) => s.models.map((mid) => models.find((x) => x.id === mid)?.name || mid).join(' / ') || '—'],
-                  ] as Array<[keyof typeof UI, (s: SiteItem) => any]>
-                ).map(([key, render]) => (
-                  <tr key={key} className="border-b border-border last:border-0">
-                    <td className="py-2.5 pr-4 text-xs text-text-muted whitespace-nowrap align-top">{t(key)}</td>
-                    {compareSites.map((s) => (
-                      <td key={s.id} className="py-2.5 px-3 text-text-secondary">{render(s)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="mt-4 text-xs text-text-muted leading-relaxed">{t('realNote')}</p>
-          </div>
         </div>
       )}
     </div>

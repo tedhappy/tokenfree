@@ -16,6 +16,19 @@ const st = { stable: ['稳定', '#22c55e'], unstable: ['不稳定', '#f59e0b'], 
 const host = site.url.replace(/^https?:\/\//, '').split('/')[0];
 const netLabel = site.network === 'direct' ? '直连' : site.network === 'proxy' ? '需代理' : null;
 
+// 倍率派生信息：省 x% 文案 + 实际倍率（充值汇率折算），与首页口径一致
+const USD_CNY = 7.2;
+const savePct = site.multiplier !== null ? Math.round((1 - site.multiplier) * 100) : null;
+const realMult = site.multiplier !== null && site.topupRate && site.topupRate > 0
+  ? (site.multiplier * site.topupRate) / USD_CNY
+  : null;
+// 倍率配色：<=0.1 绿 / <=0.5 黄 / 其余橙（与首页 multiplierColor 一致）
+function multColor(m: number): string {
+  if (m <= 0.1) return '#22c55e';
+  if (m <= 0.5) return '#eab308';
+  return '#f97316';
+}
+
 // 相关站点推荐
 const allSites = await getAllSites();
 const related = allSites
@@ -38,7 +51,7 @@ const related = allSites
       <a href="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors" data-i18n="detail.back">← 返回列表</a>
 
       <div class="mt-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2.5 flex-wrap">
             <h1 class="text-2xl font-bold">{site.name}</h1>
             <span class="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border" style={`border-color: ${st![1]}40; color: ${st![1]}`}>
@@ -52,48 +65,67 @@ const related = allSites
             )}
           </div>
           <p class="text-sm text-text-muted mt-2 font-mono">{host}</p>
-          {site.award && (
-            <span class="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white"><span data-lang="zh">🏆 {site.award}</span>{site.awardEn && <span data-lang="en">🏆 {site.awardEn}</span>}</span>
-          )}
-          {(() => {
-            const op = ageParts(site.domainRegisteredAt);
-            return op ? (
-              <span
-                class="inline-block mt-2 ml-1.5 text-xs px-2.5 py-1 rounded-full bg-status-stable/10 border border-status-stable/30 text-status-stable"
-                title={`域名注册于 ${site.domainRegisteredAt}（注册局记录）`}
-              >
-                🚀 <span data-lang="zh">已运营 {op.n} {AGE_UNIT_ZH[op.unit]}</span>
-                <span data-lang="en">live {op.n} {AGE_UNIT_EN[op.unit]}</span>
-              </span>
-            ) : null;
-          })()}
+          <div class="flex flex-wrap items-center gap-1.5 mt-2">
+            {site.award && (
+              <span class="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-accent text-white"><span data-lang="zh">🏆 {site.award}</span>{site.awardEn && <span data-lang="en">🏆 {site.awardEn}</span>}</span>
+            )}
+            {(() => {
+              const op = ageParts(site.domainRegisteredAt);
+              return op ? (
+                <span
+                  class="inline-block text-xs px-2.5 py-1 rounded-full bg-status-stable/10 border border-status-stable/30 text-status-stable"
+                  title={`域名注册于 ${site.domainRegisteredAt}（注册局记录）`}
+                >
+                  🚀 <span data-lang="zh">已运营 {op.n} {AGE_UNIT_ZH[op.unit]}</span>
+                  <span data-lang="en">live {op.n} {AGE_UNIT_EN[op.unit]}</span>
+                </span>
+              ) : null;
+            })()}
+          </div>
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            {site.url && (
+              <a id="visit-btn" href={goUrl(site)} data-plain-url={`/go?url=${encodeURIComponent(site.url)}&id=${encodeURIComponent(site.id)}`}
+                 target="_blank" rel="noopener noreferrer nofollow"
+                 class="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white transition-colors font-medium">
+                <span data-i18n="detail.visit">前往注册</span><span aria-hidden="true">↗</span>
+              </a>
+            )}
+            <button id="fav-btn" class="text-sm px-4 py-2.5 rounded-xl border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
+              <span data-i18n="detail.fav">☆ 收藏</span>
+            </button>
+            <a href={`/submit?site=${encodeURIComponent(site.id)}&name=${encodeURIComponent(site.name)}&url=${encodeURIComponent(site.url)}&summary=${encodeURIComponent(site.summary)}`} class="text-sm px-4 py-2.5 rounded-xl border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors" title="反馈价格变动、失效等问题">
+              <span data-i18n="detail.report">⚠ 报告问题</span>
+            </a>
+          </div>
         </div>
         {site.multiplier !== null && (
-          <div class="text-center px-4 py-2 rounded-xl bg-bg-secondary border border-border">
-            <p class="text-xs text-text-muted" data-i18n="detail.multiplier">倍率</p>
-            <p class="text-xl font-bold font-mono">{site.multiplier}x</p>
+          <div class="shrink-0 text-right">
+            <span
+              class="block text-4xl font-mono font-bold leading-none px-4 py-3 rounded-2xl"
+              style={`color: ${multColor(site.multiplier)}; background: ${multColor(site.multiplier)}14;`}
+              title={savePct !== null ? (savePct > 0 ? `较官方价省 ${savePct}%` : savePct < 0 ? `较官方价加价 ${-savePct}%` : '与官方价持平') : ''}
+            >
+              {site.multiplier}x
+            </span>
+            {savePct !== null && (
+              <span class="block text-xs font-medium mt-1.5" style={`color: ${multColor(site.multiplier)};`}>
+                {savePct > 0 ? `省 ${savePct}%` : savePct < 0 ? `加价 ${-savePct}%` : '原价'}
+              </span>
+            )}
           </div>
         )}
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center gap-2">
-        {site.url && (
-          <a id="visit-btn" href={goUrl(site)} data-plain-url={`/go?url=${encodeURIComponent(site.url)}&id=${encodeURIComponent(site.id)}`}
-             target="_blank" rel="noopener noreferrer nofollow"
-             class="text-sm px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors">
-            <span data-i18n="detail.visit">访问站点 ↗</span>
-          </a>
-        )}
-        <button id="fav-btn" class="text-sm px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors">
-          <span data-i18n="detail.fav">☆ 收藏</span>
-        </button>
-        <a href={`/submit?site=${encodeURIComponent(site.id)}&name=${encodeURIComponent(site.name)}&url=${encodeURIComponent(site.url)}&summary=${encodeURIComponent(site.summary)}`} class="text-sm px-4 py-2 rounded-lg border border-border text-text-muted hover:text-status-unstable hover:border-status-unstable/40 transition-colors" title="反馈价格变动、失效等问题">
-          <span data-i18n="detail.report">⚠ 报告问题</span>
-        </a>
-      </div>
-
-      <div id="live-status" class="mt-6 p-4 rounded-xl bg-bg-secondary border border-border text-sm text-text-secondary">
-        <span class="text-text-muted" data-i18n="detail.live">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
+      <div id="live-status" class="mt-6 p-4 rounded-xl bg-bg-secondary border border-border">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <p class="text-sm text-text-secondary">
+            <span class="text-text-muted" data-i18n="detail.live">实时状态：</span><span id="live-value" class="text-text-muted">加载中…</span>
+          </p>
+          <p class="text-sm text-text-muted hidden" id="uptime-pill">
+            <span data-lang="zh">24h 可用率</span><span data-lang="en">24h uptime</span>
+            <span id="uptime-value" class="ml-1 text-lg font-bold font-mono text-text-primary">—</span>
+          </p>
+        </div>
         <div id="trend-wrap" class="hidden mt-3 pt-3 border-t border-border">
           <p class="text-xs text-text-muted mb-1.5">
             <span data-lang="zh">近 7 天可用率（每格约 30 分钟）</span><span data-lang="en">Last 7 days uptime (each bar ≈ 30 min)</span>
@@ -101,6 +133,42 @@ const related = allSites
           <div id="trend" class="flex items-end gap-[2px] h-8"></div>
         </div>
       </div>
+
+      {/* 快捷信息卡：决策关键信息 2×2（有空值的卡片自动隐藏） */}
+      {(site.bonus || site.inviteCode || site.apiBase || realMult !== null) && (
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {site.bonus && (
+            <div class="p-3.5 rounded-xl bg-status-stable/[0.06] border border-status-stable/20">
+              <p class="text-xs text-text-muted mb-1"><span data-lang="zh">🎁 注册赠送</span><span data-lang="en">🎁 Sign-up bonus</span></p>
+              <p class="text-sm text-status-stable font-medium leading-relaxed">{site.bonusEn ? <><span data-lang="zh">{site.bonus}</span><span data-lang="en">{site.bonusEn}</span></> : site.bonus}</p>
+            </div>
+          )}
+          {site.inviteCode && (
+            <div class="p-3.5 rounded-xl bg-bg-secondary border border-border">
+              <p class="text-xs text-text-muted mb-1"><span data-lang="zh">🎫 邀请码</span><span data-lang="en">🎫 Invite code</span></p>
+              <button id="invite-copy" class="inline-flex items-center gap-2 text-sm font-mono text-accent hover:underline" data-code={site.inviteCode}>
+                {site.inviteCode}<span class="text-xs text-text-muted" id="invite-copy-label">复制</span>
+              </button>
+            </div>
+          )}
+          {site.apiBase && (
+            <div class="p-3.5 rounded-xl bg-bg-secondary border border-border">
+              <p class="text-xs text-text-muted mb-1"><span data-lang="zh">📋 API Base</span><span data-lang="en">📋 API Base</span></p>
+              <button id="apibase-copy" class="inline-flex items-center gap-2 text-sm font-mono text-text-primary hover:text-accent transition-colors break-all text-left" data-code={site.apiBase} title={site.apiBase}>
+                <span class="truncate max-w-[220px]">{site.apiBase}</span><span class="text-xs text-text-muted shrink-0" id="apibase-copy-label">复制</span>
+              </button>
+            </div>
+          )}
+          {realMult !== null && (
+            <div class="p-3.5 rounded-xl bg-bg-secondary border border-border">
+              <p class="text-xs text-text-muted mb-1" title={`标称倍率 × 充值汇率 ${site.topupRate} ÷ 7.2 参考汇率，折算真实成本`}>
+                <span data-lang="zh">💰 实际倍率</span><span data-lang="en">💰 Real multiplier</span>
+              </p>
+              <p class="text-sm font-mono font-bold" style={`color: ${multColor(realMult)};`}>≈{realMult.toFixed(2)}x</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div class="mt-8 space-y-5">
         <div>
@@ -112,17 +180,11 @@ const related = allSites
           ) : (
             <p class="text-base text-text-secondary leading-relaxed">{site.summary}</p>
           )}
-          {site.description && (
+          {/* 详细描述仅在相对简介有实质增量时展示（去除前 20 字相似即视为重复） */}
+          {site.description && !site.description.slice(0, 20).replace(/\s/g, '').includes(site.summary.slice(0, 10).replace(/\s/g, '')) && (
             <p class="text-sm text-text-muted mt-2 leading-relaxed whitespace-pre-line">{site.description}</p>
           )}
         </div>
-
-        {site.bonus && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.bonus">注册赠送</h2>
-            <p class="text-base text-status-stable font-medium">🎁 {site.bonusEn ? <><span data-lang="zh">{site.bonus}</span><span data-lang="en">{site.bonusEn}</span></> : site.bonus}</p>
-          </div>
-        )}
 
         {site.notice?.text && (
           <details class="group">
@@ -136,36 +198,39 @@ const related = allSites
           </details>
         )}
 
-        {site.models.length > 0 && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.models">支持模型</h2>
-            <div class="flex flex-wrap gap-2">
-              {site.models.map((mid) => {
-                const m = models.find((x) => x.id === mid);
-                if (!m) return null;
-                return <span class="text-xs px-2.5 py-1 rounded-full border" style={`border-color: ${m.color}40; color: ${m.color}`}>{m.name}</span>;
-              })}
-            </div>
-          </div>
-        )}
-
-        {(site.tools?.length ?? 0) > 0 && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tools">工具兼容</h2>
-            <div class="flex flex-wrap gap-2">
-              {site.tools!.map((t) => (
-                <span class="text-xs px-2.5 py-1 rounded-full border border-border text-text-secondary">{TOOLS.find((x) => x.id === t)?.name || t}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {site.tags.length > 0 && (
-          <div>
-            <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tags">标签</h2>
-            <div class="flex flex-wrap gap-2">
-              {site.tags.map((t) => <span class="text-xs px-2.5 py-1 rounded-full border border-dashed border-border text-text-muted">#{t}</span>)}
-            </div>
+        {/* 模型 / 工具 / 标签合并为一个区块，减少标题噪音 */}
+        {(site.models.length > 0 || (site.tools?.length ?? 0) > 0 || site.tags.length > 0) && (
+          <div class="space-y-4">
+            {site.models.length > 0 && (
+              <div>
+                <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.models">支持模型</h2>
+                <div class="flex flex-wrap gap-2">
+                  {site.models.map((mid) => {
+                    const m = models.find((x) => x.id === mid);
+                    if (!m) return null;
+                    return <span class="text-xs px-2.5 py-1 rounded-full border" style={`border-color: ${m.color}40; color: ${m.color}`}>{m.name}</span>;
+                  })}
+                </div>
+              </div>
+            )}
+            {(site.tools?.length ?? 0) > 0 && (
+              <div>
+                <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tools">工具兼容</h2>
+                <div class="flex flex-wrap gap-2">
+                  {site.tools!.map((t) => (
+                    <span class="text-xs px-2.5 py-1 rounded-full border border-border text-text-secondary">{TOOLS.find((x) => x.id === t)?.name || t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {site.tags.length > 0 && (
+              <div>
+                <h2 class="text-sm font-medium text-text-muted mb-2" data-i18n="detail.tags">标签</h2>
+                <div class="flex flex-wrap gap-2">
+                  {site.tags.map((t) => <span class="text-xs px-2.5 py-1 rounded-full border border-dashed border-border text-text-muted">#{t}</span>)}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -175,7 +240,7 @@ const related = allSites
           <h2 class="text-sm font-medium text-text-muted mb-3">
             <span data-lang="zh">相关站点</span><span data-lang="en">Related sites</span>
           </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {related.map((r) => (
               <a
                 href={`/site/${r.id}`}
@@ -187,7 +252,7 @@ const related = allSites
                 <span class="min-w-0 flex-1">
                   <span class="block text-sm font-medium text-text-primary truncate">{r.name}</span>
                   {r.multiplier !== null && (
-                    <span class="block text-xs font-mono text-text-muted">{r.multiplier}x</span>
+                    <span class="block text-xs font-mono font-bold" style={`color: ${multColor(r.multiplier)};`}>{r.multiplier}x</span>
                   )}
                 </span>
                 <span class="text-xs text-text-muted shrink-0">→</span>
@@ -212,7 +277,18 @@ const related = allSites
           el.textContent = en ? 'No monitor data yet' : '暂无监测数据';
           return;
         }
-        const pct = u.uptime24h != null ? `${Math.round(u.uptime24h * 100)}%` : '—';
+        const pct = u.uptime24h != null ? `${Math.round(u.uptime24h * 100)}%` : null;
+        // 24h 可用率：大号数字徽标（有数据才显示）
+        if (pct) {
+          const pill = document.getElementById('uptime-pill');
+          const pv = document.getElementById('uptime-value');
+          if (pill && pv) {
+            pv.textContent = pct;
+            const n = u.uptime24h * 100;
+            pv.style.color = n >= 80 ? '#22c55e' : n >= 50 ? '#f59e0b' : '#ef4444';
+            pill.classList.remove('hidden');
+          }
+        }
         const apiPart =
           u.apiUp === true
             ? (en ? ' · API endpoint OK' : ' · API 端点正常')
@@ -220,10 +296,10 @@ const related = allSites
               ? (en ? ' · API endpoint DOWN' : ' · API 端点异常')
               : '';
         el.innerHTML = !u.up
-          ? `<span style="color:#ef4444">● ${en ? 'unreachable' : '不可达'}</span> · ${en ? '24h uptime' : '24h 可用率'} ${pct}`
+          ? `<span style="color:#ef4444">● ${en ? 'unreachable' : '不可达'}</span>`
           : u.apiUp === false
-            ? `<span style="color:#f59e0b">● ${en ? 'web up, API down' : '网页在线 · API 异常'}</span> · ${en ? '24h uptime' : '24h 可用率'} ${pct}`
-            : `<span style="color:#22c55e">● ${en ? 'up' : '在线'}</span> · ${en ? 'latency' : '延迟'} ${u.latencyMs ?? '?'}ms${apiPart} · ${en ? '24h uptime' : '24h 可用率'} ${pct}`;
+            ? `<span style="color:#f59e0b">● ${en ? 'web up, API down' : '网页在线 · API 异常'}</span> · ${en ? 'latency' : '延迟'} ${u.latencyMs ?? '?'}ms${apiPart}`
+            : `<span style="color:#22c55e">● ${en ? 'up' : '在线'}</span> · ${en ? 'latency' : '延迟'} ${u.latencyMs ?? '?'}ms${apiPart}`;
       })
       .catch(() => {
         const el = document.getElementById('live-value');
@@ -284,6 +360,23 @@ const related = allSites
         renderFav();
       };
       renderFav();
+    }
+
+    // 邀请码 / API Base 一键复制（快捷信息卡）
+    const enNow = () => localStorage.getItem('tf-lang') === 'en';
+    for (const btnId of ['invite-copy', 'apibase-copy']) {
+      const btn = document.getElementById(btnId) as HTMLButtonElement | null;
+      if (!btn) continue;
+      const label = document.getElementById(btnId + '-label');
+      btn.onclick = () => {
+        const code = btn.getAttribute('data-code') || '';
+        navigator.clipboard?.writeText(code).then(() => {
+          if (label) {
+            label.textContent = enNow() ? 'Copied ✓' : '已复制 ✓';
+            setTimeout(() => { label.textContent = enNow() ? 'Copy' : '复制'; }, 1500);
+          }
+        }).catch(() => {});
+      };
     }
   </script>
 
