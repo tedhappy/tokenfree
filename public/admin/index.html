@@ -662,10 +662,11 @@ async function showDashboard() {
           <button id="bulk-clear" class="btn btn-ghost">取消选择</button>
         </div>
       </div>
-      <p class="hint" style="margin:-6px 0 14px">改动站点数据后需点击「重建前台」，前台页面才会更新。</p>
+      <p class="hint" style="margin:-6px 0 14px">改动站点数据后需点击「重建前台」，前台页面才会更新。按住行首 ⠿ 拖动可调整前台排序（搜索/筛选时不可拖拽）。</p>
       <div class="table-wrap">
         <table id="site-table">
           <thead><tr>
+            <th style="width:24px" title="拖动调整前台排序">⠿</th>
             <th style="width:32px"><input type="checkbox" id="select-all" title="全选" /></th>
             <th>名称</th><th>倍率</th><th>状态</th><th>网络</th><th>精选</th><th>点击</th><th>核验</th><th></th>
           </tr></thead>
@@ -676,6 +677,7 @@ async function showDashboard() {
               const liveColor = u && u.checks ? (u.up ? '#22c55e' : '#ef4444') : '#55556a';
               return `
               <tr data-site-row data-name="${esc(s.name)}" data-summary="${esc(s.summary)}" data-tags="${esc((s.tags||[]).join(','))}" data-status="${s.status}">
+                <td class="drag-cell" title="按住拖动调整排序">⠿</td>
                 <td><input type="checkbox" class="site-check" data-id="${esc(s.id)}" /></td>
                 <td class="cell-strong">${esc(s.name)} <span style="color:${liveColor}" title="${u && u.up ? '在线 ' + (u.latencyMs ?? '?') + 'ms' : '不可达/无数据'}">${live}</span> <span class="${s.affUrl ? 'text-success' : 'text-warning'}" style="font-size:11px" title="${s.affUrl ? '推广链接已设置' : '推广链接待补'}">${s.affUrl ? 'AFF✓' : 'AFF待补'}</span></td>
                 <td class="cell-dim">${s.multiplier ?? '—'}</td>
@@ -719,6 +721,54 @@ async function showDashboard() {
   searchInput?.addEventListener('input', applySiteFilter);
   statusFilter?.addEventListener('change', applySiteFilter);
   applySiteFilter();
+  // 拖拽排序：按住行首 ⠿ 拖动调整顺序，松手自动保存（搜索/筛选状态下禁用）
+  const siteTbody = document.querySelector('#site-table tbody');
+  let dragRow = null;
+  const siteFiltered = () => Boolean((searchInput?.value || '').trim() || statusFilter?.value);
+  siteTbody?.querySelectorAll('.drag-cell').forEach((cell) => {
+    cell.addEventListener('mousedown', () => {
+      if (siteFiltered()) { toast('请先清空搜索/筛选后再拖拽排序', 'error'); return; }
+      cell.closest('tr').draggable = true;
+    });
+    cell.addEventListener('mouseup', () => { cell.closest('tr').draggable = false; });
+  });
+  siteTbody?.querySelectorAll('[data-site-row]').forEach((row) => {
+    row.addEventListener('dragstart', (e) => {
+      if (siteFiltered() || !row.draggable) { e.preventDefault(); return; }
+      dragRow = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      row.draggable = false;
+      dragRow = null;
+      saveSiteOrder();
+    });
+    row.addEventListener('dragover', (e) => {
+      if (!dragRow || row === dragRow) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      // 按鼠标位置决定插入到目标行上方或下方
+      const rect = row.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      row.parentNode.insertBefore(dragRow, after ? row.nextSibling : row);
+    });
+  });
+  const saveSiteOrder = async () => {
+    if (!siteTbody) return;
+    const ids = [...siteTbody.querySelectorAll('[data-site-row] .site-check')].map((c) => c.dataset.id).filter(Boolean);
+    const origin = window._sites.map((s) => s.id).join(',');
+    if (!ids.length || ids.join(',') === origin) return; // 顺序未变化则不请求
+    try {
+      await api('/api/sites/reorder', { method: 'PUT', body: JSON.stringify({ ids }) });
+      window._sites = [...window._sites].sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+      toast('排序已保存。需点「重建前台」前台才会生效', 'success', 3500);
+    } catch (e) {
+      toast('排序保存失败：' + e.message, 'error', 4000);
+      showDashboard();
+    }
+  };
   // 批量操作：多选站点 + 批量改状态/精选
   const bulkBar = document.getElementById('site-bulk-bar');
   const bulkCount = document.getElementById('bulk-count');

@@ -389,6 +389,32 @@ app.post('/api/sites', async (c) => {
   return c.json(site, 201);
 });
 
+// ---- 站点排序（后台拖拽排序保存）----
+// 注意：必须注册在 /api/sites/:id 之前，否则 "reorder" 会被 :id 参数捕获
+app.put('/api/sites/reorder', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const ids = Array.isArray(body.ids) ? body.ids.filter((x) => typeof x === 'string' && x) : [];
+  if (!ids.length) return c.json({ error: 'ids 必填' }, 400);
+  try {
+    await withFileLock(SITES_FILE, () => {
+      const sites = readJson(SITES_FILE, []);
+      const pos = new Map(ids.map((id, i) => [id, i]));
+      // 列表内按新顺序排列，列表外（异常情况）保持在尾部
+      const ordered = sites
+        .slice()
+        .sort((a, b) => (pos.has(a.id) ? pos.get(a.id) : ids.length) - (pos.has(b.id) ? pos.get(b.id) : ids.length));
+      // sortOrder 与数组顺序同步写回，前台按 sortOrder 升序展示
+      ordered.forEach((s, i) => { s.sortOrder = i + 1; });
+      writeJson(SITES_FILE, ordered);
+      logAudit('调整站点排序', `${ids.length} 个站点`, '');
+    });
+    return c.json({ ok: true });
+  } catch (e) {
+    console.error('[api] 站点排序保存失败:', String(e.message || e));
+    return c.json({ error: '保存失败，请稍后重试' }, 500);
+  }
+});
+
 app.put('/api/sites/:id', async (c) => {
   const id = c.req.param('id');
   const updated = await c.req.json();

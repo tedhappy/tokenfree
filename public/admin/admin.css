@@ -158,6 +158,12 @@ details.card[open] > summary.card-title { margin-bottom: 14px; }
 }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 12px 14px; text-align: left; white-space: nowrap; }
+/* 站点列表拖拽排序 */
+.drag-cell { cursor: grab; text-align: center; color: var(--t3); user-select: none; font-size: 14px; }
+.drag-cell:hover { color: var(--accent); }
+.drag-cell:active { cursor: grabbing; }
+tr.dragging { opacity: 0.45; }
+tr[draggable="true"] { cursor: grabbing; }
 thead th { font-size: 12px; font-weight: 400; color: var(--t3); border-bottom: 1px solid var(--border); }
 tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:last-child { border-bottom: none; }
