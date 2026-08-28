@@ -1,0 +1,25 @@
+server/index.js
+  s_a02f0578bdb8c2::t_ffefd71afbafc4 392-417
+public/admin/index.html
+  s_a02f0578bdb8c2::t_1f2f14295cc8e1 669,680
+  s_a02f0578bdb8c2::t_c08f46f9e73ce6 724-771
+  s_a02f0578bdb8c2::t_98b5c49ecbebae 665
+public/admin/admin.css
+  s_a02f0578bdb8c2::t_9b0aa0381f63c0 161-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fa32135a95cf762b7643075efecb83819fa9d84c",
+  "prompts": {},
+  "sessions": {
+    "s_a02f0578bdb8c2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbf03c517ffeqQHthhIWXtPSD7",
+        "model": "unknown"
+      },
+      "human_author": "ted2.wang <ted2.wang@ly.com>"
+    }
+  }
+}
